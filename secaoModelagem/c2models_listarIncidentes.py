@@ -35,21 +35,21 @@ def listar_incidentes():
 	eixoX = []
 	eixoY = []
 
-	f = open("clusterizado_completo.c2", "w")
+	#f = open("clusterizado_completo.c2", "w")
 	for data in sorted(cluster_porDia):
 		resultados[data] = cluster_porDia[data]
 		#eixoX.append(data)
 		eixoY.append(cluster_porDia[data])
-		#print data, " : ",cluster_porDia[data] 
-		f.write(str(data)+ " : " + str(cluster_porDia[data])+"\n")
+		print data, " : ",cluster_porDia[data] 
+	#	f.write(str(data)+ " : " + str(cluster_porDia[data])+"\n")
 		timeTuple = time.strptime(data, "%Y/%B/%d %H:%m:%S")
 		timeStamp = time.mktime(timeTuple)
 		eixoX.append(repr(timeStamp))
 
-	print eixoX
+	#print eixoX
 
-	plt.plot(eixoX,eixoY)
-	plt.savefig("plot.png",dpi=96)
+	#plt.plot(eixoX,eixoY)
+	#plt.savefig("plot.png",dpi=96)
 
 
 listar_incidentes()
