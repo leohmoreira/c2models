@@ -39,10 +39,8 @@ def plot_graph(axisX, axisY):
     plt.show()
     plt.savefig("plot.png",dpi=96)
 
-def get_Incidents_from_DB():
+def get_Incidents_from_DB(inicioCopaConf,terminoCopaConf):
 
-    inicioCopaConf = datetime(2013,6,1)
-    terminoCopaConf = datetime(2013,7,3)
     clusteringDefault = '%Y/%m/%d'
     #clusterPorHora = '%Y/%B/%d %H:%m:%S'
     incidents = Incident.get_all()
@@ -53,16 +51,28 @@ def get_Incidents_from_DB():
     
     return incidentsDates
 
+def get_Incidentes_from_file(inicioCopaConf, terminoCopaConf):
+
+    datesFromFile = read_file('clusterizado.c2')
+    dates = map(date_converter, datesFromFile)
+    incidentes = map(qtd_incidents, datesFromFile)
+    datesIncidents = {}
+    for i, v in enumerate(dates):
+        tmpDate = datetime.strptime(v,"%Y/%B/%d")
+        if (inicioCopaConf <= tmpDate) and (tmpDate <= terminoCopaConf):
+
+            datesIncidents[time.strftime("%Y/%m/%d",time.strptime(v,"%Y/%B/%d"))] = incidentes[i]
+
+    return datesIncidents
 
 if __name__ == "__main__":
-        
-
-    #datesFromFile = read_file('clusterizado.c2')
-    #dates = map(date_converter, datesFromFile)
-    #incidentes = map(qtd_incidents, datesFromFile)
-
-    incidentsDates =  get_Incidents_from_DB()
-
+    
+    inicioCopaConf = datetime(2013,6,10)
+    terminoCopaConf = datetime(2013,7,3)
+    
+    # para recuperar do banco
+    
+    incidentsDates =  get_Incidents_from_DB(inicioCopaConf,terminoCopaConf)
     dictionaryIncidentsDates = {}
     #Faz a contagem de incidentes por data segundo o padrão de cluster
     clusterIncidentes = collections.Counter(incidentsDates)
@@ -70,32 +80,17 @@ if __name__ == "__main__":
     for i,v in enumerate(incidentsDates):
         dictionaryIncidentsDates[v]=clusterIncidentes[v]
     
-    sortedIncidentDates = sorted(set(incidentsDates))
+    """   
+    #para recuperar de um arquivo já clusterizado
+    dictionaryIncidentsDates = get_Incidentes_from_file(inicioCopaConf,terminoCopaConf)
+    """
+    sortedIncidentDates = sorted(set(dictionaryIncidentsDates))
+
     axisX = []
     axisY = []
     for key in sortedIncidentDates:
-        print key, dictionaryIncidentsDates[key]
         axisX.append(datetime.strptime(key,"%Y/%m/%d"))
         axisY.append(dictionaryIncidentsDates[key])
     
-    print axisX
-    print axisY
     plot_graph(axisX,axisY)
-    datesIncidents = {}
-    """
-    for i, v in enumerate(datesFromFile):
-    	datesIncidents[time.strftime("%Y/%m/%d",time.strptime(v,"%Y/%B/%d"))] = incidentes[i]
     
-    sortedDatesIncidents = sorted(datesIncidents)
-    axisX = []
-    axisY = []
-    
-    for key in sortedDatesIncidents:
-    	tmpDate = datetime.datetime.strptime(key,"%Y/%m/%d")
-    	if(inicioCopaConf <= tmpDate and tmpDate<=terminoCopaConf):
-    		  		
-    	    axisX.append(datetime.datetime.strptime(key,"%Y/%m/%d"))
-            axisY.append(datesIncidents[key])
-
-   
-    """
