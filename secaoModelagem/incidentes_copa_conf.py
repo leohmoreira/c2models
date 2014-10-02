@@ -3,8 +3,8 @@ import datetime
 import collections
 import argparse
 import numpy as np
-from scipy import special, optimize
 import matplotlib.pyplot as plt
+from scipy import stats
 import time
 from matplotlib.dates import DateFormatter
 import os, sys
@@ -279,6 +279,18 @@ def get_COP_incidents(inicioCopaConf, terminoCopaConf):
     
     return collections.Counter(cops)    
     
+def get_statics(dataArray):
+
+    print (dataArray)
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(map(float,dataArray))
+    #mean = np.mean(np.array(map(float,dataArray)))
+    mean = np.mean(map(float,dataArray))
+    vara = np.var(map(float,dataArray))
+
+    print arithmeticMean,variance
+    print mean, vara
+
+    print "Correlacao: ",stats.pearsonr(map(float,dataArray),map(float,dataArray))
 
 if __name__ == "__main__":
     
@@ -296,10 +308,9 @@ if __name__ == "__main__":
     for i,v in enumerate(incidentsDates):
         dictionaryIncidentsDates[v]=clusterIncidentes[v]
     
-    """   
     #para recuperar de um arquivo já clusterizado
-    dictionaryIncidentsDates = get_Incidentes_from_file(inicioCopaConf,terminoCopaConf)
-    """
+    #dictionaryIncidentsDates = get_all_incidentes_from_file(inicioCopaConf,terminoCopaConf)
+    
     sortedIncidentDates = sorted(set(dictionaryIncidentsDates))
 
     axisX = []
@@ -308,10 +319,10 @@ if __name__ == "__main__":
         axisX.append(datetime.strptime(key,"%Y/%m/%d"))
         axisY.append(dictionaryIncidentsDates[key])
     
-    #plot_graph(axisX,axisY)
+    get_statics(axisY)
     #plot_hist(axisX,axisY)
 
-    cops = get_COP_incidents(inicioCopaConf,terminoCopaConf)
+    #cops = get_COP_incidents(inicioCopaConf,terminoCopaConf)
 
     axisYbyCops = {}
     axisXbyCops = {}
@@ -343,5 +354,7 @@ if __name__ == "__main__":
                 axisXbyCops['CCDA - BHZ'],axisYbyCops['CCDA - BHZ']                
                 )
     """
+    
     actionsDates =  get_all_actions_from_DB(inicioCopaConf,terminoCopaConf)
     print collections.Counter(actionsDates)
+    
