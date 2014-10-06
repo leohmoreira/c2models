@@ -430,10 +430,20 @@ def incidents_near_matchDays():
 if __name__ == "__main__":
 
     #incidentes_actions_total()
+    """
     inicioCopaConf = datetime(2013,6,10)
     terminoCopaConf = datetime(2013,7,3)
     t = inicioCopaConf - terminoCopaConf
     print t.days
     print get_qtd_actions_near_date('CCDA - RIO',datetime(2013,06,30))
+    """
+
+    all_sincronizations = Sincronizacao.get_all()
+    all_actions = []
+    for sinc in all_sincronizations:
+        for action in sinc.acoes:
+            all_actions.append(action)
+
+    
 
    
