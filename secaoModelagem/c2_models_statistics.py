@@ -16,6 +16,8 @@ from incidentes.models import *
 
 #Constantes
 dateDistanceLimit = 43200 #(24 horas em segundos)
+actionSize = 86400 #(24 horas em segundos)
+punctualActionSize 3600 #(1 hora em segundos)
 inicioAmostragem = datetime(2013,6,10)
 terminoAmostragem = datetime(2013,7,3)
 
@@ -39,8 +41,11 @@ def get_dict_all_actions():
 	allCops = get_all_cops()
 	for cop in allCops:
 		dictionaryAllActions[cop] = []
+	dictionaryAllActions['TODOS'] = []
+
+	# é necessário percorrer todas sincronizacoes ao inves de usar get_all_actions porque só sinc tem o id do COP
 	for sinc in allSincronizations:
-		for action in sinc.acoes:
+		for action in get_all_actions():
 			if (
 				(sinc.cop_responsavel['id'] in allCops) and 
 				(
@@ -48,6 +53,7 @@ def get_dict_all_actions():
 					((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
 				)
 			):
+				dictionaryAllActions['TODOS'].append(action)
 				dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
 			    
 	return dictionaryAllActions
@@ -105,18 +111,21 @@ def get_actions_near_date(listActions,date,distance):
 		print inicio
 
 		if (
+			# a data esta em [inicio - 1h, inicio + 1h]
 			(
 				(action.tipo == 'PONTUAL') and 
-				(((date - action.inicio).total_seconds() <= distance) and ((date - action.inicio).total_seconds() >= 0))
+				(abs((date - action.inicio).total_seconds()) <= punctualActionSize)
+				
 			) 
 			or
 			(
+				# a ação tem duracao de no maximo actionSize e a data está em [inicio,fim]
 				(action.tipo == 'INTERVALO') and 
 				(
-					((date - action.inicio).total_seconds() <= distance and ((date - action.inicio).total_seconds() >= 0)) and
-					#((action.fim - date).total_seconds() <= distance and ((action.fim - date).total_seconds() >= 0))
-					(((action.fim - date).total_seconds() >= 0))
+					((action.fim - action.inicio).total_seconds() <= actionSize) and
+					((date - action.inicio).total_seconds() >=0)
 				)
+				
 			)
 		):
 			inc.apppend(action)
@@ -147,32 +156,28 @@ def get_dict_all_incidents():
 	
 	for cop in allCops:
 		dictionaryAllIncidents[cop] = []
+	dictionaryAllIncidents['TODOS'] = []
 
 	allIncidents = get_all_incidents()
 	for incident in allIncidents:
+		dictionaryAllIncidents['TODOS'].append(incident)
 		dictionaryAllIncidents[incident['operations_center']].append(incident)
 			    
 	return dictionaryAllIncidents
 
 
-def get_incidents_near_date(listIncidents,date,distance,type='full'):
+def get_incidents_near_date(listIncidents,date,distance,indicentDateFormatter = '%Y/%m/%d %H:%M:%S'):
 	"""
 		Retorna todos os incidentes de "listIncidents" nos quais o valor "date" esteja próximo em "distance" (em segundos) do reporting_date
-		type indica se a data dos incidentes serão agupadas por
+		indicentDateFormatter indica se a data dos incidentes serão agupadas por
 			'day' = formato AAAA/MM/DD 
 			'full' = formato AAAA/MM/DD hh:mm:ss
 	"""
-	indicentDateFormatter = '%Y/%m/%d %H:%M:%S'
-	if type == 'day':
-		indicentDateFormatter = '%Y/%m/%d'
-
+	
 	return [incident for incident in listIncidents
 			if 
 			(
-				(abs((datetime.strptime(datetime.strftime(incident.reporting_date,indicentDateFormatter),indicentDateFormatter) - date).total_seconds()) <= distance) 
-				and
-				#(abs((datetime.strptime(datetime.strftime(incident.reporting_date,indicentDateFormatter),indicentDateFormatter) - date).total_seconds()) >= 0)
-				(abs((datetime.strptime(datetime.strftime(incident.reporting_date,indicentDateFormatter),indicentDateFormatter) - date).total_seconds()) >= 0)
+				(abs((datetime.strptime(datetime.strftime(incident.reporting_date,indicentDateFormatter),indicentDateFormatter) - date).total_seconds()) <= distance)
 			)
 			]
 
@@ -294,7 +299,7 @@ if __name__ == "__main__":
 			actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day,dateDistanceLimit)))
 	"""
 	for day in matchDays:
-		incRio.append(len(get_incidents_near_date(allIncidentsDict['CCDA - RIO'],day,dateDistanceLimit,'day')))
+		incRio.append(len(get_incidents_near_date(allIncidentsDict['CCDA - RIO'],day,dateDistanceLimit,'%Y/%m/%d')))
 		actRio.append(len(get_actions_near_date(allActionsDict['CCDA - RIO'],day,dateDistanceLimit)))
 	"""
 	"""
@@ -307,8 +312,12 @@ if __name__ == "__main__":
 		incidentsSerie['CCDA - BHZ'],actionsSerie['CCDA - BHZ'])
 	"""
 
-	print len(get_actions_near_date(allActionsDict['CCDA - RIO'],datetime(2013,6,20),dateDistanceLimit))
-	print get_actions_near_date(allActionsDict['CCDA - RIO'],datetime(2013,6,20),dateDistanceLimit)
+
+	print "RIO - acoes comenca em 2013/6/30 = ", len([act for act in allActionsDict['CCDA - RIO'] 
+			if datetime.strptime(datetime.strftime(act.inicio,'%Y/%m/%d'),'%Y/%m/%d') == datetime(2013,6,30)
+		])
+	print len(get_actions_near_date(allActionsDict['CCDA - RIO'],datetime(2013,6,30),dateDistanceLimit))
+	print get_actions_near_date(allActionsDict['CCDA - RIO'],datetime(2013,6,30),dateDistanceLimit)
 
 	
 
