@@ -15,9 +15,9 @@ sys.path.append(lib_path_Pacificador)
 from incidentes.models import *
 
 #Constantes
-dateDistanceLimit = 86400 #(24 horas em segundos)
-actionSize = 86400 #(24 horas em segundos)
-punctualActionSize = 43200 #(1 hora em segundos)
+dateDistanceLimit = 43200 #(12 horas em segundos)
+actionSize = 43200 #(12 horas em segundos)
+punctualActionSize = 0 #(1 hora em segundos)
 inicioAmostragem = datetime(2013,6,10,0,0,0)
 terminoAmostragem = datetime(2013,6,30,23,59,59)
 
@@ -110,20 +110,21 @@ def get_actions_near_date(listActions,date):
 		if (
 			# a data esta em [inicio - 1h, inicio + 1h]
 			(
-				(action.tipo == 'PONTUAL') and 
-				(((date - action.inicio).total_seconds()) <= punctualActionSize)
+				#(action.tipo == 'PONTUAL') and 
+				#(((date - action.inicio).total_seconds()) <= punctualActionSize)
+				datetime.strptime(datetime.strftime(action.inicio,'%Y/%m/%d'),'%Y/%m/%d') == date
 				
 			) 
-			or
-			(
+			#or
+			#(
 				# a ação tem duracao de no maximo actionSize e a data está em [inicio,fim]
-				(action.tipo == 'INTERVALO') and 
-				(
-					(abs((action.fim - action.inicio).total_seconds()) <= actionSize) and
-					((date - action.inicio).total_seconds() >=0)
-				)
+			#	(action.tipo == 'INTERVALO') and 
+			#	(
+			#		(((action.fim - action.inicio).total_seconds()) <= actionSize) and
+			#		((date - action.inicio).total_seconds() <= dateDistanceLimit)
+			#	)
 				
-			)
+			#)
 		):
 			inc.append(action)
 	return inc
@@ -174,7 +175,8 @@ def get_incidents_near_date(listIncidents,date,distance,indicentDateFormatter = 
 	return [incident for incident in listIncidents
 			if 
 			(
-				(abs((datetime.strptime(datetime.strftime(incident.reporting_date,indicentDateFormatter),indicentDateFormatter) - date).total_seconds()) <= distance)
+				#(abs((datetime.strptime(datetime.strftime(incident.reporting_date,indicentDateFormatter),indicentDateFormatter) - date).total_seconds()) <= distance)
+				datetime.strptime(datetime.strftime(incident.reporting_date,'%Y/%m/%d'),'%Y/%m/%d') == date				
 			)
 			]
 
@@ -195,7 +197,7 @@ def plot_total(axisX,
     graphRIO.set_title("RIO DE JANEIRO - Correlacao: " + str(stats.pearsonr(incidents1,actions1)[0]))
     graphRIO.set_ylabel("Quantidade")
     graphRIO.set_xlabel("Dias")
-    graphRIO.plot(axisX,incidents1, 'bo-',axisX,actions1, 'ro-')
+    graphRIO.plot(axisX,incidents1, 'ro-',axisX,actions1, 'bo-')
     graphRIO.xaxis_date()
     graphRIO.xaxis.set_major_formatter(DateFormatter("%d/%m"))
     plt.xticks(axisX,rotation=90)
@@ -205,7 +207,7 @@ def plot_total(axisX,
     graphBSB.set_title("BRASILIA - Correlacao: " + str(stats.pearsonr(incidents2,actions2)[0]))
     graphBSB.set_ylabel("Quantidade")
     graphBSB.set_xlabel("Dias")
-    graphBSB.plot(axisX,incidents2, 'bo-',axisX,actions2, 'ro-')
+    graphBSB.plot(axisX,incidents2, 'ro-',axisX,actions2, 'bo-')
     graphBSB.xaxis_date()
     graphBSB.xaxis.set_major_formatter(DateFormatter("%d/%m"))
     plt.xticks(axisX,rotation=90)
@@ -215,7 +217,7 @@ def plot_total(axisX,
     graphSSA.set_title("SALVADOR - Correlacao: " + str(stats.pearsonr(incidents3,actions3)[0]))
     graphSSA.set_ylabel("Quantidade")
     graphSSA.set_xlabel("Dias")
-    graphSSA.plot(axisX,incidents3, 'bo-',axisX,actions3, 'ro-')
+    graphSSA.plot(axisX,incidents3, 'ro-',axisX,actions3, 'bo-')
     graphSSA.xaxis_date()
     graphSSA.xaxis.set_major_formatter(DateFormatter("%d/%m"))
     plt.xticks(axisX,rotation=90)
@@ -225,7 +227,7 @@ def plot_total(axisX,
     graphREC.set_title("RECIFE - Correlacao: " + str(stats.pearsonr(incidents4,actions4)[0]))
     graphREC.set_ylabel("Quantidade")
     graphREC.set_xlabel("Dias")
-    graphREC.plot(axisX,incidents4, 'bo-',axisX,actions4, 'ro-')
+    graphREC.plot(axisX,incidents4, 'ro-',axisX,actions4, 'bo-')
     graphREC.xaxis_date()
     graphREC.xaxis.set_major_formatter(DateFormatter("%d/%m"))
     plt.xticks(axisX,rotation=90)
@@ -235,7 +237,7 @@ def plot_total(axisX,
     graphFOR.set_title("FORTALEZA - Correlacao: " + str(stats.pearsonr(incidents5,actions5)[0]))
     graphFOR.set_ylabel("Quantidade")
     graphFOR.set_xlabel("Dias")
-    graphFOR.plot(axisX,incidents5, 'bo-',axisX,actions5, 'ro-')
+    graphFOR.plot(axisX,incidents5, 'ro-',axisX,actions5, 'bo-')
     graphFOR.xaxis_date()
     graphFOR.xaxis.set_major_formatter(DateFormatter("%d/%m"))
     plt.xticks(axisX,rotation=90)
@@ -245,7 +247,7 @@ def plot_total(axisX,
     graphBHZ.set_title("BELO HORIZONTE - Correlacao: " + str(stats.pearsonr(incidents6,actions6)[0]))
     graphBHZ.set_ylabel("Quantidade")
     graphBHZ.set_xlabel("Dias")
-    graphBHZ.plot(axisX,incidents6, 'bo-',axisX,actions6, 'ro-')
+    graphBHZ.plot(axisX,incidents6, 'ro-',axisX,actions6, 'bo-')
     graphBHZ.xaxis_date()
     graphBHZ.xaxis.set_major_formatter(DateFormatter("%d/%m"))
     plt.xticks(axisX,rotation=90)
@@ -276,14 +278,18 @@ if __name__ == "__main__":
 	matchDays = [datetime(2013,6,15,0,0,0),datetime(2013,6,16,0,0,0),datetime(2013,6,17,0,0,0),datetime(2013,6,19,0,0,0),datetime(2013,6,20,0,0,0),
                  datetime(2013,6,22,0,0,0),datetime(2013,6,23,0,0,0),datetime(2013,6,26,0,0,0),datetime(2013,6,27,0,0,0),datetime(2013,6,30,0,0,0)]
 	
+	mdays = [#datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2013,6,13),datetime(2013,6,14),
+			datetime(2013,6,15),datetime(2013,6,16),datetime(2013,6,17),datetime(2013,6,18),datetime(2013,6,19),
+			datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
+			datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
+
 	allActionsDict = get_dict_all_actions()
 	allIncidentsDict = get_dict_all_incidents()
-		
-	"""	
+
 	for cop in get_all_cops():
 		for days in matchDays:
-			print cop," -> ", days, " -> incidents = " , len(get_incidents_near_date(allIncidentsDict[cop],days,dateDistanceLimit,'day')),"acões = ",len(get_actions_near_date(allActionsDict[cop],days,dateDistanceLimit))
-	"""
+		#for days in mdays:
+			print cop," -> ", days, " -> incidents = " , len(get_incidents_near_date(allIncidentsDict[cop],days,dateDistanceLimit,'day')),"acões = ",len(get_actions_near_date(allActionsDict[cop],days))
 	
 	incidentsSerie = {}
 	actionsSerie = {}
@@ -292,18 +298,20 @@ if __name__ == "__main__":
 		incidentsSerie[cop]=[]
 		actionsSerie[cop]=[]
 		for day in matchDays:
+		#for day in mdays:
 			incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day,dateDistanceLimit)))
 			actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
 	
 	plot_total(matchDays,
+	#plot_total(mdays,
 		incidentsSerie['CCDA - RIO'],actionsSerie['CCDA - RIO'],
 		incidentsSerie['CCDA - BSB'],actionsSerie['CCDA - BSB'],
 		incidentsSerie['CCDA - SSA'],actionsSerie['CCDA - SSA'],
 		incidentsSerie['CCDA - REC'],actionsSerie['CCDA - REC'],
 		incidentsSerie['CCDA - FOR'],actionsSerie['CCDA - FOR'],
 		incidentsSerie['CCDA - BHZ'],actionsSerie['CCDA - BHZ'])
+	
 	"""
-
 	days = [datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2013,6,13),datetime(2013,6,14),
 			datetime(2013,6,15),datetime(2013,6,16),datetime(2013,6,17),datetime(2013,6,18),datetime(2013,6,19),
 			datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
