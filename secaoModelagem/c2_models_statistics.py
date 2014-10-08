@@ -77,64 +77,21 @@ def get_all_actions():
 				allActions.append(action)
 		
 	return allActions
+
+def get_actions_near_date(listActions,date, mask = '%Y/%m/%d'):
+	"""
+	Retorna todas as ações de "listActions" nas quais o valor "date" seja igual, segundo "MASK", ao inicio da ação
+	Por padrão, MASK considera apenas ANO/MES/DIA, com hora 00:00:00
+	"""
 	
-
-def get_actions_near_date_backUP(listActions,date,distance):
-	"""
-	Retorna todas as ações de "listActions" nas quais o valor "date" esteja próximo em "distance" (em segundos) do inicio ou fim da ação
-	"""
-	return [action for action in listActions 
-			if (
-				(
-					(action.tipo == 'PONTUAL') and 
-					(((date - action.inicio).total_seconds() <= distance) and ((date - action.inicio).total_seconds() >= 0))
-				) 
-				or
-				(
-					(action.tipo == 'INTERVALO') and 
-					(
-						((date - action.inicio).total_seconds() <= distance and ((date - action.inicio).total_seconds() >= 0)) and
-						#((action.fim - date).total_seconds() <= distance and ((action.fim - date).total_seconds() >= 0))
-						(((action.fim - date).total_seconds() >= 0))
-					)
-				)
-			)]
-
-def get_actions_near_date(listActions,date):
-	"""
-	Retorna todas as ações de "listActions" nas quais o valor "date" esteja próximo em "distance" (em segundos) do inicio ou fim da ação
-	"""
-	inc = []
-	for action in listActions:
-		#inicio =  datetime.strptime(datetime.strftime(action.inicio,'%Y/%m/%d 23:59:59'),'%Y/%m/%d %H:%M:%S')
-		if (
-			# a data esta em [inicio - 1h, inicio + 1h]
-			(
-				#(action.tipo == 'PONTUAL') and 
-				#(((date - action.inicio).total_seconds()) <= punctualActionSize)
-				datetime.strptime(datetime.strftime(action.inicio,'%Y/%m/%d'),'%Y/%m/%d') == date
-				
-			) 
-			#or
-			#(
-				# a ação tem duracao de no maximo actionSize e a data está em [inicio,fim]
-			#	(action.tipo == 'INTERVALO') and 
-			#	(
-			#		(((action.fim - action.inicio).total_seconds()) <= actionSize) and
-			#		((date - action.inicio).total_seconds() <= dateDistanceLimit)
-			#	)
-				
-			#)
-		):
-			inc.append(action)
-	return inc
-
+	return [action for action in listActions
+		if datetime.strptime(datetime.strftime(action.inicio,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
+	]
 
 def get_all_incidents():
 	"""
 		Retorna todos os incidentes agrupados em um array
 	"""
-
 	allIncidents = Incident.get_all()
 	allCops = get_all_cops()
 	return [i for i in allIncidents 
@@ -142,13 +99,12 @@ def get_all_incidents():
 							(i['operations_center'] in allCops) and
 							(inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
 						)
-					]
+	]
 	
 def get_dict_all_incidents():
 	"""
 		Retorna todos os incidentes agrupados em um dicionário cuja chave é o nome do COP
 	"""
-
 	dictionaryAllIncidents = {}
 	allCops = get_all_cops()
 	
@@ -164,21 +120,14 @@ def get_dict_all_incidents():
 	return dictionaryAllIncidents
 
 
-def get_incidents_near_date(listIncidents,date,distance,indicentDateFormatter = '%Y/%m/%d %H:%M:%S'):
+def get_incidents_near_date(listIncidents,date,mask = '%Y/%m/%d'):
 	"""
-		Retorna todos os incidentes de "listIncidents" nos quais o valor "date" esteja próximo em "distance" (em segundos) do reporting_date
-		indicentDateFormatter indica se a data dos incidentes serão agupadas por
-			'day' = formato AAAA/MM/DD 
-			'full' = formato AAAA/MM/DD hh:mm:ss
+	Retorna todas os incidentes de "listIncidentes" nas quais o valor "date" seja igual, segundo "MASK", ao reporting_date
+	Por padrão, MASK considera apenas ANO/MES/DIA, com hora 00:00:00
 	"""
-	
 	return [incident for incident in listIncidents
-			if 
-			(
-				#(abs((datetime.strptime(datetime.strftime(incident.reporting_date,indicentDateFormatter),indicentDateFormatter) - date).total_seconds()) <= distance)
-				datetime.strptime(datetime.strftime(incident.reporting_date,'%Y/%m/%d'),'%Y/%m/%d') == date				
-			)
-			]
+			if datetime.strptime(datetime.strftime(incident.reporting_date,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
+	]
 
 def plot_total(axisX,
                 incidents1,actions1,
@@ -286,10 +235,10 @@ if __name__ == "__main__":
 	allActionsDict = get_dict_all_actions()
 	allIncidentsDict = get_dict_all_incidents()
 
-	for cop in get_all_cops():
-		for days in matchDays:
+	#for cop in get_all_cops():
+	#	for days in matchDays:
 		#for days in mdays:
-			print cop," -> ", days, " -> incidents = " , len(get_incidents_near_date(allIncidentsDict[cop],days,dateDistanceLimit,'day')),"acões = ",len(get_actions_near_date(allActionsDict[cop],days))
+	#		print cop," -> ", days, " -> incidents = " , len(get_incidents_near_date(allIncidentsDict[cop],days,dateDistanceLimit,'day')),"acões = ",len(get_actions_near_date(allActionsDict[cop],days))
 	
 	incidentsSerie = {}
 	actionsSerie = {}
@@ -299,7 +248,7 @@ if __name__ == "__main__":
 		actionsSerie[cop]=[]
 		for day in matchDays:
 		#for day in mdays:
-			incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day,dateDistanceLimit)))
+			incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
 			actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
 	
 	plot_total(matchDays,
@@ -311,14 +260,5 @@ if __name__ == "__main__":
 		incidentsSerie['CCDA - FOR'],actionsSerie['CCDA - FOR'],
 		incidentsSerie['CCDA - BHZ'],actionsSerie['CCDA - BHZ'])
 	
-	"""
-	days = [datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2013,6,13),datetime(2013,6,14),
-			datetime(2013,6,15),datetime(2013,6,16),datetime(2013,6,17),datetime(2013,6,18),datetime(2013,6,19),
-			datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
-			datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
-
-	"""
-	#print len(get_actions_near_date(allActionsDict['CCDA - RIO'],datetime(2013,6,30),dateDistanceLimit))
-	#print get_actions_near_date(allActionsDict['CCDA - RIO'],datetime(2013,6,30),dateDistanceLimit)
-
+	
 	
