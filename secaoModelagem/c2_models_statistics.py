@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import time
 from matplotlib.dates import DateFormatter
 from scipy import stats
+from pylab import text
 import os, sys
 lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
 sys.path.append(lib_path_Pacificador)
@@ -59,6 +60,41 @@ def get_dict_all_actions():
 							    
 	return dictionaryAllActions
 
+def get_dict_all_actions_by_type(actionType):
+	"""
+		Retorna todas as ações do tipo action Type agrupadas em um dicionário cuja chave é o nome do COP
+	"""
+	allSincronizations = Sincronizacao.get_all()
+	dictionaryAllActions = {}
+	allCops = get_all_cops()
+	for cop in allCops:
+		dictionaryAllActions[cop] = []
+	dictionaryAllActions['TODOS'] = []
+
+	# é necessário percorrer todas sincronizacoes ao inves de usar get_all_actions porque só sinc tem o id do COP
+	for sinc in allSincronizations:
+		for action in sinc.acoes:
+			if (
+				(actionType == 'PONTUAL') and 
+				(sinc.cop_responsavel['id'] in allCops) and 
+				(
+					((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem))
+				)
+			):
+				dictionaryAllActions['TODOS'].append(action)
+				dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
+			if (
+				(actionType == 'INTERVALO') and 
+				(sinc.cop_responsavel['id'] in allCops) and 
+				(
+					((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))	
+				)
+			):
+				dictionaryAllActions['TODOS'].append(action)
+				dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
+							    
+	return dictionaryAllActions
+
 def get_all_actions():
 	"""
 		Retorna todas as ações agrupadas em um array
@@ -72,7 +108,7 @@ def get_all_actions():
 			if (
 				(sinc.cop_responsavel['id'] in allCops) and 
 				(
-					((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem)) or
+					((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem)) or
 					((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
 				)
 			):
@@ -149,13 +185,13 @@ def get_reports_near_date(listReports,date,mask = '%Y/%m/%d'):
 			if datetime.strptime(datetime.strftime(report.data_hora,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
 	]
 
-def plot_graph(filename,title,axisX,incidents,actions):
+def plot_graph(filename,title,axisX,serie1,serie2,rotulos):
 
     fig, graph = plt.subplots()
-    graph.set_title(title + " - Correlacao: " + str(stats.pearsonr(incidents,actions)[0]))
+    graph.set_title(title + " - Correlacao: " + str(stats.pearsonr(serie1,serie2)[0]))
     graph.set_ylabel("Quantidade")
     graph.set_xlabel("Dias")
-    lineObjects = graph.plot(axisX,incidents, 'ro-',axisX,actions, 'bo-')
+    lineObjects = graph.plot(axisX,serie1, 'ro-',axisX,serie2, 'bo-')
     graph.xaxis_date()
     graph.xaxis.set_major_formatter(DateFormatter("%d/%m"))
     plt.xticks(axisX,rotation=90)
@@ -163,7 +199,7 @@ def plot_graph(filename,title,axisX,incidents,actions):
 
     #plt.legend(iter(lineObjects),('Incidentes', 'Acoes'),loc='lower center')
     #plt.legend(iter(lineObjects),('Incidentes', 'Acoes'),bbox_to_anchor=(0., 1.02, 1., .102),loc='lower center',mode="expand", borderaxespad=0)
-    plt.legend(iter(lineObjects),('Incidentes', 'Acoes'), borderaxespad=0, bbox_to_anchor=(1.11, 0.5),prop={'size':12})
+    plt.legend(iter(lineObjects),(rotulos), borderaxespad=0, bbox_to_anchor=(1.11, 0.5),prop={'size':12})
     #plt.savefig(filename,dpi=96)
     fig.set_size_inches(18.5,10.5)
     fig.savefig(filename,dpi=96)
@@ -253,7 +289,38 @@ def plot_total(filename,axisX,
 
     plt.tight_layout(pad=0.01, w_pad=0.01, h_pad=0.01)
     #plt.show()
-    plt.savefig(filename,dpi=96)
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig(filename,dpi=96)
+
+def plot_graph_bar(filename,title,axisX,axisY,rotulo,barColor):
+
+    index = np.arange(len(axisX))
+    fig, graph = plt.subplots()
+    graph.set_title(title)
+    graph.set_ylabel("Quantidade")
+    graph.set_xlabel("Dias")
+    plt.bar(axisX,axisY,color=barColor,label = rotulo, align='center')
+    graph.xaxis_date()
+    graph.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graph.grid(True)
+    plt.legend()
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(axisY)
+    fig.text(.91,.52,"Media = " + str(arithmeticMean),fontsize=10)
+    fig.text(.91,.5,"Minimo = " + str(minimum),fontsize=10)
+    fig.text(.91,.48,"Maximo = " + str(maximum),fontsize=10)
+    fig.text(.91,.46,"Variancia = " + str('%.2f' % round(variance,2)),fontsize=10)
+
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig(filename,dpi=96)
+
+def compute_statistics(serie):
+	"""
+		Computa as estatísticas de SERIE utilizando stats.describe
+	"""
+	sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(serie)
+
+	print "Size Data  = ",sizeData , "Minimo,Maximo = ",(minimum,maximum), "Média = ", arithmeticMean , "Variância = ", variance
 
 if __name__ == "__main__":
 	"""
@@ -268,36 +335,49 @@ if __name__ == "__main__":
 			datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
 			datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
 
-	#allReports = get_all_reports()
-	#print len(allReports)
-	allActionsDict = get_dict_all_actions()
-	allIncidentsDict = get_dict_all_incidents()
-
-	#for cop in get_all_cops():
-	#	for days in matchDays:
-		#for days in mdays:
-	#		print cop," -> ", days, " -> incidents = " , len(get_incidents_near_date(allIncidentsDict[cop],days,dateDistanceLimit,'day')),"acões = ",len(get_actions_near_date(allActionsDict[cop],days))
 	
+	# inicio da geracao dos dados para estatisticas
+	allActionsDict = get_dict_all_actions()
+	allPunctualActionsDict = get_dict_all_actions_by_type('PONTUAL')
+	allIntervalActionsDict = get_dict_all_actions_by_type('INTERVALO')
+	allIncidentsDict = get_dict_all_incidents()
+	allReports = get_all_reports()
+	allCops = get_all_cops()
 	incidentsSerie = {}
 	actionsSerie = {}
+	punctualActionsSerie = {}
+	intervalActionsSerie = {}
+	reportsSerie = []
 	incidentsSerie['TODOS'] = []
 	actionsSerie['TODOS'] = []
+	punctualActionsSerie['TODOS'] = []
+	intervalActionsSerie['TODOS'] = []
 	for day in matchDays:
 		#for day in mdays:
 			incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
 			actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
-	for cop in get_all_cops():
+			punctualActionsSerie['TODOS'].append(len(get_actions_near_date(allPunctualActionsDict['TODOS'],day)))
+			intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
+			reportsSerie.append(len(get_reports_near_date(allReports,day)))
+	for cop in allCops:
 		incidentsSerie[cop]=[]
 		actionsSerie[cop]=[]
+		punctualActionsSerie[cop] = []
+		intervalActionsSerie[cop] = []
 		for day in matchDays:
 		#for day in mdays:
 			incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
 			actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
+			punctualActionsSerie[cop].append(len(get_actions_near_date(allPunctualActionsDict[cop],day)))
+			intervalActionsSerie[cop].append(len(get_actions_near_date(allIntervalActionsDict[cop],day)))
 	
-	"""
 	
-	plot_total('todos.png',matchDays,
-	#plot_total(mdays,
+	# termino da geracao dos dados para estatisticas
+	
+	# inicio da criacao dos graficos
+
+	# Incidentes e Açoes por dia 
+	plot_total('incidentes_actions_todos.png',matchDays,
 		incidentsSerie['TODOS'],actionsSerie['TODOS'],
 		incidentsSerie['CCDA - RIO'],actionsSerie['CCDA - RIO'],
 		incidentsSerie['CCDA - BSB'],actionsSerie['CCDA - BSB'],
@@ -305,10 +385,62 @@ if __name__ == "__main__":
 		incidentsSerie['CCDA - REC'],actionsSerie['CCDA - REC'],
 		incidentsSerie['CCDA - FOR'],actionsSerie['CCDA - FOR'],
 		incidentsSerie['CCDA - BHZ'],actionsSerie['CCDA - BHZ'])
-	
+
+	# Incidentes e Açoes Intervalo por dia 
+	"""
+	plot_total('incidentes_actionsInterval_todos.png',matchDays,
+		incidentsSerie['TODOS'],intervalActionsSerie['TODOS'],
+		incidentsSerie['CCDA - RIO'],intervalActionsSerie['CCDA - RIO'],
+		incidentsSerie['CCDA - BSB'],intervalActionsSerie['CCDA - BSB'],
+		incidentsSerie['CCDA - SSA'],intervalActionsSerie['CCDA - SSA'],
+		incidentsSerie['CCDA - REC'],intervalActionsSerie['CCDA - REC'],
+		incidentsSerie['CCDA - FOR'],intervalActionsSerie['CCDA - FOR'],
+		incidentsSerie['CCDA - BHZ'],intervalActionsSerie['CCDA - BHZ'])
 	"""
 	
-	for cop in get_all_cops():
-		plot_graph(cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop])
+	for cop in allCops:
+		#incidentes por COP por dia
+		plot_graph_bar("incidentes_"+cop+".png",cop + " - Incidentes",matchDays,incidentsSerie[cop],"Incidentes",'r')
+		#acoes por COP por dia
+		plot_graph_bar("actions_"+cop+".png",cop + " - Acoes",matchDays,actionsSerie[cop],"Acoes",'b')
+		#acoes por COP pontuais por dia
+		plot_graph_bar("punctualActions_"+cop+".png",cop + " - Acoes Pontuais",matchDays,punctualActionsSerie[cop],"Acoes",'b')
+		#acoes intervalo por COP por dia
+		plot_graph_bar("intervalActions_"+cop+".png",cop + " - Acoes Intervalo",matchDays,intervalActionsSerie[cop],"Acoes",'b')
+		#Relacao incidentes vs Acoes por COP por dia
+		plot_graph("incidentes_actions_"+cop+".png",cop + " - Incidentes & Acoes",matchDays,incidentsSerie[cop],actionsSerie[cop],('Incidentes','Acoes'))
 	
+	# comparacao entre incidentes e relatos
+	#plot_graph("increl.png","Incidentes e Relatos",matchDays,incidentsSerie['TODOS'],reportsSerie,('incidentes','relatos'))
+
+	#Relatos de situacao por dia
+	plot_graph_bar("incidentes.png","Incidentes",matchDays,incidentsSerie['TODOS'],"Incidentes",'r')
+
+	#Incidentes por dia
+	plot_graph_bar("relatosDeSituacao.png","Relatos de Situacao",matchDays,reportsSerie,"Relatos",'g')
+
+	# Dados finais
+
+	print '-' * 100
+	print "Total de incidentes", len(allIncidentsDict['TODOS'])
+	compute_statistics(incidentsSerie['TODOS'])
+	print "Total de ações", len(allActionsDict['TODOS'])
+	compute_statistics(actionsSerie['TODOS'])
+	print "Total de ações pontuais", len(allPunctualActionsDict['TODOS'])
+	compute_statistics(punctualActionsSerie['TODOS'])
+	print "Total de ações intervalo", len(allIntervalActionsDict ['TODOS'])
+	compute_statistics(intervalActionsSerie['TODOS'])
+	print '-' * 100
 	
+
+	for cop in allCops:
+		print '-' * 100
+		print cop
+		print "Total de incidentes", len(allIncidentsDict[cop])
+		compute_statistics(incidentsSerie[cop])
+		print "Total de ações", len(allActionsDict[cop])
+		compute_statistics(actionsSerie[cop])
+		print "Total de ações pontuais", len(allPunctualActionsDict[cop])
+		compute_statistics(punctualActionsSerie[cop])
+		print "Total de ações intervalo", len(allIntervalActionsDict [cop])
+		compute_statistics(intervalActionsSerie[cop])		

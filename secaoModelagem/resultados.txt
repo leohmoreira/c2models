@@ -1,0 +1,80 @@
+----------------------------------------------------------------------------------------------------
+Total de incidentes 872
+Size Data  =  10 Minimo,Maximo =  (21, 171) Média =  66.5 Variância =  1970.72222222
+Total de ações 1887
+Size Data  =  10 Minimo,Maximo =  (53, 205) Média =  111.3 Variância =  2941.34444444
+Total de ações pontuais 828
+Size Data  =  10 Minimo,Maximo =  (8, 122) Média =  50.9 Variância =  1432.1
+Total de ações intervalo 1059
+Size Data  =  10 Minimo,Maximo =  (29, 104) Média =  60.4 Variância =  506.044444444
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+CCDA - FOR
+Total de incidentes 65
+Size Data  =  10 Minimo,Maximo =  (0, 57) Média =  6.5 Variância =  316.5
+Total de ações 230
+Size Data  =  10 Minimo,Maximo =  (0, 23) Média =  13.6 Variância =  49.3777777778
+Total de ações pontuais 32
+Size Data  =  10 Minimo,Maximo =  (0, 4) Média =  2.2 Variância =  3.73333333333
+Total de ações intervalo 198
+Size Data  =  10 Minimo,Maximo =  (0, 19) Média =  11.4 Variância =  31.1555555556
+----------------------------------------------------------------------------------------------------
+CCDA - BHZ
+Total de incidentes 132
+Size Data  =  10 Minimo,Maximo =  (0, 40) Média =  9.5 Variância =  221.166666667
+Total de ações 43
+Size Data  =  10 Minimo,Maximo =  (0, 26) Média =  4.0 Variância =  71.7777777778
+Total de ações pontuais 27
+Size Data  =  10 Minimo,Maximo =  (0, 25) Média =  2.7 Variância =  61.5666666667
+Total de ações intervalo 16
+Size Data  =  10 Minimo,Maximo =  (0, 10) Média =  1.3 Variância =  9.78888888889
+----------------------------------------------------------------------------------------------------
+CCDA - SSA
+Total de incidentes 215
+Size Data  =  10 Minimo,Maximo =  (1, 58) Média =  14.8 Variância =  505.955555556
+Total de ações 163
+Size Data  =  10 Minimo,Maximo =  (0, 34) Média =  8.9 Variância =  108.322222222
+Total de ações pontuais 25
+Size Data  =  10 Minimo,Maximo =  (0, 8) Média =  1.7 Variância =  6.01111111111
+Total de ações intervalo 138
+Size Data  =  10 Minimo,Maximo =  (0, 26) Média =  7.2 Variância =  68.4
+----------------------------------------------------------------------------------------------------
+CC2 - FTC - SSA
+Total de incidentes 38
+Size Data  =  10 Minimo,Maximo =  (0, 6) Média =  1.6 Variância =  3.82222222222
+Total de ações 2
+Size Data  =  10 Minimo,Maximo =  (0, 0) Média =  0.0 Variância =  0.0
+Total de ações pontuais 1
+Size Data  =  10 Minimo,Maximo =  (0, 0) Média =  0.0 Variância =  0.0
+Total de ações intervalo 1
+Size Data  =  10 Minimo,Maximo =  (0, 0) Média =  0.0 Variância =  0.0
+----------------------------------------------------------------------------------------------------
+CCDA - RIO
+Total de incidentes 212
+Size Data  =  10 Minimo,Maximo =  (0, 66) Média =  17.0 Variância =  487.333333333
+Total de ações 1032
+Size Data  =  10 Minimo,Maximo =  (12, 112) Média =  63.6 Variância =  1323.6
+Total de ações pontuais 471
+Size Data  =  10 Minimo,Maximo =  (3, 54) Média =  30.7 Variância =  378.9
+Total de ações intervalo 561
+Size Data  =  10 Minimo,Maximo =  (6, 61) Média =  32.9 Variância =  443.655555556
+----------------------------------------------------------------------------------------------------
+CCDA - BSB
+Total de incidentes 15
+Size Data  =  10 Minimo,Maximo =  (0, 6) Média =  1.3 Variância =  6.23333333333
+Total de ações 292
+Size Data  =  10 Minimo,Maximo =  (0, 103) Média =  13.5 Variância =  1019.83333333
+Total de ações pontuais 236
+Size Data  =  10 Minimo,Maximo =  (0, 92) Média =  11.6 Variância =  818.488888889
+Total de ações intervalo 56
+Size Data  =  10 Minimo,Maximo =  (0, 11) Média =  1.9 Variância =  12.1
+----------------------------------------------------------------------------------------------------
+CCDA - REC
+Total de incidentes 195
+Size Data  =  10 Minimo,Maximo =  (0, 41) Média =  15.8 Variância =  234.844444444
+Total de ações 125
+Size Data  =  10 Minimo,Maximo =  (0, 18) Média =  7.7 Variância =  50.0111111111
+Total de ações pontuais 36
+Size Data  =  10 Minimo,Maximo =  (0, 8) Média =  2.0 Variância =  5.33333333333
+Total de ações intervalo 89
+Size Data  =  10 Minimo,Maximo =  (0, 15) Média =  5.7 Variância =  31.3444444444
