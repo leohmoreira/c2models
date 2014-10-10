@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import time
 from matplotlib.dates import DateFormatter
 from scipy import stats
-from pylab import text
+from pylab import text,title
 import os, sys
 lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
 sys.path.append(lib_path_Pacificador)
@@ -196,11 +196,7 @@ def plot_graph(filename,title,axisX,serie1,serie2,rotulos):
     graph.xaxis.set_major_formatter(DateFormatter("%d/%m"))
     plt.xticks(axisX,rotation=90)
     graph.grid(True)
-
-    #plt.legend(iter(lineObjects),('Incidentes', 'Acoes'),loc='lower center')
-    #plt.legend(iter(lineObjects),('Incidentes', 'Acoes'),bbox_to_anchor=(0., 1.02, 1., .102),loc='lower center',mode="expand", borderaxespad=0)
     plt.legend(iter(lineObjects),(rotulos), borderaxespad=0, bbox_to_anchor=(1.11, 0.5),prop={'size':12})
-    #plt.savefig(filename,dpi=96)
     fig.set_size_inches(18.5,10.5)
     fig.savefig(filename,dpi=96)
 
@@ -294,7 +290,6 @@ def plot_total(filename,axisX,
 
 def plot_graph_bar(filename,title,axisX,axisY,rotulo,barColor):
 
-    index = np.arange(len(axisX))
     fig, graph = plt.subplots()
     graph.set_title(title)
     graph.set_ylabel("Quantidade")
@@ -310,9 +305,133 @@ def plot_graph_bar(filename,title,axisX,axisY,rotulo,barColor):
     fig.text(.91,.5,"Minimo = " + str(minimum),fontsize=10)
     fig.text(.91,.48,"Maximo = " + str(maximum),fontsize=10)
     fig.text(.91,.46,"Variancia = " + str('%.2f' % round(variance,2)),fontsize=10)
-
     fig.set_size_inches(18.5,10.5)
     fig.savefig(filename,dpi=96)
+
+def dateChangeFormat(item):
+
+	return datetime.strftime(item,"%d/%m")
+
+def plot_graph_bar_full(filename,title,axisX,
+							serie1,rotulo1,barColor1,
+							serie2,rotulo2,barColor2,
+							serie3,rotulo3,barColor3,
+							serie4,rotulo4,barColor4,
+							serie5,rotulo5,barColor5,
+							serie6,rotulo6,barColor6,
+							serie7,rotulo7,barColor7,
+							serie8,rotulo8,barColor8):
+
+    barWidth = 0.1
+    valuesAxisX = map(dateChangeFormat,axisX)
+    index = np.arange(len(axisX))
+    fig, graph = plt.subplots()
+    graph.set_title(title)
+    graph.set_ylabel("Quantidade")
+    graph.set_xlabel("Dias")
+    plt.bar(index,serie1,barWidth,color=barColor1,label = rotulo1)
+    plt.bar(index+barWidth,serie2,barWidth,color=barColor2,label = rotulo2)
+    plt.bar(index+2*barWidth,serie3,barWidth,color=barColor3,label = rotulo3)
+    plt.bar(index+3*barWidth,serie4,barWidth,color=barColor4,label = rotulo4)
+    plt.bar(index+4*barWidth,serie5,barWidth,color=barColor5,label = rotulo5)
+    plt.bar(index+5*barWidth,serie6,barWidth,color=barColor6,label = rotulo6)
+    plt.bar(index+6*barWidth,serie7,barWidth,color=barColor7,label = rotulo7)
+    plt.bar(index+7*barWidth,serie8,barWidth,color=barColor8,label = rotulo8)
+    graph.xaxis_date()
+    graph.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(index + barWidth,valuesAxisX)
+    graph.grid(True)
+    plt.legend()
+    #sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(axisY)
+    #fig.text(.91,.52,"Media = " + str(arithmeticMean),fontsize=10)
+    #fig.text(.91,.5,"Minimo = " + str(minimum),fontsize=10)
+    #fig.text(.91,.48,"Maximo = " + str(maximum),fontsize=10)
+    #fig.text(.91,.46,"Variancia = " + str('%.2f' % round(variance,2)),fontsize=10)
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig(filename,dpi=96)
+
+def plot_resume_cop(filename,cop,axisX,incidents,actions,punctualActions,intervalActions):
+
+    plt.close('all')
+    fig = plt.figure()
+
+    graphIncidentsActions = plt.subplot2grid((3,2),(0,0),colspan=2)      
+    graphIncidentsActions.set_title(cop+"\nIncidentes & Acoes - Correlacao: " + str(stats.pearsonr(incidents,actions)[0]))
+    graphIncidentsActions.set_ylabel("Quantidade")
+    graphIncidentsActions.set_xlabel("Dias")
+    linesIncidentsActions = graphIncidentsActions.plot(axisX,incidents, 'ro-',axisX,actions, 'bo-')
+    graphIncidentsActions.xaxis_date()
+    graphIncidentsActions.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphIncidentsActions.grid(True)
+    plt.legend(iter(linesIncidentsActions),('Incidentes','Acoes'),prop={'size':10})#, borderaxespad=0, bbox_to_anchor=(1.11, 0.5),prop={'size':12})
+
+    graphIncidents = plt.subplot2grid((3,2),(1,0))      
+    graphIncidents.set_title("Incidentes")
+    graphIncidents.set_ylabel("Quantidade")
+    graphIncidents.set_xlabel("Dias")
+    graphIncidents.plot(axisX,incidents, 'ro-')
+    graphIncidents.xaxis_date()
+    graphIncidents.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphIncidents.grid(True)
+
+    graphActions = plt.subplot2grid((3,2),(1,1))
+    graphActions.set_title("Acoes")
+    graphActions.set_ylabel("Quantidade")
+    graphActions.set_xlabel("Dias")
+    graphActions.plot(axisX,actions, 'bo-')
+    graphActions.xaxis_date()
+    graphActions.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphActions.grid(True)  
+
+    graphPunctualActions = plt.subplot2grid((3,2),(2,0))
+    graphPunctualActions.set_title("Acoes Pontuais")
+    graphPunctualActions.set_ylabel("Quantidade")
+    graphPunctualActions.set_xlabel("Dias")
+    graphPunctualActions.plot(axisX,punctualActions, 'go-')
+    graphPunctualActions.xaxis_date()
+    graphPunctualActions.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphPunctualActions.grid(True)  
+
+    graphIntervalActions = plt.subplot2grid((3,2),(2,1))
+    graphIntervalActions.set_title("Acoes Intervalo")
+    graphIntervalActions.set_ylabel("Quantidade")
+    graphIntervalActions.set_xlabel("Dias")
+    graphIntervalActions.plot(axisX,intervalActions, 'co-')
+    graphIntervalActions.xaxis_date()
+    graphIntervalActions.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphIntervalActions.grid(True)  
+    
+    plt.tight_layout(pad=0.01, w_pad=0.01, h_pad=0.01)
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig(filename,dpi=96)
+
+def plot_graph_pie(filename,titulo,serie):
+
+	"""
+		Constroi um grafico pizza
+	"""
+	validSerie = []
+	labels =[]
+	colors = ['yellowgreen', 'gold', 'lightskyblue', 'lightcoral','cyan','green','pink']
+	explode = [0.1,0.1,0.1,0.1,0.1,0.1,0.1]
+	for cop in serie.keys():
+		if cop != 'TODOS' :
+			validSerie.append(cop)
+			labels.append(cop)
+	sizes = []
+	for cop in validSerie:
+		sizes.append(len(serie[cop]))
+
+	plt.close('all')
+	title(titulo)
+	plt.pie(sizes,labels=labels,colors=colors,explode=explode,autopct='%1.1f%%')
+	plt.axis('equal')
+	plt.savefig(filename,dpi=96)
 
 def compute_statistics(serie):
 	"""
@@ -371,10 +490,40 @@ if __name__ == "__main__":
 			punctualActionsSerie[cop].append(len(get_actions_near_date(allPunctualActionsDict[cop],day)))
 			intervalActionsSerie[cop].append(len(get_actions_near_date(allIntervalActionsDict[cop],day)))
 	
-	
 	# termino da geracao dos dados para estatisticas
 	
 	# inicio da criacao dos graficos
+
+	# contribuição em incidentes
+	plot_graph_pie('pizzaIncidents.png',"Incidentes",allIncidentsDict)
+
+	# contribuição em acoes
+	plot_graph_pie('pizzaAcoes.png',"Acoes",allActionsDict)
+
+
+	# barra incidentes por dia
+	plot_graph_bar_full("bar_incidentes_todos.png","Incidentes",matchDays,
+						incidentsSerie['TODOS'],'TODOS','r',
+						incidentsSerie['CC2 - FTC - SSA'],'CC2 - FTC - SSA','#0000FF',
+						incidentsSerie['CCDA - BHZ'],'CCDA - BHZ','#A52A2A',
+						incidentsSerie['CCDA - BSB'],'CCDA - BSB','#DEB887',
+						incidentsSerie['CCDA - FOR'],'CCDA - FOR','#7FFF00',
+						incidentsSerie['CCDA - REC'],'CCDA - REC','#D2691E',
+						incidentsSerie['CCDA - RIO'],'CCDA - RIO','#9932CC',
+						incidentsSerie['CCDA - SSA'],'CCDA - SSA','#808080',
+						)
+
+	# barra acoes por dia
+	plot_graph_bar_full("bar_actions_todos.png","Acoes",matchDays,
+						actionsSerie['TODOS'],'TODOS','r',
+						actionsSerie['CC2 - FTC - SSA'],'CC2 - FTC - SSA','#0000FF',
+						actionsSerie['CCDA - BHZ'],'CCDA - BHZ','#A52A2A',
+						actionsSerie['CCDA - BSB'],'CCDA - BSB','#DEB887',
+						actionsSerie['CCDA - FOR'],'CCDA - FOR','#7FFF00',
+						actionsSerie['CCDA - REC'],'CCDA - REC','#D2691E',
+						actionsSerie['CCDA - RIO'],'CCDA - RIO','#9932CC',
+						actionsSerie['CCDA - SSA'],'CCDA - SSA','#808080',
+						)
 
 	# Incidentes e Açoes por dia 
 	plot_total('incidentes_actions_todos.png',matchDays,
@@ -409,15 +558,20 @@ if __name__ == "__main__":
 		plot_graph_bar("intervalActions_"+cop+".png",cop + " - Acoes Intervalo",matchDays,intervalActionsSerie[cop],"Acoes",'b')
 		#Relacao incidentes vs Acoes por COP por dia
 		plot_graph("incidentes_actions_"+cop+".png",cop + " - Incidentes & Acoes",matchDays,incidentsSerie[cop],actionsSerie[cop],('Incidentes','Acoes'))
+		#Resumo
+		plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
 	
 	# comparacao entre incidentes e relatos
 	#plot_graph("increl.png","Incidentes e Relatos",matchDays,incidentsSerie['TODOS'],reportsSerie,('incidentes','relatos'))
 
+	#somaIncRel = [sum(x) for x in zip(incidentsSerie['TODOS'],reportsSerie)]
+	#plot_graph("increl_final.png","Incidentes + Relatos por Acoes",matchDays,somaIncRel,actionsSerie['TODOS'],('inc rel','acoes'))
+
 	#Relatos de situacao por dia
-	plot_graph_bar("incidentes.png","Incidentes",matchDays,incidentsSerie['TODOS'],"Incidentes",'r')
+	plot_graph_bar("bar_incidentes.png","Incidentes",matchDays,incidentsSerie['TODOS'],"Incidentes",'r')
 
 	#Incidentes por dia
-	plot_graph_bar("relatosDeSituacao.png","Relatos de Situacao",matchDays,reportsSerie,"Relatos",'g')
+	plot_graph_bar("bar_relatosDeSituacao.png","Relatos de Situacao",matchDays,reportsSerie,"Relatos",'g')
 
 	# Dados finais
 
