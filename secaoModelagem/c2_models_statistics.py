@@ -485,10 +485,19 @@ if __name__ == "__main__":
 		intervalActionsSerie[cop] = []
 		for day in matchDays:
 		#for day in mdays:
+			print cop
+			print "Incidentes"
+			print day, len(get_incidents_near_date(allIncidentsDict[cop],day))
 			incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
+			print "Acoes"
+			print day, len(get_actions_near_date(allActionsDict[cop],day))
 			actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
 			punctualActionsSerie[cop].append(len(get_actions_near_date(allPunctualActionsDict[cop],day)))
+			print "Acoes Pontuais"
+			print day, len(get_actions_near_date(allPunctualActionsDict[cop],day))
 			intervalActionsSerie[cop].append(len(get_actions_near_date(allIntervalActionsDict[cop],day)))
+			print "Acoes Intervalo"
+			print day, len(get_actions_near_date(allIntervalActionsDict[cop],day))
 	
 	# termino da geracao dos dados para estatisticas
 	

@@ -1,3 +1,633 @@
+CCDA - FOR
+Incidentes
+2013-06-15 00:00:00 0
+Acoes
+2013-06-15 00:00:00 6
+Acoes Pontuais
+2013-06-15 00:00:00 0
+Acoes Intervalo
+2013-06-15 00:00:00 6
+CCDA - FOR
+Incidentes
+2013-06-16 00:00:00 1
+Acoes
+2013-06-16 00:00:00 14
+Acoes Pontuais
+2013-06-16 00:00:00 4
+Acoes Intervalo
+2013-06-16 00:00:00 10
+CCDA - FOR
+Incidentes
+2013-06-17 00:00:00 0
+Acoes
+2013-06-17 00:00:00 17
+Acoes Pontuais
+2013-06-17 00:00:00 4
+Acoes Intervalo
+2013-06-17 00:00:00 13
+CCDA - FOR
+Incidentes
+2013-06-19 00:00:00 2
+Acoes
+2013-06-19 00:00:00 19
+Acoes Pontuais
+2013-06-19 00:00:00 4
+Acoes Intervalo
+2013-06-19 00:00:00 15
+CCDA - FOR
+Incidentes
+2013-06-20 00:00:00 0
+Acoes
+2013-06-20 00:00:00 8
+Acoes Pontuais
+2013-06-20 00:00:00 0
+Acoes Intervalo
+2013-06-20 00:00:00 8
+CCDA - FOR
+Incidentes
+2013-06-22 00:00:00 0
+Acoes
+2013-06-22 00:00:00 13
+Acoes Pontuais
+2013-06-22 00:00:00 1
+Acoes Intervalo
+2013-06-22 00:00:00 12
+CCDA - FOR
+Incidentes
+2013-06-23 00:00:00 4
+Acoes
+2013-06-23 00:00:00 23
+Acoes Pontuais
+2013-06-23 00:00:00 4
+Acoes Intervalo
+2013-06-23 00:00:00 19
+CCDA - FOR
+Incidentes
+2013-06-26 00:00:00 1
+Acoes
+2013-06-26 00:00:00 17
+Acoes Pontuais
+2013-06-26 00:00:00 1
+Acoes Intervalo
+2013-06-26 00:00:00 16
+CCDA - FOR
+Incidentes
+2013-06-27 00:00:00 57
+Acoes
+2013-06-27 00:00:00 19
+Acoes Pontuais
+2013-06-27 00:00:00 4
+Acoes Intervalo
+2013-06-27 00:00:00 15
+CCDA - FOR
+Incidentes
+2013-06-30 00:00:00 0
+Acoes
+2013-06-30 00:00:00 0
+Acoes Pontuais
+2013-06-30 00:00:00 0
+Acoes Intervalo
+2013-06-30 00:00:00 0
+CCDA - BHZ
+Incidentes
+2013-06-15 00:00:00 4
+Acoes
+2013-06-15 00:00:00 0
+Acoes Pontuais
+2013-06-15 00:00:00 0
+Acoes Intervalo
+2013-06-15 00:00:00 0
+CCDA - BHZ
+Incidentes
+2013-06-16 00:00:00 0
+Acoes
+2013-06-16 00:00:00 0
+Acoes Pontuais
+2013-06-16 00:00:00 0
+Acoes Intervalo
+2013-06-16 00:00:00 0
+CCDA - BHZ
+Incidentes
+2013-06-17 00:00:00 10
+Acoes
+2013-06-17 00:00:00 26
+Acoes Pontuais
+2013-06-17 00:00:00 25
+Acoes Intervalo
+2013-06-17 00:00:00 1
+CCDA - BHZ
+Incidentes
+2013-06-19 00:00:00 0
+Acoes
+2013-06-19 00:00:00 0
+Acoes Pontuais
+2013-06-19 00:00:00 0
+Acoes Intervalo
+2013-06-19 00:00:00 0
+CCDA - BHZ
+Incidentes
+2013-06-20 00:00:00 4
+Acoes
+2013-06-20 00:00:00 0
+Acoes Pontuais
+2013-06-20 00:00:00 0
+Acoes Intervalo
+2013-06-20 00:00:00 0
+CCDA - BHZ
+Incidentes
+2013-06-22 00:00:00 34
+Acoes
+2013-06-22 00:00:00 0
+Acoes Pontuais
+2013-06-22 00:00:00 0
+Acoes Intervalo
+2013-06-22 00:00:00 0
+CCDA - BHZ
+Incidentes
+2013-06-23 00:00:00 2
+Acoes
+2013-06-23 00:00:00 0
+Acoes Pontuais
+2013-06-23 00:00:00 0
+Acoes Intervalo
+2013-06-23 00:00:00 0
+CCDA - BHZ
+Incidentes
+2013-06-26 00:00:00 40
+Acoes
+2013-06-26 00:00:00 11
+Acoes Pontuais
+2013-06-26 00:00:00 1
+Acoes Intervalo
+2013-06-26 00:00:00 10
+CCDA - BHZ
+Incidentes
+2013-06-27 00:00:00 1
+Acoes
+2013-06-27 00:00:00 3
+Acoes Pontuais
+2013-06-27 00:00:00 1
+Acoes Intervalo
+2013-06-27 00:00:00 2
+CCDA - BHZ
+Incidentes
+2013-06-30 00:00:00 0
+Acoes
+2013-06-30 00:00:00 0
+Acoes Pontuais
+2013-06-30 00:00:00 0
+Acoes Intervalo
+2013-06-30 00:00:00 0
+CCDA - SSA
+Incidentes
+2013-06-15 00:00:00 2
+Acoes
+2013-06-15 00:00:00 0
+Acoes Pontuais
+2013-06-15 00:00:00 0
+Acoes Intervalo
+2013-06-15 00:00:00 0
+CCDA - SSA
+Incidentes
+2013-06-16 00:00:00 1
+Acoes
+2013-06-16 00:00:00 0
+Acoes Pontuais
+2013-06-16 00:00:00 0
+Acoes Intervalo
+2013-06-16 00:00:00 0
+CCDA - SSA
+Incidentes
+2013-06-17 00:00:00 8
+Acoes
+2013-06-17 00:00:00 7
+Acoes Pontuais
+2013-06-17 00:00:00 3
+Acoes Intervalo
+2013-06-17 00:00:00 4
+CCDA - SSA
+Incidentes
+2013-06-19 00:00:00 3
+Acoes
+2013-06-19 00:00:00 7
+Acoes Pontuais
+2013-06-19 00:00:00 1
+Acoes Intervalo
+2013-06-19 00:00:00 6
+CCDA - SSA
+Incidentes
+2013-06-20 00:00:00 58
+Acoes
+2013-06-20 00:00:00 34
+Acoes Pontuais
+2013-06-20 00:00:00 8
+Acoes Intervalo
+2013-06-20 00:00:00 26
+CCDA - SSA
+Incidentes
+2013-06-22 00:00:00 56
+Acoes
+2013-06-22 00:00:00 16
+Acoes Pontuais
+2013-06-22 00:00:00 2
+Acoes Intervalo
+2013-06-22 00:00:00 14
+CCDA - SSA
+Incidentes
+2013-06-23 00:00:00 1
+Acoes
+2013-06-23 00:00:00 5
+Acoes Pontuais
+2013-06-23 00:00:00 0
+Acoes Intervalo
+2013-06-23 00:00:00 5
+CCDA - SSA
+Incidentes
+2013-06-26 00:00:00 1
+Acoes
+2013-06-26 00:00:00 0
+Acoes Pontuais
+2013-06-26 00:00:00 0
+Acoes Intervalo
+2013-06-26 00:00:00 0
+CCDA - SSA
+Incidentes
+2013-06-27 00:00:00 10
+Acoes
+2013-06-27 00:00:00 6
+Acoes Pontuais
+2013-06-27 00:00:00 2
+Acoes Intervalo
+2013-06-27 00:00:00 4
+CCDA - SSA
+Incidentes
+2013-06-30 00:00:00 8
+Acoes
+2013-06-30 00:00:00 14
+Acoes Pontuais
+2013-06-30 00:00:00 1
+Acoes Intervalo
+2013-06-30 00:00:00 13
+CC2 - FTC - SSA
+Incidentes
+2013-06-15 00:00:00 0
+Acoes
+2013-06-15 00:00:00 0
+Acoes Pontuais
+2013-06-15 00:00:00 0
+Acoes Intervalo
+2013-06-15 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-16 00:00:00 1
+Acoes
+2013-06-16 00:00:00 0
+Acoes Pontuais
+2013-06-16 00:00:00 0
+Acoes Intervalo
+2013-06-16 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-17 00:00:00 6
+Acoes
+2013-06-17 00:00:00 0
+Acoes Pontuais
+2013-06-17 00:00:00 0
+Acoes Intervalo
+2013-06-17 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-19 00:00:00 3
+Acoes
+2013-06-19 00:00:00 0
+Acoes Pontuais
+2013-06-19 00:00:00 0
+Acoes Intervalo
+2013-06-19 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-20 00:00:00 3
+Acoes
+2013-06-20 00:00:00 0
+Acoes Pontuais
+2013-06-20 00:00:00 0
+Acoes Intervalo
+2013-06-20 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-22 00:00:00 2
+Acoes
+2013-06-22 00:00:00 0
+Acoes Pontuais
+2013-06-22 00:00:00 0
+Acoes Intervalo
+2013-06-22 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-23 00:00:00 1
+Acoes
+2013-06-23 00:00:00 0
+Acoes Pontuais
+2013-06-23 00:00:00 0
+Acoes Intervalo
+2013-06-23 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-26 00:00:00 0
+Acoes
+2013-06-26 00:00:00 0
+Acoes Pontuais
+2013-06-26 00:00:00 0
+Acoes Intervalo
+2013-06-26 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-27 00:00:00 0
+Acoes
+2013-06-27 00:00:00 0
+Acoes Pontuais
+2013-06-27 00:00:00 0
+Acoes Intervalo
+2013-06-27 00:00:00 0
+CC2 - FTC - SSA
+Incidentes
+2013-06-30 00:00:00 0
+Acoes
+2013-06-30 00:00:00 0
+Acoes Pontuais
+2013-06-30 00:00:00 0
+Acoes Intervalo
+2013-06-30 00:00:00 0
+CCDA - RIO
+Incidentes
+2013-06-15 00:00:00 2
+Acoes
+2013-06-15 00:00:00 89
+Acoes Pontuais
+2013-06-15 00:00:00 28
+Acoes Intervalo
+2013-06-15 00:00:00 61
+CCDA - RIO
+Incidentes
+2013-06-16 00:00:00 32
+Acoes
+2013-06-16 00:00:00 112
+Acoes Pontuais
+2013-06-16 00:00:00 54
+Acoes Intervalo
+2013-06-16 00:00:00 58
+CCDA - RIO
+Incidentes
+2013-06-17 00:00:00 30
+Acoes
+2013-06-17 00:00:00 75
+Acoes Pontuais
+2013-06-17 00:00:00 50
+Acoes Intervalo
+2013-06-17 00:00:00 25
+CCDA - RIO
+Incidentes
+2013-06-19 00:00:00 5
+Acoes
+2013-06-19 00:00:00 83
+Acoes Pontuais
+2013-06-19 00:00:00 44
+Acoes Intervalo
+2013-06-19 00:00:00 39
+CCDA - RIO
+Incidentes
+2013-06-20 00:00:00 66
+Acoes
+2013-06-20 00:00:00 104
+Acoes Pontuais
+2013-06-20 00:00:00 48
+Acoes Intervalo
+2013-06-20 00:00:00 56
+CCDA - RIO
+Incidentes
+2013-06-22 00:00:00 1
+Acoes
+2013-06-22 00:00:00 18
+Acoes Pontuais
+2013-06-22 00:00:00 3
+Acoes Intervalo
+2013-06-22 00:00:00 15
+CCDA - RIO
+Incidentes
+2013-06-23 00:00:00 2
+Acoes
+2013-06-23 00:00:00 12
+Acoes Pontuais
+2013-06-23 00:00:00 6
+Acoes Intervalo
+2013-06-23 00:00:00 6
+CCDA - RIO
+Incidentes
+2013-06-26 00:00:00 0
+Acoes
+2013-06-26 00:00:00 25
+Acoes Pontuais
+2013-06-26 00:00:00 6
+Acoes Intervalo
+2013-06-26 00:00:00 19
+CCDA - RIO
+Incidentes
+2013-06-27 00:00:00 1
+Acoes
+2013-06-27 00:00:00 43
+Acoes Pontuais
+2013-06-27 00:00:00 35
+Acoes Intervalo
+2013-06-27 00:00:00 8
+CCDA - RIO
+Incidentes
+2013-06-30 00:00:00 31
+Acoes
+2013-06-30 00:00:00 75
+Acoes Pontuais
+2013-06-30 00:00:00 33
+Acoes Intervalo
+2013-06-30 00:00:00 42
+CCDA - BSB
+Incidentes
+2013-06-15 00:00:00 6
+Acoes
+2013-06-15 00:00:00 103
+Acoes Pontuais
+2013-06-15 00:00:00 92
+Acoes Intervalo
+2013-06-15 00:00:00 11
+CCDA - BSB
+Incidentes
+2013-06-16 00:00:00 0
+Acoes
+2013-06-16 00:00:00 16
+Acoes Pontuais
+2013-06-16 00:00:00 14
+Acoes Intervalo
+2013-06-16 00:00:00 2
+CCDA - BSB
+Incidentes
+2013-06-17 00:00:00 0
+Acoes
+2013-06-17 00:00:00 6
+Acoes Pontuais
+2013-06-17 00:00:00 4
+Acoes Intervalo
+2013-06-17 00:00:00 2
+CCDA - BSB
+Incidentes
+2013-06-19 00:00:00 0
+Acoes
+2013-06-19 00:00:00 0
+Acoes Pontuais
+2013-06-19 00:00:00 0
+Acoes Intervalo
+2013-06-19 00:00:00 0
+CCDA - BSB
+Incidentes
+2013-06-20 00:00:00 6
+Acoes
+2013-06-20 00:00:00 10
+Acoes Pontuais
+2013-06-20 00:00:00 6
+Acoes Intervalo
+2013-06-20 00:00:00 4
+CCDA - BSB
+Incidentes
+2013-06-22 00:00:00 1
+Acoes
+2013-06-22 00:00:00 0
+Acoes Pontuais
+2013-06-22 00:00:00 0
+Acoes Intervalo
+2013-06-22 00:00:00 0
+CCDA - BSB
+Incidentes
+2013-06-23 00:00:00 0
+Acoes
+2013-06-23 00:00:00 0
+Acoes Pontuais
+2013-06-23 00:00:00 0
+Acoes Intervalo
+2013-06-23 00:00:00 0
+CCDA - BSB
+Incidentes
+2013-06-26 00:00:00 0
+Acoes
+2013-06-26 00:00:00 0
+Acoes Pontuais
+2013-06-26 00:00:00 0
+Acoes Intervalo
+2013-06-26 00:00:00 0
+CCDA - BSB
+Incidentes
+2013-06-27 00:00:00 0
+Acoes
+2013-06-27 00:00:00 0
+Acoes Pontuais
+2013-06-27 00:00:00 0
+Acoes Intervalo
+2013-06-27 00:00:00 0
+CCDA - BSB
+Incidentes
+2013-06-30 00:00:00 0
+Acoes
+2013-06-30 00:00:00 0
+Acoes Pontuais
+2013-06-30 00:00:00 0
+Acoes Intervalo
+2013-06-30 00:00:00 0
+CCDA - REC
+Incidentes
+2013-06-15 00:00:00 7
+Acoes
+2013-06-15 00:00:00 7
+Acoes Pontuais
+2013-06-15 00:00:00 2
+Acoes Intervalo
+2013-06-15 00:00:00 5
+CCDA - REC
+Incidentes
+2013-06-16 00:00:00 33
+Acoes
+2013-06-16 00:00:00 5
+Acoes Pontuais
+2013-06-16 00:00:00 2
+Acoes Intervalo
+2013-06-16 00:00:00 3
+CCDA - REC
+Incidentes
+2013-06-17 00:00:00 17
+Acoes
+2013-06-17 00:00:00 6
+Acoes Pontuais
+2013-06-17 00:00:00 2
+Acoes Intervalo
+2013-06-17 00:00:00 4
+CCDA - REC
+Incidentes
+2013-06-19 00:00:00 41
+Acoes
+2013-06-19 00:00:00 16
+Acoes Pontuais
+2013-06-19 00:00:00 2
+Acoes Intervalo
+2013-06-19 00:00:00 14
+CCDA - REC
+Incidentes
+2013-06-20 00:00:00 34
+Acoes
+2013-06-20 00:00:00 18
+Acoes Pontuais
+2013-06-20 00:00:00 8
+Acoes Intervalo
+2013-06-20 00:00:00 10
+CCDA - REC
+Incidentes
+2013-06-22 00:00:00 11
+Acoes
+2013-06-22 00:00:00 8
+Acoes Pontuais
+2013-06-22 00:00:00 2
+Acoes Intervalo
+2013-06-22 00:00:00 6
+CCDA - REC
+Incidentes
+2013-06-23 00:00:00 15
+Acoes
+2013-06-23 00:00:00 17
+Acoes Pontuais
+2013-06-23 00:00:00 2
+Acoes Intervalo
+2013-06-23 00:00:00 15
+CCDA - REC
+Incidentes
+2013-06-26 00:00:00 0
+Acoes
+2013-06-26 00:00:00 0
+Acoes Pontuais
+2013-06-26 00:00:00 0
+Acoes Intervalo
+2013-06-26 00:00:00 0
+CCDA - REC
+Incidentes
+2013-06-27 00:00:00 0
+Acoes
+2013-06-27 00:00:00 0
+Acoes Pontuais
+2013-06-27 00:00:00 0
+Acoes Intervalo
+2013-06-27 00:00:00 0
+CCDA - REC
+Incidentes
+2013-06-30 00:00:00 0
+Acoes
+2013-06-30 00:00:00 0
+Acoes Pontuais
+2013-06-30 00:00:00 0
+Acoes Intervalo
+2013-06-30 00:00:00 0
 ----------------------------------------------------------------------------------------------------
 Total de incidentes 872
 Size Data  =  10 Minimo,Maximo =  (21, 171) Média =  66.5 Variância =  1970.72222222
