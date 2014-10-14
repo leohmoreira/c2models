@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*- 
-
+from scipy.misc import factorial
 from datetime import datetime
+from scipy.optimize import curve_fit
+import math
 import collections
 import argparse
 import numpy as np
@@ -433,6 +435,36 @@ def plot_graph_pie(filename,titulo,serie):
 	plt.axis('equal')
 	plt.savefig(filename,dpi=96)
 
+def graph_incidents_per_action(cop,incidents,actions):
+
+	#z = np.polyfit(actions,incidents,15)
+	#print cop, ' === ',z
+	#f = np.poly1d(z)
+	
+	incAction = {}
+	for i, a in zip(incidents,actions):
+		incAction[a] = i
+	tmpAction =[]
+	tmpInc =[]
+	tmpNew = []
+	for a in sorted(incAction):
+		tmpAction.append(a)
+		tmpInc.append(incAction[a])
+	print cop, " === ",tmpAction
+	#popt, pocv = curve_fit(func,tmpAction,tmpInc)
+	#print popt
+	plt.close('all')
+	plt.plot(tmpAction,tmpInc,'ro-')#,tmpAction,func(tmpAction,popt[0],popt[1],popt[2],popt[3]),'g^-')
+	plt.grid(True)
+	plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
+	#plt.show()
+
+def func (k):
+
+	#return (math.pow(lamb,k)/factorial(k)) * np.exp(-lamb)
+	return (math.pow(1,k)/factorial(k)) * np.exp(1)
+
+	
 def compute_statistics(serie):
 	"""
 		Computa as estatísticas de SERIE utilizando stats.describe
@@ -440,6 +472,39 @@ def compute_statistics(serie):
 	sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(serie)
 
 	print "Size Data  = ",sizeData , "Minimo,Maximo = ",(minimum,maximum), "Média = ", arithmeticMean , "Variância = ", variance
+
+def inter_arrrival_distribution(cop,incidentSerie, stepInterval = 300,limit = 24*3600):
+
+	"""
+		Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
+		Salva em arquivo
+	"""
+	arrivalTime = []
+	#for i in allIncidentsDict['CCDA - SSA']:
+	for i in incidentSerie[cop]:
+		arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+	sortedArrivalTime =  sorted(arrivalTime)
+	interArrivalTime = []
+	for i in range(0,len(sortedArrivalTime)-1):
+		interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+	interval = (sortedArrivalTime[-1] - sortedArrivalTime[0]).total_seconds()
+	
+	#stepInterval = 300 # 1 hora em segundos
+	qtdInterArrival = []
+	axisXInterArrival = []
+	#for i in np.arange(0,interval+stepInterval,stepInterval):
+	for i in np.arange(0,limit,stepInterval):
+			qtdInterArrival.append(float(len([t for t in interArrivalTime if t>=i and t<i+stepInterval]))/float(len(interArrivalTime)))
+			axisXInterArrival.append(float(i))
+
+	#popt, pocv = curve_fit(func,axisXInterArrival,qtdInterArrival)
+	#print cop, popt
+	fig, graph = plt.subplots()
+	plt.close('all')
+	graph.plot(axisXInterArrival,qtdInterArrival,'ro-',axisXInterArrival,stats.poisson.pmf(axisXInterArrival,1.5),'g^-')
+	graph.grid(True)
+	fig.set_size_inches(18.5,10.5)
+	fig.savefig('Poisson_Incidents'+cop+'.png',dpi=96)
 
 if __name__ == "__main__":
 	"""
@@ -479,30 +544,67 @@ if __name__ == "__main__":
 			intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
 			reportsSerie.append(len(get_reports_near_date(allReports,day)))
 	for cop in allCops:
+		inter_arrrival_distribution(cop,allIncidentsDict, stepInterval = 300,limit = 24*3600)
 		incidentsSerie[cop]=[]
 		actionsSerie[cop]=[]
 		punctualActionsSerie[cop] = []
 		intervalActionsSerie[cop] = []
 		for day in matchDays:
 		#for day in mdays:
-			print cop
-			print "Incidentes"
-			print day, len(get_incidents_near_date(allIncidentsDict[cop],day))
+			#print cop
+			#print "Incidentes"
+			#print day, len(get_incidents_near_date(allIncidentsDict[cop],day))
 			incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
-			print "Acoes"
-			print day, len(get_actions_near_date(allActionsDict[cop],day))
+			#print "Acoes"
+			#print day, len(get_actions_near_date(allActionsDict[cop],day))
 			actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
 			punctualActionsSerie[cop].append(len(get_actions_near_date(allPunctualActionsDict[cop],day)))
-			print "Acoes Pontuais"
-			print day, len(get_actions_near_date(allPunctualActionsDict[cop],day))
+			#print "Acoes Pontuais"
+			#print day, len(get_actions_near_date(allPunctualActionsDict[cop],day))
 			intervalActionsSerie[cop].append(len(get_actions_near_date(allIntervalActionsDict[cop],day)))
-			print "Acoes Intervalo"
-			print day, len(get_actions_near_date(allIntervalActionsDict[cop],day))
+			#print "Acoes Intervalo"
+			#print day, len(get_actions_near_date(allIntervalActionsDict[cop],day))
+		#qtde incidentes por qtde acoes
+		#graph_incidents_per_action(cop,incidentsSerie[cop],actionsSerie[cop])
+
+	tmpQtdeAction = []
+	for cop in allCops:
+		for qtd in actionsSerie[cop]:
+			tmpQtdeAction.append(qtd)
+	print set(tmpQtdeAction)
+
+	# calculo de interarrival time
+	"""
+	arrivalTime = []
+	for i in allIncidentsDict['CCDA - SSA']:
+		arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+	sortedArrivalTime =  sorted(arrivalTime)
+	interArrivalTime = []
+	for i in range(0,len(sortedArrivalTime)-1):
+		interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+	interval = (sortedArrivalTime[-1] - sortedArrivalTime[0]).total_seconds()
 	
+	stepInterval = 300 # 1 hora em segundos
+	qtdInterArrival = []
+	axisXInterArrival = []
+	#for i in np.arange(0,interval+stepInterval,stepInterval):
+	for i in np.arange(0,24*3600,stepInterval):
+			qtdInterArrival.append(len([t for t in interArrivalTime if t>=i and t<i+stepInterval]))
+			axisXInterArrival.append(i)
+
+
+	plt.close('all')
+	plt.plot(axisXInterArrival,qtdInterArrival,'ro-')#,tmpAction,func(tmpAction,popt[0],popt[1],popt[2],popt[3]),'g^-')
+	plt.grid(True)
+	plt.show()
+
+	"""
 	# termino da geracao dos dados para estatisticas
 	
+	#graph_incidents_per_action("RJ",incidentsSerie['CCDA - RIO'],actionsSerie['CCDA - RIO'])
+	#graph_incidents_per_action("SSA",incidentsSerie['CCDA - SSA'],actionsSerie['CCDA - SSA'])
 	# inicio da criacao dos graficos
-
+	"""
 	# contribuição em incidentes
 	plot_graph_pie('pizzaIncidents.png',"Incidentes",allIncidentsDict)
 
@@ -544,18 +646,6 @@ if __name__ == "__main__":
 		incidentsSerie['CCDA - FOR'],actionsSerie['CCDA - FOR'],
 		incidentsSerie['CCDA - BHZ'],actionsSerie['CCDA - BHZ'])
 
-	# Incidentes e Açoes Intervalo por dia 
-	"""
-	plot_total('incidentes_actionsInterval_todos.png',matchDays,
-		incidentsSerie['TODOS'],intervalActionsSerie['TODOS'],
-		incidentsSerie['CCDA - RIO'],intervalActionsSerie['CCDA - RIO'],
-		incidentsSerie['CCDA - BSB'],intervalActionsSerie['CCDA - BSB'],
-		incidentsSerie['CCDA - SSA'],intervalActionsSerie['CCDA - SSA'],
-		incidentsSerie['CCDA - REC'],intervalActionsSerie['CCDA - REC'],
-		incidentsSerie['CCDA - FOR'],intervalActionsSerie['CCDA - FOR'],
-		incidentsSerie['CCDA - BHZ'],intervalActionsSerie['CCDA - BHZ'])
-	"""
-	
 	for cop in allCops:
 		#incidentes por COP por dia
 		plot_graph_bar("incidentes_"+cop+".png",cop + " - Incidentes",matchDays,incidentsSerie[cop],"Incidentes",'r')
@@ -606,4 +696,5 @@ if __name__ == "__main__":
 		print "Total de ações pontuais", len(allPunctualActionsDict[cop])
 		compute_statistics(punctualActionsSerie[cop])
 		print "Total de ações intervalo", len(allIntervalActionsDict [cop])
-		compute_statistics(intervalActionsSerie[cop])		
+		compute_statistics(intervalActionsSerie[cop])
+	"""
