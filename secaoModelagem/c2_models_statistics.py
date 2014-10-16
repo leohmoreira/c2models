@@ -459,12 +459,11 @@ def graph_incidents_per_action(cop,incidents,actions):
 	plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
 	#plt.show()
 
-def func (k):
+def func(x,p):
 
-	#return (math.pow(lamb,k)/factorial(k)) * np.exp(-lamb)
-	return (math.pow(1,k)/factorial(k)) * np.exp(1)
-
-	
+	#return p * np.exp(-p*x)
+	return ((1 - p)**x)*p
+		
 def compute_statistics(serie):
 	"""
 		Computa as estatísticas de SERIE utilizando stats.describe
@@ -487,24 +486,41 @@ def inter_arrrival_distribution(cop,incidentSerie, stepInterval = 300,limit = 24
 	interArrivalTime = []
 	for i in range(0,len(sortedArrivalTime)-1):
 		interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
-	interval = (sortedArrivalTime[-1] - sortedArrivalTime[0]).total_seconds()
+	
+	#interval = (sortedArrivalTime[-1] - sortedArrivalTime[0]).total_seconds()
+	interval = 12*3600
 	
 	#stepInterval = 300 # 1 hora em segundos
 	qtdInterArrival = []
 	axisXInterArrival = []
-	#for i in np.arange(0,interval+stepInterval,stepInterval):
+	qtdeTotal = 0
 	for i in np.arange(0,limit,stepInterval):
-			qtdInterArrival.append(float(len([t for t in interArrivalTime if t>=i and t<i+stepInterval]))/float(len(interArrivalTime)))
-			axisXInterArrival.append(float(i))
+		qtdeTotal = qtdeTotal + len([t for t in interArrivalTime if t>i and t<=i+stepInterval]) 
+		qtdInterArrival.append(len([t for t in interArrivalTime if t>i and t<=i+stepInterval]))
+		axisXInterArrival.append(i)
+	
+	percInterArrival = []
+		
+	for q in qtdInterArrival:
+		percInterArrival.append(float(q)/float(qtdeTotal))
+	#print percInterArrival
+	popt, pocv = curve_fit(func,np.array(axisXInterArrival),np.array(percInterArrival))
+	print popt
 
-	#popt, pocv = curve_fit(func,axisXInterArrival,qtdInterArrival)
-	#print cop, popt
+	#z = np.polyfit(axisXInterArrival,qtdInterArrival,3)
+	#p = np.poly1d(z)
 	fig, graph = plt.subplots()
 	plt.close('all')
-	graph.plot(axisXInterArrival,qtdInterArrival,'ro-',axisXInterArrival,stats.poisson.pmf(axisXInterArrival,1.5),'g^-')
-	graph.grid(True)
-	fig.set_size_inches(18.5,10.5)
-	fig.savefig('Poisson_Incidents'+cop+'.png',dpi=96)
+	
+	#graph.plot(axisXInterArrival,qtdInterArrival,'ro-',axisXInterArrival,func(np.array(axisXInterArrival),*popt),'g^-')
+	index = np.arange(0,limit,stepInterval)
+	plt.plot(axisXInterArrival,percInterArrival,'ro-',axisXInterArrival,func(np.array(axisXInterArrival),*popt),'g^-')
+	plt.bar(axisXInterArrival,percInterArrival,width=stepInterval)
+	plt.xticks(axisXInterArrival,rotation=90)
+	#graph.bar(axisXInterArrival,percInterArrival)
+	plt.grid(True)
+	#plt.set_size_inches(18.5,10.5)
+	plt.savefig('Poisson_Incidents'+cop+'.png',dpi=96)
 
 if __name__ == "__main__":
 	"""
@@ -544,7 +560,7 @@ if __name__ == "__main__":
 			intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
 			reportsSerie.append(len(get_reports_near_date(allReports,day)))
 	for cop in allCops:
-		inter_arrrival_distribution(cop,allIncidentsDict, stepInterval = 300,limit = 24*3600)
+		#inter_arrrival_distribution(cop,allIncidentsDict, stepInterval = 300,limit = 2*3600)
 		incidentsSerie[cop]=[]
 		actionsSerie[cop]=[]
 		punctualActionsSerie[cop] = []
@@ -566,7 +582,7 @@ if __name__ == "__main__":
 			#print day, len(get_actions_near_date(allIntervalActionsDict[cop],day))
 		#qtde incidentes por qtde acoes
 		#graph_incidents_per_action(cop,incidentsSerie[cop],actionsSerie[cop])
-
+	inter_arrrival_distribution('CCDA - RIO',allIncidentsDict, stepInterval = 300,limit = 2*3600)
 	tmpQtdeAction = []
 	for cop in allCops:
 		for qtd in actionsSerie[cop]:
