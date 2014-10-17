@@ -462,7 +462,22 @@ def graph_incidents_per_action(cop,incidents,actions):
 def func(x,p):
 
 	#return p * np.exp(-p*x)
-	return ((1 - p)**x)*p
+	to = 0
+	#traceSerie = []
+	trace = []
+	traceInterval = []
+	axisX = []
+	while to < 20 * 24 * 3600:
+		to = to + 60
+		if np.random.uniform(0,1) <= p:
+			trace.append(to)
+
+	for i in range(0,len(trace)-1):
+		traceInterval.append(trace[i+1] - trace[i])
+
+	return len([t for t in traceInterval if t>x and t<=x+300])
+	
+	#return ((1 - p)**x)*p
 		
 def compute_statistics(serie):
 	"""
@@ -504,7 +519,8 @@ def inter_arrrival_distribution(cop,incidentSerie, stepInterval = 300,limit = 24
 	for q in qtdInterArrival:
 		percInterArrival.append(float(q)/float(qtdeTotal))
 	#print percInterArrival
-	popt, pocv = curve_fit(func,np.array(axisXInterArrival),np.array(percInterArrival))
+	#popt, pocv = curve_fit(func,np.array(axisXInterArrival),np.array(percInterArrival))
+	popt, pocv = curve_fit(func,np.array(axisXInterArrival),np.array(qtdInterArrival))
 	print popt
 
 	#z = np.polyfit(axisXInterArrival,qtdInterArrival,3)
@@ -535,7 +551,7 @@ if __name__ == "__main__":
 			datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
 			datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
 
-	
+	print func(300,0.5)
 	# inicio da geracao dos dados para estatisticas
 	allActionsDict = get_dict_all_actions()
 	allPunctualActionsDict = get_dict_all_actions_by_type('PONTUAL')
