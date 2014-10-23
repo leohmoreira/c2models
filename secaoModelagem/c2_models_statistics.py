@@ -35,167 +35,167 @@ latLongCops['CCDA - RIO'] = (-22.90597,-43.21631)
 latLongCops['CCDA - SSA'] = (-12.97974,-38.48362)
 
 def get_all_cops():
-	"""
-		Retorna todos os COPs baseado nas sincronizacoes
-	"""
-	
-	allSincronizations = Sincronizacao.get_all()
+    """
+        Retorna todos os COPs baseado nas sincronizacoes
+    """
+    
+    allSincronizations = Sincronizacao.get_all()
 
-	return set([sinc.cop_responsavel['id'] for sinc in allSincronizations 
-			if ((sinc.inicio >= inicioAmostragem) and (sinc.fim <=terminoAmostragem))
-			])
+    return set([sinc.cop_responsavel['id'] for sinc in allSincronizations 
+            if ((sinc.inicio >= inicioAmostragem) and (sinc.fim <=terminoAmostragem))
+            ])
 
-	
+    
 def get_dict_all_actions():
-	"""
-		Retorna todas as ações agrupadas em um dicionário cuja chave é o nome do COP
-	"""
-	allSincronizations = Sincronizacao.get_all()
-	dictionaryAllActions = {}
-	allCops = get_all_cops()
-	for cop in allCops:
-		dictionaryAllActions[cop] = []
-	dictionaryAllActions['TODOS'] = []
+    """
+        Retorna todas as ações agrupadas em um dicionário cuja chave é o nome do COP
+    """
+    allSincronizations = Sincronizacao.get_all()
+    dictionaryAllActions = {}
+    allCops = get_all_cops()
+    for cop in allCops:
+        dictionaryAllActions[cop] = []
+    dictionaryAllActions['TODOS'] = []
 
-	# é necessário percorrer todas sincronizacoes ao inves de usar get_all_actions porque só sinc tem o id do COP
-	for sinc in allSincronizations:
-		for action in sinc.acoes:
-			if (
-				(sinc.cop_responsavel['id'] in allCops) and 
-				(
-					((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem)) or
-					((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
-				)
-			):
-				dictionaryAllActions['TODOS'].append(action)
-				dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
-							    
-	return dictionaryAllActions
+    # é necessário percorrer todas sincronizacoes ao inves de usar get_all_actions porque só sinc tem o id do COP
+    for sinc in allSincronizations:
+        for action in sinc.acoes:
+            if (
+                (sinc.cop_responsavel['id'] in allCops) and 
+                (
+                    ((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem)) or
+                    ((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
+                )
+            ):
+                dictionaryAllActions['TODOS'].append(action)
+                dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
+                                
+    return dictionaryAllActions
 
 def get_dict_all_actions_by_type(actionType):
-	"""
-		Retorna todas as ações do tipo action Type agrupadas em um dicionário cuja chave é o nome do COP
-	"""
-	allSincronizations = Sincronizacao.get_all()
-	dictionaryAllActions = {}
-	allCops = get_all_cops()
-	for cop in allCops:
-		dictionaryAllActions[cop] = []
-	dictionaryAllActions['TODOS'] = []
+    """
+        Retorna todas as ações do tipo action Type agrupadas em um dicionário cuja chave é o nome do COP
+    """
+    allSincronizations = Sincronizacao.get_all()
+    dictionaryAllActions = {}
+    allCops = get_all_cops()
+    for cop in allCops:
+        dictionaryAllActions[cop] = []
+    dictionaryAllActions['TODOS'] = []
 
-	# é necessário percorrer todas sincronizacoes ao inves de usar get_all_actions porque só sinc tem o id do COP
-	for sinc in allSincronizations:
-		for action in sinc.acoes:
-			if (
-				(actionType == 'PONTUAL') and 
-				(sinc.cop_responsavel['id'] in allCops) and 
-				(
-					((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem))
-				)
-			):
-				dictionaryAllActions['TODOS'].append(action)
-				dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
-			if (
-				(actionType == 'INTERVALO') and 
-				(sinc.cop_responsavel['id'] in allCops) and 
-				(
-					((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))	
-				)
-			):
-				dictionaryAllActions['TODOS'].append(action)
-				dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
-							    
-	return dictionaryAllActions
+    # é necessário percorrer todas sincronizacoes ao inves de usar get_all_actions porque só sinc tem o id do COP
+    for sinc in allSincronizations:
+        for action in sinc.acoes:
+            if (
+                (actionType == 'PONTUAL') and 
+                (sinc.cop_responsavel['id'] in allCops) and 
+                (
+                    ((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem))
+                )
+            ):
+                dictionaryAllActions['TODOS'].append(action)
+                dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
+            if (
+                (actionType == 'INTERVALO') and 
+                (sinc.cop_responsavel['id'] in allCops) and 
+                (
+                    ((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))  
+                )
+            ):
+                dictionaryAllActions['TODOS'].append(action)
+                dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
+                                
+    return dictionaryAllActions
 
 def get_all_actions():
-	"""
-		Retorna todas as ações agrupadas em um array
-	"""
+    """
+        Retorna todas as ações agrupadas em um array
+    """
 
-	allSincronizations = Sincronizacao.get_all()
-	allActions = []
-	allCops = get_all_cops()
-	for sinc in allSincronizations:
-		for action in sinc.acoes:
-			if (
-				(sinc.cop_responsavel['id'] in allCops) and 
-				(
-					((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem)) or
-					((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
-				)
-			):
-				allActions.append(action)
-		
-	return allActions
+    allSincronizations = Sincronizacao.get_all()
+    allActions = []
+    allCops = get_all_cops()
+    for sinc in allSincronizations:
+        for action in sinc.acoes:
+            if (
+                (sinc.cop_responsavel['id'] in allCops) and 
+                (
+                    ((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem)) or
+                    ((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
+                )
+            ):
+                allActions.append(action)
+        
+    return allActions
 
 def get_actions_near_date(listActions,date, mask = '%Y/%m/%d'):
-	"""
-	Retorna todas as ações de "listActions" nas quais o valor "date" seja igual, segundo "MASK", ao inicio da ação
-	Por padrão, MASK considera apenas ANO/MES/DIA, com hora 00:00:00
-	"""
-	
-	return [action for action in listActions
-		if datetime.strptime(datetime.strftime(action.inicio,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
-	]
+    """
+    Retorna todas as ações de "listActions" nas quais o valor "date" seja igual, segundo "MASK", ao inicio da ação
+    Por padrão, MASK considera apenas ANO/MES/DIA, com hora 00:00:00
+    """
+    
+    return [action for action in listActions
+        if datetime.strptime(datetime.strftime(action.inicio,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
+    ]
 
 def get_all_incidents():
-	"""
-		Retorna todos os incidentes agrupados em um array
-	"""
-	allIncidents = Incident.get_all()
-	allCops = get_all_cops()
-	return [i for i in allIncidents 
-						if(
-							(i['operations_center'] in allCops) and
-							(inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
-						)
-	]
-	
+    """
+        Retorna todos os incidentes agrupados em um array
+    """
+    allIncidents = Incident.get_all()
+    allCops = get_all_cops()
+    return [i for i in allIncidents 
+                        if(
+                            (i['operations_center'] in allCops) and
+                            (inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
+                        )
+    ]
+    
 def get_dict_all_incidents():
-	"""
-		Retorna todos os incidentes agrupados em um dicionário cuja chave é o nome do COP
-	"""
-	dictionaryAllIncidents = {}
-	allCops = get_all_cops()
-	
-	for cop in allCops:
-		dictionaryAllIncidents[cop] = []
-	dictionaryAllIncidents['TODOS'] = []
+    """
+        Retorna todos os incidentes agrupados em um dicionário cuja chave é o nome do COP
+    """
+    dictionaryAllIncidents = {}
+    allCops = get_all_cops()
+    
+    for cop in allCops:
+        dictionaryAllIncidents[cop] = []
+    dictionaryAllIncidents['TODOS'] = []
 
-	allIncidents = get_all_incidents()
-	for incident in allIncidents:
-		dictionaryAllIncidents['TODOS'].append(incident)
-		dictionaryAllIncidents[incident['operations_center']].append(incident)
-			    
-	return dictionaryAllIncidents
+    allIncidents = get_all_incidents()
+    for incident in allIncidents:
+        dictionaryAllIncidents['TODOS'].append(incident)
+        dictionaryAllIncidents[incident['operations_center']].append(incident)
+                
+    return dictionaryAllIncidents
 
 
 def get_incidents_near_date(listIncidents,date,mask = '%Y/%m/%d'):
-	"""
-	Retorna todas os incidentes de "listIncidentes" nas quais o valor "date" seja igual, segundo "MASK", ao reporting_date
-	Por padrão, MASK considera apenas ANO/MES/DIA, com hora 00:00:00
-	"""
-	return [incident for incident in listIncidents
-			if datetime.strptime(datetime.strftime(incident.reporting_date,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
-	]
+    """
+    Retorna todas os incidentes de "listIncidentes" nas quais o valor "date" seja igual, segundo "MASK", ao reporting_date
+    Por padrão, MASK considera apenas ANO/MES/DIA, com hora 00:00:00
+    """
+    return [incident for incident in listIncidents
+            if datetime.strptime(datetime.strftime(incident.reporting_date,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
+    ]
 
 def get_all_reports():
-	"""
-		Retorna todos os relatos de situação agrupados em um array
-	"""
-	allReports = RelatoDeSituacao.get_all()
-	return [report for report in allReports 
-			if (inicioAmostragem <= report.data_hora and report.data_hora <=terminoAmostragem)
-	]
-	
+    """
+        Retorna todos os relatos de situação agrupados em um array
+    """
+    allReports = RelatoDeSituacao.get_all()
+    return [report for report in allReports 
+            if (inicioAmostragem <= report.data_hora and report.data_hora <=terminoAmostragem)
+    ]
+    
 def get_reports_near_date(listReports,date,mask = '%Y/%m/%d'):
-	"""
-	Retorna todas os relatos de situação de "listReports" nas quais o valor "date" seja igual, segundo "MASK", ao data_hora
-	Por padrão, MASK considera apenas ANO/MES/DIA, com hora 00:00:00
-	"""
-	return [report for report in listReports
-			if datetime.strptime(datetime.strftime(report.data_hora,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
-	]
+    """
+    Retorna todas os relatos de situação de "listReports" nas quais o valor "date" seja igual, segundo "MASK", ao data_hora
+    Por padrão, MASK considera apenas ANO/MES/DIA, com hora 00:00:00
+    """
+    return [report for report in listReports
+            if datetime.strptime(datetime.strftime(report.data_hora,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
+    ]
 
 def plot_graph(filename,title,axisX,serie1,serie2,rotulos):
 
@@ -213,7 +213,7 @@ def plot_graph(filename,title,axisX,serie1,serie2,rotulos):
     fig.savefig(filename,dpi=96)
 
 def plot_total(filename,axisX,
-				incidentsTotal,actionsTotal,
+                incidentsTotal,actionsTotal,
                 incidents1,actions1,
                 incidents2,actions2,
                 incidents3,actions3,
@@ -322,17 +322,17 @@ def plot_graph_bar(filename,title,axisX,axisY,rotulo,barColor):
 
 def dateChangeFormat(item):
 
-	return datetime.strftime(item,"%d/%m")
+    return datetime.strftime(item,"%d/%m")
 
 def plot_graph_bar_full(filename,title,axisX,
-							serie1,rotulo1,barColor1,
-							serie2,rotulo2,barColor2,
-							serie3,rotulo3,barColor3,
-							serie4,rotulo4,barColor4,
-							serie5,rotulo5,barColor5,
-							serie6,rotulo6,barColor6,
-							serie7,rotulo7,barColor7,
-							serie8,rotulo8,barColor8):
+                            serie1,rotulo1,barColor1,
+                            serie2,rotulo2,barColor2,
+                            serie3,rotulo3,barColor3,
+                            serie4,rotulo4,barColor4,
+                            serie5,rotulo5,barColor5,
+                            serie6,rotulo6,barColor6,
+                            serie7,rotulo7,barColor7,
+                            serie8,rotulo8,barColor8):
 
     barWidth = 0.1
     valuesAxisX = map(dateChangeFormat,axisX)
@@ -424,196 +424,199 @@ def plot_resume_cop(filename,cop,axisX,incidents,actions,punctualActions,interva
 
 def plot_graph_pie(filename,titulo,serie):
 
-	"""
-		Constroi um grafico pizza
-	"""
-	validSerie = []
-	labels =[]
-	colors = ['yellowgreen', 'gold', 'lightskyblue', 'lightcoral','cyan','green','pink']
-	explode = [0.1,0.1,0.1,0.1,0.1,0.1,0.1]
-	for cop in serie.keys():
-		if cop != 'TODOS' :
-			validSerie.append(cop)
-			labels.append(cop)
-	sizes = []
-	for cop in validSerie:
-		sizes.append(len(serie[cop]))
+    """
+        Constroi um grafico pizza
+    """
+    validSerie = []
+    labels =[]
+    colors = ['yellowgreen', 'gold', 'lightskyblue', 'lightcoral','cyan','green','pink']
+    explode = [0.1,0.1,0.1,0.1,0.1,0.1,0.1]
+    for cop in serie.keys():
+        if cop != 'TODOS' :
+            validSerie.append(cop)
+            labels.append(cop)
+    sizes = []
+    for cop in validSerie:
+        sizes.append(len(serie[cop]))
 
-	plt.close('all')
-	title(titulo)
-	plt.pie(sizes,labels=labels,colors=colors,explode=explode,autopct='%1.1f%%')
-	plt.axis('equal')
-	plt.savefig(filename,dpi=96)
+    plt.close('all')
+    title(titulo)
+    plt.pie(sizes,labels=labels,colors=colors,explode=explode,autopct='%1.1f%%')
+    plt.axis('equal')
+    plt.savefig(filename,dpi=96)
 
 def graph_incidents_per_action(cop,incidents,actions):
 
-	#z = np.polyfit(actions,incidents,15)
-	#print cop, ' === ',z
-	#f = np.poly1d(z)
-	
-	incAction = {}
-	for i, a in zip(incidents,actions):
-		incAction[a] = i
-	tmpAction =[]
-	tmpInc =[]
-	tmpNew = []
-	for a in sorted(incAction):
-		tmpAction.append(a)
-		tmpInc.append(incAction[a])
-	print cop, " === ",tmpAction
-	#popt, pocv = curve_fit(func,tmpAction,tmpInc)
-	#print popt
-	plt.close('all')
-	plt.plot(tmpAction,tmpInc,'ro-')#,tmpAction,func(tmpAction,popt[0],popt[1],popt[2],popt[3]),'g^-')
-	plt.grid(True)
-	plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
-	#plt.show()
+    #z = np.polyfit(actions,incidents,15)
+    #print cop, ' === ',z
+    #f = np.poly1d(z)
+    
+    incAction = {}
+    for i, a in zip(incidents,actions):
+        incAction[a] = i
+    tmpAction =[]
+    tmpInc =[]
+    tmpNew = []
+    for a in sorted(incAction):
+        tmpAction.append(a)
+        tmpInc.append(incAction[a])
+    print cop, " === ",tmpAction
+    #popt, pocv = curve_fit(func,tmpAction,tmpInc)
+    #print popt
+    plt.close('all')
+    plt.plot(tmpAction,tmpInc,'ro-')#,tmpAction,func(tmpAction,popt[0],popt[1],popt[2],popt[3]),'g^-')
+    plt.grid(True)
+    plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
+    #plt.show()
 
-def funcExpoPoisson(x,lamb):
+def funcExpoPoisson(x,t,lamb):
 
-	return 1 - np.exp(lamb*x)
+    return lamb*t * np.exp(- lamb*x*t)
 
 def funcExpGenLinear(x,a,b,c,d,e,f):
 
-	#return a * np.exp(-b*x)
-	return a * (b**(c*x)) + d * (e**(f*x))
-
-
+    return a * (b**(c*x)) + d * (e**(f*x))
+    
 def compute_statistics(serie):
-	"""
-		Computa as estatísticas de SERIE utilizando stats.describe
-	"""
-	sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(serie)
+    """
+        Computa as estatísticas de SERIE utilizando stats.describe
+    """
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(serie)
 
-	print "Size Data  = ",sizeData , "Minimo,Maximo = ",(minimum,maximum), "Média = ", arithmeticMean , "Variância = ", variance
+    print "Size Data  = ",sizeData , "Minimo,Maximo = ",(minimum,maximum), "Média = ", arithmeticMean , "Variância = ", variance
 
 def interArrrival_time_distribution(cop,incidentSerie, stepInterval = 300,limit = 24*3600):
 
-	"""
-		Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
-		Salva em arquivo
-	"""
-	arrivalTime = []
-	for i in incidentSerie[cop]:
-		arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
-	sortedArrivalTime =  sorted(arrivalTime)
-	interArrivalTime = []
-	for i in range(0,len(sortedArrivalTime)-1):
-		interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
-	
-		qtdInterArrival = []
-	axisXInterArrival = []
-	qtdeTotal = 0
-	for i in np.arange(0,limit,stepInterval):
-		qtdeTotal = qtdeTotal + len([t for t in interArrivalTime if t>i and t<=i+stepInterval]) 
-		qtdInterArrival.append(len([t for t in interArrivalTime if t>i and t<=i+stepInterval]))
-		axisXInterArrival.append(i)
-	
-	percInterArrival = []
-		
-	for q in qtdInterArrival:
-		percInterArrival.append(float(q)/float(qtdeTotal))
-	
-	
-	poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(axisXInterArrival),np.array(percInterArrival))
-		
-	fig, graph = plt.subplots()
-	plt.close('all')
-		
-	plt.close('all')
-	fig = plt.figure()
-	fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais de incidentes")
-	plt.ylabel("Quantide (%)")
-	plt.xlabel("Intervalo (s)")
-	plt.plot(axisXInterArrival,percInterArrival,'ro-',
-		axisXInterArrival,funcExpGenLinear(np.array(axisXInterArrival),*poptLinear),'b^-')
+    """
+        Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
+        Salva em arquivo
+    """
+    arrivalTime = []
+    for i in incidentSerie[cop]:
+        arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+    sortedArrivalTime =  sorted(arrivalTime)
+    interArrivalTime = []
+    for i in range(0,len(sortedArrivalTime)-1):
+        interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+    print cop, " max intertime = ",np.max(interArrivalTime)
+    qtdInterArrival = []
+    axisXInterArrival = []
+    qtdeTotal = 0
+    for i in np.arange(0,limit,stepInterval):
+        qtdeTotal = qtdeTotal + len([t for t in interArrivalTime if t>i and t<=i+stepInterval]) 
+        qtdInterArrival.append(len([t for t in interArrivalTime if t>i and t<=i+stepInterval]))
+        axisXInterArrival.append(i)
+    
+    percInterArrival = []
+        
+    for q in qtdInterArrival:
+        percInterArrival.append(float(q)/float(qtdeTotal))
+    
+    
+    poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(axisXInterArrival),np.array(percInterArrival))
 
-	index = np.arange(0,limit,stepInterval)
-	plt.bar(axisXInterArrival,percInterArrival,width=stepInterval,color='gray')
-	plt.xticks(axisXInterArrival,rotation=90)
-	plt.grid(True)
-	fig.set_size_inches(18.5,10.5)
-	fig.savefig('interArrival_time_incidents'+cop+'.png',dpi=96)
-	plt.close('all')
-	
+    fig, graph = plt.subplots()
+    plt.close('all')
+    print cop, " coeficientes = ", poptLinear
+    print cop, "Estatitisticas"   
+    print compute_statistics(percInterArrival)
+    
+    fig = plt.figure()
+    fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais de incidentes")
+    plt.ylabel("Probabilidade (%)")
+    plt.xlabel("Intervalo (s)")
+    plt.plot(axisXInterArrival,percInterArrival,'ro-',
+        axisXInterArrival,funcExpGenLinear(np.array(axisXInterArrival),*poptLinear),'b^-')
+    
+    index = np.arange(0,limit,stepInterval)
+    plt.bar(axisXInterArrival,percInterArrival,width=stepInterval,color='gray',align='edge')
+    plt.xticks(axisXInterArrival,rotation=90)
+    plt.grid(True)
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig('interArrival_time_incidents_'+cop+'.png',dpi=96)
+    plt.close('all')
+    
 
 def interArrrival_distance_distribution(cop,incidentSerie, stepInterval = 300,limit = 10000):
 
-	"""
-		Calcula a distribuição da distancia entre ocorrencias dos incidentes.
-		Salva em arquivo
-	"""
-	lats =[]
-	longs = []
-	interArrivalDistance = []
-	#ordena sequencialmente no tempo os incidentes
-	arrivalSequence = sorted(incidentSerie[cop],key=lambda x: x.reporting_date)
-	for i in range(0,len(arrivalSequence)-1):
-		if(incidentSerie[cop][i].lon and incidentSerie[cop][i].lat and incidentSerie[cop][i+1].lon and incidentSerie[cop][i+1].lat):
-			lats.append(float(incidentSerie[cop][i].lat))
-			longs.append(float(incidentSerie[cop][i].lon))
-			interArrivalDistance.append(haversine(
-				float(incidentSerie[cop][i+1].lon),float(incidentSerie[cop][i+1].lat),
-				float(incidentSerie[cop][i].lon),float(incidentSerie[cop][i].lat)
-			))
+    """
+        Calcula a distribuição da distancia entre ocorrencias dos incidentes.
+        Salva em arquivo
+    """
+    lats =[]
+    longs = []
+    interArrivalDistance = []
+    #ordena sequencialmente no tempo os incidentes
+    arrivalSequence = sorted(incidentSerie[cop],key=lambda x: x.reporting_date)
+    for i in range(0,len(arrivalSequence)-1):
+        if(incidentSerie[cop][i].lon and incidentSerie[cop][i].lat and incidentSerie[cop][i+1].lon and incidentSerie[cop][i+1].lat):
+            lats.append(float(incidentSerie[cop][i].lat))
+            longs.append(float(incidentSerie[cop][i].lon))
+            interArrivalDistance.append(haversine(
+                float(incidentSerie[cop][i+1].lon),float(incidentSerie[cop][i+1].lat),
+                float(incidentSerie[cop][i].lon),float(incidentSerie[cop][i].lat)
+            ))
 
-	qtdInterArrival = []
-	axisX = []
-	qtdeTotal = 0
-	for i in np.arange(0,limit,stepInterval):
-		qtd = len([d for d in interArrivalDistance if d>i and d<=i+stepInterval]) 
-		qtdeTotal = qtdeTotal + qtd
-		qtdInterArrival.append(qtd)
-		axisX.append(i)
-	
-	percInterArrivalDistance = []
-		
-	for q in qtdInterArrival:
-		percInterArrivalDistance.append(float(q)/float(qtdeTotal))
-		
-	poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(axisX),np.array(percInterArrivalDistance))
-		
-	
-	plt.close('all')
-	fig = plt.figure()
-	fig.suptitle(cop+"\nIntervalo de distancia das ocorrencias sequenciais de incidentes")
-	plt.xlabel("Distancia (km)")
-	plt.ylabel("Quantidade (%)")
-	fig.set_size_inches(18.5,10.5)
-	plt.plot(axisX,percInterArrivalDistance,'ro-',
-		axisX,funcExpGenLinear(np.array(axisX),*poptLinear),'b^-')
-	index = np.arange(0,limit,stepInterval)
-	plt.bar(axisX,percInterArrivalDistance,width=stepInterval,color='gray')
-	plt.grid(True)
-	fig.savefig('interArrival_distance_incidents'+cop+'.png',dpi=96)
-	plt.close('all')
-		
+    qtdInterArrival = []
+    axisX = []
+    qtdeTotal = 0
+    for i in np.arange(0,limit,stepInterval):
+        qtd = len([d for d in interArrivalDistance if d>i and d<=i+stepInterval]) 
+        qtdeTotal = qtdeTotal + qtd
+        qtdInterArrival.append(qtd)
+        axisX.append(i)
+    
+    percInterArrivalDistance = []
+        
+    for q in qtdInterArrival:
+        percInterArrivalDistance.append(float(q)/float(qtdeTotal))
+        
+    poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(axisX),np.array(percInterArrivalDistance))
+        
+    
+    plt.close('all')
+    fig = plt.figure()
+    fig.suptitle(cop+"\nIntervalo de distancia das ocorrencias sequenciais de incidentes")
+    plt.xlabel("Distancia (km)")
+    plt.ylabel("Probabilidade (%)")
+    fig.set_size_inches(18.5,10.5)
+    plt.plot(axisX,percInterArrivalDistance,'ro-',
+        axisX,funcExpGenLinear(np.array(axisX),*poptLinear),'b^-')
+    index = np.arange(0,limit,stepInterval)
+    plt.bar(axisX,percInterArrivalDistance,width=stepInterval,color='gray')
+    plt.grid(True)
+    fig.savefig('interArrival_distance_incidents_'+cop+'.png',dpi=96)
+    plt.close('all')
+        
 
 def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
 
-	"""
-		Plota a localização dos incidentes long (eixo X) x lat (eixo Y)
-	"""
-	
-	lats = []
-	longs = []
-	
-	for i in incidentSerie[cop]:
-		if(i.lon and i.lat and haversine(float(latLongCops[cop][1]),float(latLongCops[cop][0]),float(i.lon),float(i.lat))<=50):
-			lats.append(float(i.lat))
-			longs.append(float(i.lon))
-			
-	plt.close('all')
-	fig = plt.figure()
-	fig.suptitle(cop+"\nLocalizacao dos incidentes")
-	plt.xlabel("Longitude")
-	plt.ylabel("Latitude")
-	fig.set_size_inches(18.5,10.5)
-	plt.plot(longs,lats,"ro")
-	plt.grid(True)
-	fig.savefig('incidents_location_'+cop+'.png',dpi=96)
-	plt.close('all')
-	
+    """
+        Plota a localização dos incidentes long (eixo X) x lat (eixo Y)
+    """
+    
+    lats = []
+    longs = []
+    
+    for i in incidentSerie[cop]:
+        if(cop == 'TODOS' and i.lon and i.lat):
+            lats.append(float(i.lat))
+            longs.append(float(i.lon))
+        elif(i.lon and i.lat and haversine(float(latLongCops[cop][1]),float(latLongCops[cop][0]),float(i.lon),float(i.lat))<=50):
+            lats.append(float(i.lat))
+            longs.append(float(i.lon))
+
+    plt.close('all')
+    fig = plt.figure()
+    fig.suptitle(cop+"\nLocalizacao dos incidentes")
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+    fig.set_size_inches(18.5,10.5)
+    plt.plot(longs,lats,"ro")
+    plt.grid(True)
+    fig.savefig('incidents_location_'+cop+'.png',dpi=96)
+    plt.close('all')
+    
 def haversine(lon1, lat1, lon2, lat2):
     """
     Calculate the great circle distance between two points 
@@ -630,202 +633,174 @@ def haversine(lon1, lat1, lon2, lat2):
     return km
 
 if __name__ == "__main__":
-	"""
-		Loop principal
-	"""
-	
-	matchDays = [datetime(2013,6,15,0,0,0),datetime(2013,6,16,0,0,0),datetime(2013,6,17,0,0,0),datetime(2013,6,19,0,0,0),datetime(2013,6,20,0,0,0),
+    """
+        Loop principal
+    """
+    
+    matchDays = [datetime(2013,6,15,0,0,0),datetime(2013,6,16,0,0,0),datetime(2013,6,17,0,0,0),datetime(2013,6,19,0,0,0),datetime(2013,6,20,0,0,0),
                  datetime(2013,6,22,0,0,0),datetime(2013,6,23,0,0,0),datetime(2013,6,26,0,0,0),datetime(2013,6,27,0,0,0),datetime(2013,6,30,0,0,0)]
-	
-	mdays = [#datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2013,6,13),datetime(2013,6,14),
-			datetime(2013,6,15),datetime(2013,6,16),datetime(2013,6,17),datetime(2013,6,18),datetime(2013,6,19),
-			datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
-			datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
+    
+    mdays = [#datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2013,6,13),
+            #datetime(2013,6,14),
+            datetime(2013,6,15),datetime(2013,6,16),datetime(2013,6,17),datetime(2013,6,18),datetime(2013,6,19),
+            datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
+            datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
+            #datetime(2013,7,1)]
+    #matchDays = mdays
+    # inicio da geracao dos dados para estatisticas
+    allActionsDict = get_dict_all_actions()
+    allPunctualActionsDict = get_dict_all_actions_by_type('PONTUAL')
+    allIntervalActionsDict = get_dict_all_actions_by_type('INTERVALO')
+    allIncidentsDict = get_dict_all_incidents()
+    
+    allReports = get_all_reports()
+    allCops = get_all_cops()
+    incidentsSerie = {}
+    actionsSerie = {}
+    punctualActionsSerie = {}
+    intervalActionsSerie = {}
+    reportsSerie = []
+    incidentsSerie['TODOS'] = []
+    actionsSerie['TODOS'] = []
+    punctualActionsSerie['TODOS'] = []
+    intervalActionsSerie['TODOS'] = []
+    for day in matchDays:
+        #for day in mdays:
+            incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
+            actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
+            punctualActionsSerie['TODOS'].append(len(get_actions_near_date(allPunctualActionsDict['TODOS'],day)))
+            intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
+            reportsSerie.append(len(get_reports_near_date(allReports,day)))
+    for cop in allCops:
+        incidentsSerie[cop]=[]
+        actionsSerie[cop]=[]
+        punctualActionsSerie[cop] = []
+        intervalActionsSerie[cop] = []
+        for day in matchDays:
+        #for day in mdays:
+            #print cop
+            #print "Incidentes"
+            #print day, len(get_incidents_near_date(allIncidentsDict[cop],day))
+            incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
+            #print "Acoes"
+            #print day, len(get_actions_near_date(allActionsDict[cop],day))
+            actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
+            punctualActionsSerie[cop].append(len(get_actions_near_date(allPunctualActionsDict[cop],day)))
+            #print "Acoes Pontuais"
+            #print day, len(get_actions_near_date(allPunctualActionsDict[cop],day))
+            intervalActionsSerie[cop].append(len(get_actions_near_date(allIntervalActionsDict[cop],day)))
+            #print "Acoes Intervalo"
+            #print day, len(get_actions_near_date(allIntervalActionsDict[cop],day))
+                
+    tmpQtdeAction = []
+    for cop in allCops:
+        for qtd in actionsSerie[cop]:
+            tmpQtdeAction.append(qtd)
+    #print set(tmpQtdeAction)
 
-	# inicio da geracao dos dados para estatisticas
-	allActionsDict = get_dict_all_actions()
-	allPunctualActionsDict = get_dict_all_actions_by_type('PONTUAL')
-	allIntervalActionsDict = get_dict_all_actions_by_type('INTERVALO')
-	allIncidentsDict = get_dict_all_incidents()
-	
-	allReports = get_all_reports()
-	allCops = get_all_cops()
-	incidentsSerie = {}
-	actionsSerie = {}
-	punctualActionsSerie = {}
-	intervalActionsSerie = {}
-	reportsSerie = []
-	incidentsSerie['TODOS'] = []
-	actionsSerie['TODOS'] = []
-	punctualActionsSerie['TODOS'] = []
-	intervalActionsSerie['TODOS'] = []
-	for day in matchDays:
-		#for day in mdays:
-			incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
-			actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
-			punctualActionsSerie['TODOS'].append(len(get_actions_near_date(allPunctualActionsDict['TODOS'],day)))
-			intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
-			reportsSerie.append(len(get_reports_near_date(allReports,day)))
-	for cop in allCops:
-		#inter_arrrival_distribution(cop,allIncidentsDict, stepInterval = 300,limit = 2*3600)
-		incidentsSerie[cop]=[]
-		actionsSerie[cop]=[]
-		punctualActionsSerie[cop] = []
-		intervalActionsSerie[cop] = []
-		for day in matchDays:
-		#for day in mdays:
-			#print cop
-			#print "Incidentes"
-			#print day, len(get_incidents_near_date(allIncidentsDict[cop],day))
-			incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
-			#print "Acoes"
-			#print day, len(get_actions_near_date(allActionsDict[cop],day))
-			actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
-			punctualActionsSerie[cop].append(len(get_actions_near_date(allPunctualActionsDict[cop],day)))
-			#print "Acoes Pontuais"
-			#print day, len(get_actions_near_date(allPunctualActionsDict[cop],day))
-			intervalActionsSerie[cop].append(len(get_actions_near_date(allIntervalActionsDict[cop],day)))
-			#print "Acoes Intervalo"
-			#print day, len(get_actions_near_date(allIntervalActionsDict[cop],day))
-		#qtde incidentes por qtde acoes
-		#graph_incidents_per_action(cop,incidentsSerie[cop],actionsSerie[cop])
-		incidents_location(cop,allIncidentsDict, stepInterval = 1,limit = 100)
-		interArrrival_time_distribution(cop,allIncidentsDict, stepInterval = 240,limit = 2*3600)
-		interArrrival_distance_distribution(cop,allIncidentsDict, stepInterval = 1,limit = 50)
-		#inter_arrrival_location_distribution(cop,allIncidentsDict, stepInterval = 1,limit = 100)
-		#inter_arrrival_distribution(cop,allIncidentsDict, stepInterval = 240,limit = 2*3600)
-	
-	#intervalo entre ocorrencia de incididentes = todos
-	#inter_arrrival_distribution('TODOS',allIncidentsDict, stepInterval = 240,limit = 2*3600)
-	#inter_arrrival_location_distribution('TODOS',allIncidentsDict, stepInterval = 1,limit = 100)
-	tmpQtdeAction = []
-	for cop in allCops:
-		for qtd in actionsSerie[cop]:
-			tmpQtdeAction.append(qtd)
-	#print set(tmpQtdeAction)
+    # termino da geracao dos dados para estatisticas
+    
+    # inicio da criacao dos graficos
 
-	# calculo de interarrival time
-	"""
-	arrivalTime = []
-	for i in allIncidentsDict['CCDA - SSA']:
-		arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
-	sortedArrivalTime =  sorted(arrivalTime)
-	interArrivalTime = []
-	for i in range(0,len(sortedArrivalTime)-1):
-		interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
-	interval = (sortedArrivalTime[-1] - sortedArrivalTime[0]).total_seconds()
-	
-	stepInterval = 300 # 1 hora em segundos
-	qtdInterArrival = []
-	axisXInterArrival = []
-	#for i in np.arange(0,interval+stepInterval,stepInterval):
-	for i in np.arange(0,24*3600,stepInterval):
-			qtdInterArrival.append(len([t for t in interArrivalTime if t>=i and t<i+stepInterval]))
-			axisXInterArrival.append(i)
+    # cluster de ocorrência de incidentes
+    incidents_location('TODOS',allIncidentsDict, stepInterval = 1,limit = 100) # unidade em km
+    # intervalo em tempo de incidentes consecutivas
+    interArrrival_time_distribution('TODOS',allIncidentsDict, stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
+    # intervalo em distancia (km) de incidentes consecutivos
+    #interArrrival_distance_distribution('TODOS',allIncidentsDict, stepInterval = 1,limit = 50) # unidade em km
+    
+    for cop in allCops:
+        # cluster de ocorrência de incidentes
+        incidents_location(cop,allIncidentsDict, stepInterval = 1,limit = 100) # unidade em km
+        # intervalo em tempo de incidentes consecutivas
+        interArrrival_time_distribution(cop,allIncidentsDict, stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
+        # intervalo em distancia (km) de incidentes consecutivos
+        interArrrival_distance_distribution(cop,allIncidentsDict, stepInterval = 1,limit = 50) # unidade em km
+    
+    # contribuição em incidentes
+    plot_graph_pie('pizzaIncidents.png',"Incidentes",allIncidentsDict)
+
+    # contribuição em acoes
+    plot_graph_pie('pizzaAcoes.png',"Acoes",allActionsDict)
 
 
-	plt.close('all')
-	plt.plot(axisXInterArrival,qtdInterArrival,'ro-')#,tmpAction,func(tmpAction,popt[0],popt[1],popt[2],popt[3]),'g^-')
-	plt.grid(True)
-	plt.show()
+    # barra incidentes por dia
+    plot_graph_bar_full("bar_incidentes_todos.png","Incidentes",matchDays,
+                        incidentsSerie['TODOS'],'TODOS','r',
+                        incidentsSerie['CC2 - FTC - SSA'],'CC2 - FTC - SSA','#0000FF',
+                        incidentsSerie['CCDA - BHZ'],'CCDA - BHZ','#A52A2A',
+                        incidentsSerie['CCDA - BSB'],'CCDA - BSB','#DEB887',
+                        incidentsSerie['CCDA - FOR'],'CCDA - FOR','#7FFF00',
+                        incidentsSerie['CCDA - REC'],'CCDA - REC','#D2691E',
+                        incidentsSerie['CCDA - RIO'],'CCDA - RIO','#9932CC',
+                        incidentsSerie['CCDA - SSA'],'CCDA - SSA','#808080',
+                        )
 
-	"""
-	# termino da geracao dos dados para estatisticas
-	
-	#graph_incidents_per_action("RJ",incidentsSerie['CCDA - RIO'],actionsSerie['CCDA - RIO'])
-	#graph_incidents_per_action("SSA",incidentsSerie['CCDA - SSA'],actionsSerie['CCDA - SSA'])
-	# inicio da criacao dos graficos
-	"""
-	# contribuição em incidentes
-	plot_graph_pie('pizzaIncidents.png',"Incidentes",allIncidentsDict)
+    # barra acoes por dia
+    plot_graph_bar_full("bar_actions_todos.png","Acoes",matchDays,
+                        actionsSerie['TODOS'],'TODOS','r',
+                        actionsSerie['CC2 - FTC - SSA'],'CC2 - FTC - SSA','#0000FF',
+                        actionsSerie['CCDA - BHZ'],'CCDA - BHZ','#A52A2A',
+                        actionsSerie['CCDA - BSB'],'CCDA - BSB','#DEB887',
+                        actionsSerie['CCDA - FOR'],'CCDA - FOR','#7FFF00',
+                        actionsSerie['CCDA - REC'],'CCDA - REC','#D2691E',
+                        actionsSerie['CCDA - RIO'],'CCDA - RIO','#9932CC',
+                        actionsSerie['CCDA - SSA'],'CCDA - SSA','#808080',
+                        )
 
-	# contribuição em acoes
-	plot_graph_pie('pizzaAcoes.png',"Acoes",allActionsDict)
+    # Incidentes e Açoes por dia 
+    plot_total('incidentes_actions_todos.png',matchDays,
+        incidentsSerie['TODOS'],actionsSerie['TODOS'],
+        incidentsSerie['CCDA - RIO'],actionsSerie['CCDA - RIO'],
+        incidentsSerie['CCDA - BSB'],actionsSerie['CCDA - BSB'],
+        incidentsSerie['CCDA - SSA'],actionsSerie['CCDA - SSA'],
+        incidentsSerie['CCDA - REC'],actionsSerie['CCDA - REC'],
+        incidentsSerie['CCDA - FOR'],actionsSerie['CCDA - FOR'],
+        incidentsSerie['CCDA - BHZ'],actionsSerie['CCDA - BHZ'])
 
+    for cop in allCops:
+        #incidentes por COP por dia
+        plot_graph_bar("incidentes_"+cop+".png",cop + " - Incidentes",matchDays,incidentsSerie[cop],"Incidentes",'r')
+        #acoes por COP por dia
+        plot_graph_bar("actions_"+cop+".png",cop + " - Acoes",matchDays,actionsSerie[cop],"Acoes",'b')
+        #acoes por COP pontuais por dia
+        plot_graph_bar("punctualActions_"+cop+".png",cop + " - Acoes Pontuais",matchDays,punctualActionsSerie[cop],"Acoes",'b')
+        #acoes intervalo por COP por dia
+        plot_graph_bar("intervalActions_"+cop+".png",cop + " - Acoes Intervalo",matchDays,intervalActionsSerie[cop],"Acoes",'b')
+        #Relacao incidentes vs Acoes por COP por dia
+        plot_graph("incidentes_actions_"+cop+".png",cop + " - Incidentes & Acoes",matchDays,incidentsSerie[cop],actionsSerie[cop],('Incidentes','Acoes'))
+        #Resumo
+        plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
+    
+    #Relatos de situacao por dia
+    plot_graph_bar("bar_incidentes.png","Incidentes",matchDays,incidentsSerie['TODOS'],"Incidentes",'r')
 
-	# barra incidentes por dia
-	plot_graph_bar_full("bar_incidentes_todos.png","Incidentes",matchDays,
-						incidentsSerie['TODOS'],'TODOS','r',
-						incidentsSerie['CC2 - FTC - SSA'],'CC2 - FTC - SSA','#0000FF',
-						incidentsSerie['CCDA - BHZ'],'CCDA - BHZ','#A52A2A',
-						incidentsSerie['CCDA - BSB'],'CCDA - BSB','#DEB887',
-						incidentsSerie['CCDA - FOR'],'CCDA - FOR','#7FFF00',
-						incidentsSerie['CCDA - REC'],'CCDA - REC','#D2691E',
-						incidentsSerie['CCDA - RIO'],'CCDA - RIO','#9932CC',
-						incidentsSerie['CCDA - SSA'],'CCDA - SSA','#808080',
-						)
+    #Incidentes por dia
+    plot_graph_bar("bar_relatosDeSituacao.png","Relatos de Situacao",matchDays,reportsSerie,"Relatos",'g')
 
-	# barra acoes por dia
-	plot_graph_bar_full("bar_actions_todos.png","Acoes",matchDays,
-						actionsSerie['TODOS'],'TODOS','r',
-						actionsSerie['CC2 - FTC - SSA'],'CC2 - FTC - SSA','#0000FF',
-						actionsSerie['CCDA - BHZ'],'CCDA - BHZ','#A52A2A',
-						actionsSerie['CCDA - BSB'],'CCDA - BSB','#DEB887',
-						actionsSerie['CCDA - FOR'],'CCDA - FOR','#7FFF00',
-						actionsSerie['CCDA - REC'],'CCDA - REC','#D2691E',
-						actionsSerie['CCDA - RIO'],'CCDA - RIO','#9932CC',
-						actionsSerie['CCDA - SSA'],'CCDA - SSA','#808080',
-						)
+    # Dados finais
 
-	# Incidentes e Açoes por dia 
-	plot_total('incidentes_actions_todos.png',matchDays,
-		incidentsSerie['TODOS'],actionsSerie['TODOS'],
-		incidentsSerie['CCDA - RIO'],actionsSerie['CCDA - RIO'],
-		incidentsSerie['CCDA - BSB'],actionsSerie['CCDA - BSB'],
-		incidentsSerie['CCDA - SSA'],actionsSerie['CCDA - SSA'],
-		incidentsSerie['CCDA - REC'],actionsSerie['CCDA - REC'],
-		incidentsSerie['CCDA - FOR'],actionsSerie['CCDA - FOR'],
-		incidentsSerie['CCDA - BHZ'],actionsSerie['CCDA - BHZ'])
+    print '-' * 100
+    print "Total de incidentes", len(allIncidentsDict['TODOS'])
+    compute_statistics(incidentsSerie['TODOS'])
+    print "Total de ações", len(allActionsDict['TODOS'])
+    compute_statistics(actionsSerie['TODOS'])
+    print "Total de ações pontuais", len(allPunctualActionsDict['TODOS'])
+    compute_statistics(punctualActionsSerie['TODOS'])
+    print "Total de ações intervalo", len(allIntervalActionsDict ['TODOS'])
+    compute_statistics(intervalActionsSerie['TODOS'])
+    print '-' * 100
+    
 
-	for cop in allCops:
-		#incidentes por COP por dia
-		plot_graph_bar("incidentes_"+cop+".png",cop + " - Incidentes",matchDays,incidentsSerie[cop],"Incidentes",'r')
-		#acoes por COP por dia
-		plot_graph_bar("actions_"+cop+".png",cop + " - Acoes",matchDays,actionsSerie[cop],"Acoes",'b')
-		#acoes por COP pontuais por dia
-		plot_graph_bar("punctualActions_"+cop+".png",cop + " - Acoes Pontuais",matchDays,punctualActionsSerie[cop],"Acoes",'b')
-		#acoes intervalo por COP por dia
-		plot_graph_bar("intervalActions_"+cop+".png",cop + " - Acoes Intervalo",matchDays,intervalActionsSerie[cop],"Acoes",'b')
-		#Relacao incidentes vs Acoes por COP por dia
-		plot_graph("incidentes_actions_"+cop+".png",cop + " - Incidentes & Acoes",matchDays,incidentsSerie[cop],actionsSerie[cop],('Incidentes','Acoes'))
-		#Resumo
-		plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
-	
-	# comparacao entre incidentes e relatos
-	#plot_graph("increl.png","Incidentes e Relatos",matchDays,incidentsSerie['TODOS'],reportsSerie,('incidentes','relatos'))
-
-	#somaIncRel = [sum(x) for x in zip(incidentsSerie['TODOS'],reportsSerie)]
-	#plot_graph("increl_final.png","Incidentes + Relatos por Acoes",matchDays,somaIncRel,actionsSerie['TODOS'],('inc rel','acoes'))
-
-	#Relatos de situacao por dia
-	plot_graph_bar("bar_incidentes.png","Incidentes",matchDays,incidentsSerie['TODOS'],"Incidentes",'r')
-
-	#Incidentes por dia
-	plot_graph_bar("bar_relatosDeSituacao.png","Relatos de Situacao",matchDays,reportsSerie,"Relatos",'g')
-
-	# Dados finais
-
-	print '-' * 100
-	print "Total de incidentes", len(allIncidentsDict['TODOS'])
-	compute_statistics(incidentsSerie['TODOS'])
-	print "Total de ações", len(allActionsDict['TODOS'])
-	compute_statistics(actionsSerie['TODOS'])
-	print "Total de ações pontuais", len(allPunctualActionsDict['TODOS'])
-	compute_statistics(punctualActionsSerie['TODOS'])
-	print "Total de ações intervalo", len(allIntervalActionsDict ['TODOS'])
-	compute_statistics(intervalActionsSerie['TODOS'])
-	print '-' * 100
-	
-
-	for cop in allCops:
-		print '-' * 100
-		print cop
-		print "Total de incidentes", len(allIncidentsDict[cop])
-		compute_statistics(incidentsSerie[cop])
-		print "Total de ações", len(allActionsDict[cop])
-		compute_statistics(actionsSerie[cop])
-		print "Total de ações pontuais", len(allPunctualActionsDict[cop])
-		compute_statistics(punctualActionsSerie[cop])
-		print "Total de ações intervalo", len(allIntervalActionsDict [cop])
-		compute_statistics(intervalActionsSerie[cop])
-	"""
+    for cop in allCops:
+        print '-' * 100
+        print cop
+        print "Total de incidentes", len(allIncidentsDict[cop])
+        compute_statistics(incidentsSerie[cop])
+        print "Total de ações", len(allActionsDict[cop])
+        compute_statistics(actionsSerie[cop])
+        print "Total de ações pontuais", len(allPunctualActionsDict[cop])
+        compute_statistics(punctualActionsSerie[cop])
+        print "Total de ações intervalo", len(allIntervalActionsDict [cop])
+        compute_statistics(intervalActionsSerie[cop])
+    

@@ -1,0 +1,124 @@
+TODOS  max intertime =  87884.0
+TODOS  coeficientes =  [  0.43222864   0.99978788  25.07415734   0.06175704   0.99993072
+  10.3130912 ]
+TODOS Estatitisticas
+Size Data  =  30 Minimo,Maximo =  (0.0, 0.49400479616306953) Média =  0.0333333333333 Variância =  0.00870357051
+None
+CCDA - FOR  max intertime =  345167.0
+CCDA - FOR  coeficientes =  [ 0.0258648   0.9998586   3.44015661  0.39412242  0.99962547  7.85789272]
+CCDA - FOR Estatitisticas
+Size Data  =  30 Minimo,Maximo =  (0.0, 0.40677966101694918) Média =  0.0333333333333 Variância =  0.00755794179899
+None
+CCDA - BHZ  max intertime =  245008.0
+CCDA - BHZ  coeficientes =  [ 0.09740365  0.99978794  3.38262724  0.27552001  0.9994511   9.71850373]
+CCDA - BHZ Estatitisticas
+Size Data  =  30 Minimo,Maximo =  (0.0, 0.37168141592920356) Média =  0.0333333333333 Variância =  0.00536149420787
+None
+CCDA - SSA  max intertime =  166821.0
+CCDA - SSA  coeficientes =  [  0.05998279   0.9999675   20.89023715   0.44188563   0.99962123
+  15.93594326]
+CCDA - SSA Estatitisticas
+Size Data  =  30 Minimo,Maximo =  (0.0, 0.50273224043715847) Média =  0.0333333333333 Variância =  0.0087591293487
+None
+CC2 - FTC - SSA  max intertime =  512134.0
+CC2 - FTC - SSA  coeficientes =  [ 0.38178137  0.99958239  6.84069043  0.02935285  0.99981101  2.72159691]
+CC2 - FTC - SSA Estatitisticas
+Size Data  =  30 Minimo,Maximo =  (0.0, 0.40909090909090912) Média =  0.0333333333333 Variância =  0.00768500047497
+None
+CCDA - RIO  max intertime =  177986.0
+CCDA - RIO  coeficientes =  [  0.42562203   0.99938833  22.74093922   0.09034074   0.99985581
+   5.36532737]
+CCDA - RIO Estatitisticas
+Size Data  =  30 Minimo,Maximo =  (0.0, 0.51595744680851063) Média =  0.0333333333333 Variância =  0.00877666078685
+None
+CCDA - BSB  max intertime =  436094.0
+CCDA - BSB  coeficientes =  [ 0.03732794  0.9999172   2.24188407  0.15568569  0.99968456  7.1889418 ]
+CCDA - BSB Estatitisticas
+Size Data  =  30 Minimo,Maximo =  (0.0, 0.18181818181818182) Média =  0.0333333333333 Variância =  0.00369525980811
+None
+CCDA - REC  max intertime =  85247.0
+CCDA - REC  coeficientes =  [  0.0518309    0.99990312   3.96682992   0.2516802    0.99969079
+  11.17514719]
+CCDA - REC Estatitisticas
+Size Data  =  30 Minimo,Maximo =  (0.0, 0.30769230769230771) Média =  0.0333333333333 Variância =  0.00369561901588
+None
+----------------------------------------------------------------------------------------------------
+Total de incidentes 872
+Size Data  =  16 Minimo,Maximo =  (2, 171) Média =  50.4375 Variância =  1921.19583333
+Total de ações 1887
+Size Data  =  16 Minimo,Maximo =  (23, 205) Média =  96.625 Variância =  2461.31666667
+Total de ações pontuais 828
+Size Data  =  16 Minimo,Maximo =  (6, 122) Média =  41.3125 Variância =  1118.7625
+Total de ações intervalo 1059
+Size Data  =  16 Minimo,Maximo =  (17, 104) Média =  55.3125 Variância =  490.895833333
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+CCDA - FOR
+Total de incidentes 65
+Size Data  =  16 Minimo,Maximo =  (0, 57) Média =  4.0625 Variância =  200.4625
+Total de ações 230
+Size Data  =  16 Minimo,Maximo =  (0, 23) Média =  11.8125 Variância =  48.6958333333
+Total de ações pontuais 32
+Size Data  =  16 Minimo,Maximo =  (0, 4) Média =  1.6875 Variância =  3.02916666667
+Total de ações intervalo 198
+Size Data  =  16 Minimo,Maximo =  (0, 19) Média =  10.125 Variância =  32.25
+----------------------------------------------------------------------------------------------------
+CCDA - BHZ
+Total de incidentes 132
+Size Data  =  16 Minimo,Maximo =  (0, 40) Média =  7.5625 Variância =  170.529166667
+Total de ações 43
+Size Data  =  16 Minimo,Maximo =  (0, 26) Média =  2.6875 Variância =  46.6291666667
+Total de ações pontuais 27
+Size Data  =  16 Minimo,Maximo =  (0, 25) Média =  1.6875 Variância =  38.7625
+Total de ações intervalo 16
+Size Data  =  16 Minimo,Maximo =  (0, 10) Média =  1.0 Variância =  6.53333333333
+----------------------------------------------------------------------------------------------------
+CCDA - SSA
+Total de incidentes 215
+Size Data  =  16 Minimo,Maximo =  (0, 58) Média =  10.8125 Variância =  335.495833333
+Total de ações 163
+Size Data  =  16 Minimo,Maximo =  (0, 34) Média =  9.1875 Variância =  85.2291666667
+Total de ações pontuais 25
+Size Data  =  16 Minimo,Maximo =  (0, 8) Média =  1.3125 Variância =  4.09583333333
+Total de ações intervalo 138
+Size Data  =  16 Minimo,Maximo =  (0, 26) Média =  7.875 Variância =  59.3166666667
+----------------------------------------------------------------------------------------------------
+CC2 - FTC - SSA
+Total de incidentes 38
+Size Data  =  16 Minimo,Maximo =  (0, 16) Média =  2.25 Variância =  16.3333333333
+Total de ações 2
+Size Data  =  16 Minimo,Maximo =  (0, 2) Média =  0.125 Variância =  0.25
+Total de ações pontuais 1
+Size Data  =  16 Minimo,Maximo =  (0, 1) Média =  0.0625 Variância =  0.0625
+Total de ações intervalo 1
+Size Data  =  16 Minimo,Maximo =  (0, 1) Média =  0.0625 Variância =  0.0625
+----------------------------------------------------------------------------------------------------
+CCDA - RIO
+Total de incidentes 212
+Size Data  =  16 Minimo,Maximo =  (0, 66) Média =  13.0625 Variância =  336.4625
+Total de ações 1032
+Size Data  =  16 Minimo,Maximo =  (7, 112) Média =  57.5 Variância =  1130.53333333
+Total de ações pontuais 471
+Size Data  =  16 Minimo,Maximo =  (2, 54) Média =  27.125 Variância =  372.116666667
+Total de ações intervalo 561
+Size Data  =  16 Minimo,Maximo =  (5, 61) Média =  30.375 Variância =  332.383333333
+----------------------------------------------------------------------------------------------------
+CCDA - BSB
+Total de incidentes 15
+Size Data  =  16 Minimo,Maximo =  (0, 6) Média =  0.9375 Variância =  4.19583333333
+Total de ações 292
+Size Data  =  16 Minimo,Maximo =  (0, 103) Média =  8.5625 Variância =  655.4625
+Total de ações pontuais 236
+Size Data  =  16 Minimo,Maximo =  (0, 92) Média =  7.3125 Variância =  523.829166667
+Total de ações intervalo 56
+Size Data  =  16 Minimo,Maximo =  (0, 11) Média =  1.25 Variância =  8.06666666667
+----------------------------------------------------------------------------------------------------
+CCDA - REC
+Total de incidentes 195
+Size Data  =  16 Minimo,Maximo =  (0, 41) Média =  11.75 Variância =  196.6
+Total de ações 125
+Size Data  =  16 Minimo,Maximo =  (0, 18) Média =  6.75 Variância =  41.0
+Total de ações pontuais 36
+Size Data  =  16 Minimo,Maximo =  (0, 8) Média =  2.125 Variância =  4.65
+Total de ações intervalo 89
+Size Data  =  16 Minimo,Maximo =  (0, 15) Média =  4.625 Variância =  24.65
