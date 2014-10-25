@@ -4,9 +4,11 @@ from scipy.misc import factorial
 from datetime import datetime
 from scipy.optimize import curve_fit
 import math
+import calendar
 import collections
 import argparse
 import numpy as np
+from numpy import array
 from scipy import special, optimize
 import matplotlib.pyplot as plt
 import time
@@ -14,7 +16,10 @@ from matplotlib.dates import DateFormatter
 from scipy import stats
 from pylab import text,title
 import os, sys
-lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+from mpl_toolkits.mplot3d import Axes3D
+from scipy.cluster.vq import vq, kmeans, whiten
+#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 from incidentes.models import *
 
@@ -34,6 +39,15 @@ latLongCops['CCDA - REC'] = (-8.046,-34.937)
 latLongCops['CCDA - RIO'] = (-22.90597,-43.21631)
 latLongCops['CCDA - SSA'] = (-12.97974,-38.48362)
 
+#qtde de clusters por COPs
+qtdeClustersCOP = {}
+qtdeClustersCOP['CC2 - FTC - SSA'] = (-12.97974,-38.48362)
+qtdeClustersCOP['CCDA - BHZ'] = (-19.88866,-43.93903)
+qtdeClustersCOP['CCDA - BSB'] = (-15.79388,-47.88271)
+qtdeClustersCOP['CCDA - FOR'] = (-3.7889,-38.5193)
+qtdeClustersCOP['CCDA - REC'] = (-8.046,-34.937)
+qtdeClustersCOP['CCDA - RIO'] = (-22.90597,-43.21631)
+qtdeClustersCOP['CCDA - SSA'] = (-12.97974,-38.48362)
 def get_all_cops():
     """
         Retorna todos os COPs baseado nas sincronizacoes
@@ -535,7 +549,7 @@ def interArrrival_time_distribution(cop,incidentSerie, stepInterval = 300,limit 
     fig.set_size_inches(18.5,10.5)
     fig.savefig('interArrival_time_incidents_'+cop+'.png',dpi=96)
     plt.close('all')
-    
+   
 
 def interArrrival_distance_distribution(cop,incidentSerie, stepInterval = 300,limit = 10000):
 
@@ -597,14 +611,24 @@ def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
     
     lats = []
     longs = []
-    
+    tempo = []
+    cluster2DLatLong =[]
     for i in incidentSerie[cop]:
+        tempo.append(i.reporting_date)
+        if(i.lon and i.lat):
+            cluster2DLatLong.append([float(i.lat),float(i.lon)])
         if(cop == 'TODOS' and i.lon and i.lat):
             lats.append(float(i.lat))
             longs.append(float(i.lon))
         elif(i.lon and i.lat and haversine(float(latLongCops[cop][1]),float(latLongCops[cop][0]),float(i.lon),float(i.lat))<=50):
             lats.append(float(i.lat))
             longs.append(float(i.lon))
+
+    #centro de massa = media da latitude e longitude
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(lats)
+    mediaLat = arithmeticMean
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(longs)
+    mediaLon = arithmeticMean
 
     plt.close('all')
     fig = plt.figure()
@@ -613,10 +637,49 @@ def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
     plt.ylabel("Latitude")
     fig.set_size_inches(18.5,10.5)
     plt.plot(longs,lats,"ro")
+    plt.plot(mediaLon,mediaLat,'b*')
     plt.grid(True)
     fig.savefig('incidents_location_'+cop+'.png',dpi=96)
     plt.close('all')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    menorTempo = np.min(tempo)
+    cluster3DLatLong =[]
+    for lat,lon,t in zip(lats,longs,tempo):
+        #print datetime.strftime(t,"%Y%m%d%H%M%S")
+        #ax.scatter(lat, lon, float(datetime.strftime(t,"%Y%m%d%H%M%S")))
+        cluster3DLatLong.append([lat,lon,(t - menorTempo).total_seconds()])
+        #cluster3DLatLong.append([lat,lon])
+        ax.scatter(lat, lon, (t - menorTempo).total_seconds(),c='r')
     
+    #clusters geograficos
+    features  = array(cluster3DLatLong)
+    clusters,distorcao = kmeans(features,1)
+
+    for c in clusters:
+        print "-----------------", c
+        ax.scatter(c[0], c[1],c[2],c='y',s=200)
+
+    #centro de massa = media da latitude e longitude
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(lats)
+    mediaLat = arithmeticMean
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(longs)
+    mediaLon = arithmeticMean
+    tmpTempo = []
+    for t in tempo:
+        tmpTempo.append((t - menorTempo).total_seconds())
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(tmpTempo)
+    mediaTempo = arithmeticMean
+    ax.scatter(mediaLat, mediaLon, mediaTempo,c='b')
+    ax.set_xlabel('Latitude', fontsize=20)
+    ax.set_ylabel('Longitude', fontsize=20)
+    ax.set_zlabel('Tempo', fontsize=20)
+    ax.set_title('Incidentes no tempo e no espaco')
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig('3D_incidents_location_'+cop+'.png',dpi=96)
+    plt.show()
+
+
 def haversine(lon1, lat1, lon2, lat2):
     """
     Calculate the great circle distance between two points 
@@ -717,6 +780,7 @@ if __name__ == "__main__":
         # intervalo em distancia (km) de incidentes consecutivos
         interArrrival_distance_distribution(cop,allIncidentsDict, stepInterval = 1,limit = 50) # unidade em km
     
+    """
     # contribuição em incidentes
     plot_graph_pie('pizzaIncidents.png',"Incidentes",allIncidentsDict)
 
@@ -803,4 +867,5 @@ if __name__ == "__main__":
         compute_statistics(punctualActionsSerie[cop])
         print "Total de ações intervalo", len(allIntervalActionsDict [cop])
         compute_statistics(intervalActionsSerie[cop])
+    """
     
