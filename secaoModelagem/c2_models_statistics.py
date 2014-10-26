@@ -41,13 +41,10 @@ latLongCops['CCDA - SSA'] = (-12.97974,-38.48362)
 
 #qtde de clusters por COPs
 qtdeClustersCOP = {}
-qtdeClustersCOP['CC2 - FTC - SSA'] = (-12.97974,-38.48362)
-qtdeClustersCOP['CCDA - BHZ'] = (-19.88866,-43.93903)
-qtdeClustersCOP['CCDA - BSB'] = (-15.79388,-47.88271)
-qtdeClustersCOP['CCDA - FOR'] = (-3.7889,-38.5193)
-qtdeClustersCOP['CCDA - REC'] = (-8.046,-34.937)
-qtdeClustersCOP['CCDA - RIO'] = (-22.90597,-43.21631)
-qtdeClustersCOP['CCDA - SSA'] = (-12.97974,-38.48362)
+#tamanho minimo necessário de elementos no cluster
+clusterMinimumSize = 15
+#distancia maximoa em km do centro do cluster
+clusterMaxDistance = 2
 def get_all_cops():
     """
         Retorna todos os COPs baseado nas sincronizacoes
@@ -461,10 +458,6 @@ def plot_graph_pie(filename,titulo,serie):
 
 def graph_incidents_per_action(cop,incidents,actions):
 
-    #z = np.polyfit(actions,incidents,15)
-    #print cop, ' === ',z
-    #f = np.poly1d(z)
-    
     incAction = {}
     for i, a in zip(incidents,actions):
         incAction[a] = i
@@ -512,7 +505,7 @@ def interArrrival_time_distribution(cop,incidentSerie, stepInterval = 300,limit 
     interArrivalTime = []
     for i in range(0,len(sortedArrivalTime)-1):
         interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
-    print cop, " max intertime = ",np.max(interArrivalTime)
+    
     qtdInterArrival = []
     axisXInterArrival = []
     qtdeTotal = 0
@@ -531,10 +524,7 @@ def interArrrival_time_distribution(cop,incidentSerie, stepInterval = 300,limit 
 
     fig, graph = plt.subplots()
     plt.close('all')
-    print cop, " coeficientes = ", poptLinear
-    print cop, "Estatitisticas"   
-    print compute_statistics(percInterArrival)
-    
+        
     fig = plt.figure()
     fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais de incidentes")
     plt.ylabel("Probabilidade (%)")
@@ -624,6 +614,8 @@ def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
             lats.append(float(i.lat))
             longs.append(float(i.lon))
 
+    #calculando os cluster. Quantidade necessaria = sqrt(n/2) e os centro (lat,long)
+
     #centro de massa = media da latitude e longitude
     sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(lats)
     mediaLat = arithmeticMean
@@ -646,19 +638,22 @@ def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
     menorTempo = np.min(tempo)
     cluster3DLatLong =[]
     for lat,lon,t in zip(lats,longs,tempo):
-        #print datetime.strftime(t,"%Y%m%d%H%M%S")
-        #ax.scatter(lat, lon, float(datetime.strftime(t,"%Y%m%d%H%M%S")))
-        cluster3DLatLong.append([lat,lon,(t - menorTempo).total_seconds()])
-        #cluster3DLatLong.append([lat,lon])
+        #cluster3DLatLong.append([lat,lon,(t - menorTempo).total_seconds()])
+        cluster3DLatLong.append([lat,lon])
         ax.scatter(lat, lon, (t - menorTempo).total_seconds(),c='r')
-    
+        
+    """
     #clusters geograficos
     features  = array(cluster3DLatLong)
-    clusters,distorcao = kmeans(features,1)
-
+    k = int(math.sqrt(len(lats)/2.0))
+    
+    clusters,distorcao = kmeans(features,k)
+    print cop ,' com ',k, ' clusters DISTORCAO = ',distorcao
+    """
+    clusters = computeCluster(cop,incidentSerie)
     for c in clusters:
-        print "-----------------", c
-        ax.scatter(c[0], c[1],c[2],c='y',s=200)
+        print cop, "-----------------", c
+        ax.scatter(c[0], c[1],c='y',s=200)
 
     #centro de massa = media da latitude e longitude
     sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(lats)
@@ -677,7 +672,7 @@ def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
     ax.set_title('Incidentes no tempo e no espaco')
     fig.set_size_inches(18.5,10.5)
     fig.savefig('3D_incidents_location_'+cop+'.png',dpi=96)
-    plt.show()
+    #plt.show()
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -694,6 +689,64 @@ def haversine(lon1, lat1, lon2, lat2):
     c = 2 * asin(sqrt(a)) 
     km = 6367 * c
     return km
+
+def computeCluster(cop,serie):
+    """
+        Calcula a quantide de cluster necessaria (Rule o Thumbs) e o centros de cada
+    """
+    latitudes = []
+    longitudes = []
+    tempo = []
+    cluster3DLatLong =[]
+    serieItens =[]
+    for i in serie[cop]:
+        
+        if(cop == 'TODOS' and i.lon and i.lat):
+            latitudes.append(float(i.lat))
+            longitudes.append(float(i.lon))
+            tempo.append(i.reporting_date)
+            cluster3DLatLong.append([float(i.lat),float(i.lon)])
+            serieItens.append(i)
+        elif(i.lon and i.lat and haversine(float(latLongCops[cop][1]),float(latLongCops[cop][0]),float(i.lon),float(i.lat))<=50):
+            latitudes.append(float(i.lat))
+            longitudes.append(float(i.lon))
+            tempo.append(i.reporting_date)
+            cluster3DLatLong.append([float(i.lat),float(i.lon)])
+            serieItens.append(i)
+    #clusters geograficos
+    features  = array(zip(latitudes,longitudes))
+    # escolhi pegar o maior valor menor q sqrt(n/2)
+    k = int(math.floor(math.sqrt(len(latitudes)/2.0)))
+    clusters,distorcao = kmeans(features,k)
+    
+    #criando um vetor com a qtde de clusters necessarios
+    itensClusterizados = []
+    for i in range(0,k):
+        itensClusterizados.append([])
+    #agrupando cada item no seu cluster
+    for i in range(0,len(tempo)):
+        distancias=[]
+        for c in clusters:
+            #calcula a distancia o item ao centro de cada cluster
+            distancias.append(haversine(float(longitudes[i]),float(latitudes[i]),float(c[1]),float(c[0])))
+        #armazena o item no cluster mais proximo
+        itensClusterizados[distancias.index(np.min(distancias))].append(serieItens[i])
+
+    menorTempo = np.min(tempo)
+    #criando os graficos ... cada grafico com uma cor
+    if(cop == 'CC2 - FTC - SSA'):
+        plt.close('all')
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        colors=['y','b','r']
+        for c in range(0,k):
+            for i in itensClusterizados[c]:
+                ax.scatter(float(i.lat), float(i.lon), (i.reporting_date - menorTempo).total_seconds(),c=colors[c])
+        ax.set_xlabel('Latitude', fontsize=20)
+        ax.set_ylabel('Longitude', fontsize=20)
+        ax.set_zlabel('Tempo', fontsize=20)
+        plt.show()
+    return clusters
 
 if __name__ == "__main__":
     """
