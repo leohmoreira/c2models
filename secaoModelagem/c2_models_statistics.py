@@ -39,12 +39,33 @@ latLongCops['CCDA - REC'] = (-8.046,-34.937)
 latLongCops['CCDA - RIO'] = (-22.90597,-43.21631)
 latLongCops['CCDA - SSA'] = (-12.97974,-38.48362)
 
-#qtde de clusters por COPs
-qtdeClustersCOP = {}
-#tamanho minimo necessário de elementos no cluster
-clusterMinimumSize = 15
-#distancia maximoa em km do centro do cluster
-clusterMaxDistance = 2
+#paleta com 25 cores
+cores = ['#f0f8ff',#ALICE BLUE
+         '#00ffff',#AQUA
+         '#ffe4c4',#BISQUE
+         '#000000',#BLACK
+         '#0000ff',#BLUE
+         '#8a2be2',#BLUEVIOLET
+         '#a52a2a',#BROWN
+         '#7fff00',#CHARTREUSE
+         '#d2691e',#CHOCOLATE
+         '#dc143c',#CRISMSON
+         '#a9a9a9',#DARKGRAY
+         '#006400',#DARKGREEN
+         '#8b008b',#DARKMAGENTA
+         '#8b0000',#DARKRED
+         '#2f4f4f',#DARKSLATEGRAY
+         '#ff00ff',#FUCHSIA
+         '#daa520',#GOLD
+         '#7cfc00',#LAWNGREEN
+         '#ffb6c1',#LIGHTPINK
+         '#808000',#PINK
+         '#cd853f',#PERU
+         '#f4a460',#SANDYBROWN
+         '#708090',#SLATEGRAY
+         '#ff6347',#TOMATO
+         '#9acd32'#YELLOWGREEN
+        ]
 def get_all_cops():
     """
         Retorna todos os COPs baseado nas sincronizacoes
@@ -492,14 +513,15 @@ def compute_statistics(serie):
 
     print "Size Data  = ",sizeData , "Minimo,Maximo = ",(minimum,maximum), "Média = ", arithmeticMean , "Variância = ", variance
 
-def interArrrival_time_distribution(cop,incidentSerie, stepInterval = 300,limit = 24*3600):
+def interArrrival_time_distribution(cop,serie, stepInterval = 300,limit = 24*3600):
 
     """
         Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
         Salva em arquivo
     """
     arrivalTime = []
-    for i in incidentSerie[cop]:
+    #for i in serie[cop]:
+    for i in serie:
         arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
     sortedArrivalTime =  sorted(arrivalTime)
     interArrivalTime = []
@@ -509,13 +531,14 @@ def interArrrival_time_distribution(cop,incidentSerie, stepInterval = 300,limit 
     qtdInterArrival = []
     axisXInterArrival = []
     qtdeTotal = 0
+    
     for i in np.arange(0,limit,stepInterval):
         qtdeTotal = qtdeTotal + len([t for t in interArrivalTime if t>i and t<=i+stepInterval]) 
         qtdInterArrival.append(len([t for t in interArrivalTime if t>i and t<=i+stepInterval]))
         axisXInterArrival.append(i)
     
     percInterArrival = []
-        
+    
     for q in qtdInterArrival:
         percInterArrival.append(float(q)/float(qtdeTotal))
     
@@ -529,11 +552,13 @@ def interArrrival_time_distribution(cop,incidentSerie, stepInterval = 300,limit 
     fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais de incidentes")
     plt.ylabel("Probabilidade (%)")
     plt.xlabel("Intervalo (s)")
+    #plt.plot(axisXInterArrival,qtdInterArrival,'ro-')#,
     plt.plot(axisXInterArrival,percInterArrival,'ro-',
         axisXInterArrival,funcExpGenLinear(np.array(axisXInterArrival),*poptLinear),'b^-')
     
     index = np.arange(0,limit,stepInterval)
     plt.bar(axisXInterArrival,percInterArrival,width=stepInterval,color='gray',align='edge')
+    #plt.bar(axisXInterArrival,qtdInterArrival,width=stepInterval,color='gray',align='edge')
     plt.xticks(axisXInterArrival,rotation=90)
     plt.grid(True)
     fig.set_size_inches(18.5,10.5)
@@ -541,7 +566,7 @@ def interArrrival_time_distribution(cop,incidentSerie, stepInterval = 300,limit 
     plt.close('all')
    
 
-def interArrrival_distance_distribution(cop,incidentSerie, stepInterval = 300,limit = 10000):
+def interArrrival_distance_distribution(cop,serie, stepInterval = 300,limit = 10000):
 
     """
         Calcula a distribuição da distancia entre ocorrencias dos incidentes.
@@ -551,14 +576,14 @@ def interArrrival_distance_distribution(cop,incidentSerie, stepInterval = 300,li
     longs = []
     interArrivalDistance = []
     #ordena sequencialmente no tempo os incidentes
-    arrivalSequence = sorted(incidentSerie[cop],key=lambda x: x.reporting_date)
+    arrivalSequence = sorted(serie,key=lambda x: x.reporting_date)
     for i in range(0,len(arrivalSequence)-1):
-        if(incidentSerie[cop][i].lon and incidentSerie[cop][i].lat and incidentSerie[cop][i+1].lon and incidentSerie[cop][i+1].lat):
-            lats.append(float(incidentSerie[cop][i].lat))
-            longs.append(float(incidentSerie[cop][i].lon))
+        if(serie[i].lon and serie[i].lat and serie[i+1].lon and serie[i+1].lat):
+            lats.append(float(serie[i].lat))
+            longs.append(float(serie[i].lon))
             interArrivalDistance.append(haversine(
-                float(incidentSerie[cop][i+1].lon),float(incidentSerie[cop][i+1].lat),
-                float(incidentSerie[cop][i].lon),float(incidentSerie[cop][i].lat)
+                float(serie[i+1].lon),float(serie[i+1].lat),
+                float(serie[i].lon),float(serie[i].lat)
             ))
 
     qtdInterArrival = []
@@ -572,10 +597,11 @@ def interArrrival_distance_distribution(cop,incidentSerie, stepInterval = 300,li
     
     percInterArrivalDistance = []
         
-    for q in qtdInterArrival:
-        percInterArrivalDistance.append(float(q)/float(qtdeTotal))
+    #for q in qtdInterArrival:
+    #    percInterArrivalDistance.append(float(q)/float(qtdeTotal))
         
-    poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(axisX),np.array(percInterArrivalDistance))
+    percInterArrivalDistance = qtdInterArrival
+    #poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(axisX),np.array(percInterArrivalDistance))
         
     
     plt.close('all')
@@ -584,8 +610,8 @@ def interArrrival_distance_distribution(cop,incidentSerie, stepInterval = 300,li
     plt.xlabel("Distancia (km)")
     plt.ylabel("Probabilidade (%)")
     fig.set_size_inches(18.5,10.5)
-    plt.plot(axisX,percInterArrivalDistance,'ro-',
-        axisX,funcExpGenLinear(np.array(axisX),*poptLinear),'b^-')
+    plt.plot(axisX,percInterArrivalDistance,'ro-')#,
+        #axisX,funcExpGenLinear(np.array(axisX),*poptLinear),'b^-')
     index = np.arange(0,limit,stepInterval)
     plt.bar(axisX,percInterArrivalDistance,width=stepInterval,color='gray')
     plt.grid(True)
@@ -593,7 +619,7 @@ def interArrrival_distance_distribution(cop,incidentSerie, stepInterval = 300,li
     plt.close('all')
         
 
-def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
+def incidents_location(cop,serie, stepInterval = 300,limit = 10000):
 
     """
         Plota a localização dos incidentes long (eixo X) x lat (eixo Y)
@@ -603,7 +629,7 @@ def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
     longs = []
     tempo = []
     cluster2DLatLong =[]
-    for i in incidentSerie[cop]:
+    for i in serie:
         tempo.append(i.reporting_date)
         if(i.lon and i.lat):
             cluster2DLatLong.append([float(i.lat),float(i.lon)])
@@ -613,8 +639,6 @@ def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
         elif(i.lon and i.lat and haversine(float(latLongCops[cop][1]),float(latLongCops[cop][0]),float(i.lon),float(i.lat))<=50):
             lats.append(float(i.lat))
             longs.append(float(i.lon))
-
-    #calculando os cluster. Quantidade necessaria = sqrt(n/2) e os centro (lat,long)
 
     #centro de massa = media da latitude e longitude
     sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(lats)
@@ -633,48 +657,7 @@ def incidents_location(cop,incidentSerie, stepInterval = 300,limit = 10000):
     plt.grid(True)
     fig.savefig('incidents_location_'+cop+'.png',dpi=96)
     plt.close('all')
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    menorTempo = np.min(tempo)
-    cluster3DLatLong =[]
-    for lat,lon,t in zip(lats,longs,tempo):
-        #cluster3DLatLong.append([lat,lon,(t - menorTempo).total_seconds()])
-        cluster3DLatLong.append([lat,lon])
-        ax.scatter(lat, lon, (t - menorTempo).total_seconds(),c='r')
-        
-    """
-    #clusters geograficos
-    features  = array(cluster3DLatLong)
-    k = int(math.sqrt(len(lats)/2.0))
     
-    clusters,distorcao = kmeans(features,k)
-    print cop ,' com ',k, ' clusters DISTORCAO = ',distorcao
-    """
-    clusters = computeCluster(cop,incidentSerie)
-    for c in clusters:
-        print cop, "-----------------", c
-        ax.scatter(c[0], c[1],c='y',s=200)
-
-    #centro de massa = media da latitude e longitude
-    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(lats)
-    mediaLat = arithmeticMean
-    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(longs)
-    mediaLon = arithmeticMean
-    tmpTempo = []
-    for t in tempo:
-        tmpTempo.append((t - menorTempo).total_seconds())
-    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(tmpTempo)
-    mediaTempo = arithmeticMean
-    ax.scatter(mediaLat, mediaLon, mediaTempo,c='b')
-    ax.set_xlabel('Latitude', fontsize=20)
-    ax.set_ylabel('Longitude', fontsize=20)
-    ax.set_zlabel('Tempo', fontsize=20)
-    ax.set_title('Incidentes no tempo e no espaco')
-    fig.set_size_inches(18.5,10.5)
-    fig.savefig('3D_incidents_location_'+cop+'.png',dpi=96)
-    #plt.show()
-
-
 def haversine(lon1, lat1, lon2, lat2):
     """
     Calculate the great circle distance between two points 
@@ -699,7 +682,7 @@ def computeCluster(cop,serie):
     tempo = []
     cluster3DLatLong =[]
     serieItens =[]
-    for i in serie[cop]:
+    for i in serie:
         
         if(cop == 'TODOS' and i.lon and i.lat):
             latitudes.append(float(i.lat))
@@ -716,7 +699,10 @@ def computeCluster(cop,serie):
     #clusters geograficos
     features  = array(zip(latitudes,longitudes))
     # escolhi pegar o maior valor menor q sqrt(n/2)
-    k = int(math.floor(math.sqrt(len(latitudes)/2.0)))
+    #k = int(math.floor(math.sqrt(len(latitudes)/2.0)))
+    k = int(math.floor(math.sqrt(len(latitudes)/4.0)))
+    if (k==0): 
+        k = 1
     clusters,distorcao = kmeans(features,k)
     
     #criando um vetor com a qtde de clusters necessarios
@@ -734,19 +720,21 @@ def computeCluster(cop,serie):
 
     menorTempo = np.min(tempo)
     #criando os graficos ... cada grafico com uma cor
-    if(cop == 'CC2 - FTC - SSA'):
-        plt.close('all')
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        colors=['y','b','r']
-        for c in range(0,k):
-            for i in itensClusterizados[c]:
-                ax.scatter(float(i.lat), float(i.lon), (i.reporting_date - menorTempo).total_seconds(),c=colors[c])
-        ax.set_xlabel('Latitude', fontsize=20)
-        ax.set_ylabel('Longitude', fontsize=20)
-        ax.set_zlabel('Tempo', fontsize=20)
-        plt.show()
-    return clusters
+    
+    plt.close('all')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    colors=['y','b','r']
+    for c in range(0,k):
+        for i in itensClusterizados[c]:
+              ax.scatter(float(i.lat), float(i.lon), (i.reporting_date - menorTempo).total_seconds(),c=cores[c])
+    ax.set_xlabel('Latitude', fontsize=20)
+    ax.set_ylabel('Longitude', fontsize=20)
+    ax.set_zlabel('Tempo', fontsize=20)
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig('3D_colored_cluster_incidents_location_'+cop+'.png',dpi=96)
+    
+    return clusters,itensClusterizados
 
 if __name__ == "__main__":
     """
@@ -819,19 +807,27 @@ if __name__ == "__main__":
     # inicio da criacao dos graficos
 
     # cluster de ocorrência de incidentes
-    incidents_location('TODOS',allIncidentsDict, stepInterval = 1,limit = 100) # unidade em km
+    incidents_location('TODOS',allIncidentsDict['TODOS'], stepInterval = 1,limit = 100) # unidade em km
     # intervalo em tempo de incidentes consecutivas
-    interArrrival_time_distribution('TODOS',allIncidentsDict, stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
+    interArrrival_time_distribution('TODOS',allIncidentsDict['TODOS'], stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
     # intervalo em distancia (km) de incidentes consecutivos
     #interArrrival_distance_distribution('TODOS',allIncidentsDict, stepInterval = 1,limit = 50) # unidade em km
     
     for cop in allCops:
         # cluster de ocorrência de incidentes
-        incidents_location(cop,allIncidentsDict, stepInterval = 1,limit = 100) # unidade em km
+        incidents_location(cop,allIncidentsDict[cop], stepInterval = 1,limit = 100) # unidade em km
         # intervalo em tempo de incidentes consecutivas
-        interArrrival_time_distribution(cop,allIncidentsDict, stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
+        interArrrival_time_distribution(cop,allIncidentsDict[cop], stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
         # intervalo em distancia (km) de incidentes consecutivos
-        interArrrival_distance_distribution(cop,allIncidentsDict, stepInterval = 1,limit = 50) # unidade em km
+        interArrrival_distance_distribution(cop,allIncidentsDict[cop], stepInterval = 2,limit = 50) # unidade em km
+        #criacao dos clusters
+        clusters, itensClusterizados = computeCluster(cop,allIncidentsDict[cop])
+        #print clusters, itensClusterizados
+        for c in range(0,len(itensClusterizados)):
+            #só posso fazer a contagem de intervalos se exister mais de um incidente no cluster
+            print cop, 'tamano do cluster = ',len(itensClusterizados[c])
+            if(len(itensClusterizados[c])>1):
+                interArrrival_distance_distribution(cop+str(c),itensClusterizados[c], stepInterval = 2,limit = 50) # unidade em segundos    
     
     """
     # contribuição em incidentes
