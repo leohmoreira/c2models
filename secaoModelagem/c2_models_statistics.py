@@ -513,7 +513,7 @@ def compute_statistics(serie):
 
     print "Size Data  = ",sizeData , "Minimo,Maximo = ",(minimum,maximum), "Média = ", arithmeticMean , "Variância = ", variance
 
-def interArrrival_time_distribution(cop,serie, stepInterval = 300,limit = 24*3600):
+def interArrrival_time_distribution(cop,serie, nbins=30,stepInterval = 300,limit = 24*3600,cor='green'):
 
     """
         Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
@@ -524,101 +524,67 @@ def interArrrival_time_distribution(cop,serie, stepInterval = 300,limit = 24*360
     for i in serie:
         arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
     sortedArrivalTime =  sorted(arrivalTime)
+    
     interArrivalTime = []
     for i in range(0,len(sortedArrivalTime)-1):
         interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
     
-    qtdInterArrival = []
-    axisXInterArrival = []
-    qtdeTotal = 0
-    
-    for i in np.arange(0,limit,stepInterval):
-        qtdeTotal = qtdeTotal + len([t for t in interArrivalTime if t>i and t<=i+stepInterval]) 
-        qtdInterArrival.append(len([t for t in interArrivalTime if t>i and t<=i+stepInterval]))
-        axisXInterArrival.append(i)
-    
-    percInterArrival = []
-    
-    for q in qtdInterArrival:
-        percInterArrival.append(float(q)/float(qtdeTotal))
-    
-    
-    poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(axisXInterArrival),np.array(percInterArrival))
-
-    fig, graph = plt.subplots()
     plt.close('all')
-        
     fig = plt.figure()
+
+    qtde, bins, patches = plt.hist(interArrivalTime, nbins, range=(0,limit),facecolor=cor, alpha=0.5)
+    
+    poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
+
+    plt.plot(bins[:-1],qtde,'ro-',
+        bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+    
     fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais de incidentes")
     plt.ylabel("Probabilidade (%)")
     plt.xlabel("Intervalo (s)")
-    #plt.plot(axisXInterArrival,qtdInterArrival,'ro-')#,
-    plt.plot(axisXInterArrival,percInterArrival,'ro-',
-        axisXInterArrival,funcExpGenLinear(np.array(axisXInterArrival),*poptLinear),'b^-')
-    
-    index = np.arange(0,limit,stepInterval)
-    plt.bar(axisXInterArrival,percInterArrival,width=stepInterval,color='gray',align='edge')
-    #plt.bar(axisXInterArrival,qtdInterArrival,width=stepInterval,color='gray',align='edge')
-    plt.xticks(axisXInterArrival,rotation=90)
+    #plt.xticks(bins[:-1],rotation=90)
     plt.grid(True)
     fig.set_size_inches(18.5,10.5)
     fig.savefig('interArrival_time_incidents_'+cop+'.png',dpi=96)
     plt.close('all')
-   
 
-def interArrrival_distance_distribution(cop,serie, stepInterval = 300,limit = 10000):
+    
+def interArrrival_distance_distribution(cop,serie, nbins=30,stepInterval = 1,limit = 10,cor='gray'):
 
     """
         Calcula a distribuição da distancia entre ocorrencias dos incidentes.
         Salva em arquivo
     """
-    lats =[]
-    longs = []
+    
     interArrivalDistance = []
     #ordena sequencialmente no tempo os incidentes
     arrivalSequence = sorted(serie,key=lambda x: x.reporting_date)
     for i in range(0,len(arrivalSequence)-1):
         if(serie[i].lon and serie[i].lat and serie[i+1].lon and serie[i+1].lat):
-            lats.append(float(serie[i].lat))
-            longs.append(float(serie[i].lon))
             interArrivalDistance.append(haversine(
                 float(serie[i+1].lon),float(serie[i+1].lat),
                 float(serie[i].lon),float(serie[i].lat)
             ))
 
-    qtdInterArrival = []
-    axisX = []
-    qtdeTotal = 0
-    for i in np.arange(0,limit,stepInterval):
-        qtd = len([d for d in interArrivalDistance if d>i and d<=i+stepInterval]) 
-        qtdeTotal = qtdeTotal + qtd
-        qtdInterArrival.append(qtd)
-        axisX.append(i)
-    
-    percInterArrivalDistance = []
-        
-    #for q in qtdInterArrival:
-    #    percInterArrivalDistance.append(float(q)/float(qtdeTotal))
-        
-    percInterArrivalDistance = qtdInterArrival
-    #poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(axisX),np.array(percInterArrivalDistance))
-        
-    
     plt.close('all')
     fig = plt.figure()
+
+    qtde, bins, patches = plt.hist(interArrivalDistance, nbins, range=(0,limit),facecolor=cor, alpha=0.5)
+    
+    poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
+
+    plt.plot(bins[:-1],qtde,'ro-',
+        bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+    
     fig.suptitle(cop+"\nIntervalo de distancia das ocorrencias sequenciais de incidentes")
     plt.xlabel("Distancia (km)")
     plt.ylabel("Probabilidade (%)")
-    fig.set_size_inches(18.5,10.5)
-    plt.plot(axisX,percInterArrivalDistance,'ro-')#,
-        #axisX,funcExpGenLinear(np.array(axisX),*poptLinear),'b^-')
-    index = np.arange(0,limit,stepInterval)
-    plt.bar(axisX,percInterArrivalDistance,width=stepInterval,color='gray')
+    #plt.xticks(bins[:-1],rotation=90)
     plt.grid(True)
+    fig.set_size_inches(18.5,10.5)
     fig.savefig('interArrival_distance_incidents_'+cop+'.png',dpi=96)
     plt.close('all')
-        
-
+    
 def incidents_location(cop,serie, stepInterval = 300,limit = 10000):
 
     """
@@ -819,16 +785,16 @@ if __name__ == "__main__":
         # intervalo em tempo de incidentes consecutivas
         interArrrival_time_distribution(cop,allIncidentsDict[cop], stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
         # intervalo em distancia (km) de incidentes consecutivos
-        interArrrival_distance_distribution(cop,allIncidentsDict[cop], stepInterval = 2,limit = 50) # unidade em km
+        interArrrival_distance_distribution(cop,allIncidentsDict[cop], nbins=10,limit = 5) # unidade em km
         #criacao dos clusters
         clusters, itensClusterizados = computeCluster(cop,allIncidentsDict[cop])
-        #print clusters, itensClusterizados
+        
+        """
         for c in range(0,len(itensClusterizados)):
             #só posso fazer a contagem de intervalos se exister mais de um incidente no cluster
-            print cop, 'tamano do cluster = ',len(itensClusterizados[c])
             if(len(itensClusterizados[c])>1):
                 interArrrival_distance_distribution(cop+str(c),itensClusterizados[c], stepInterval = 2,limit = 50) # unidade em segundos    
-    
+        """
     """
     # contribuição em incidentes
     plot_graph_pie('pizzaIncidents.png',"Incidentes",allIncidentsDict)
