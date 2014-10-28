@@ -216,10 +216,38 @@ def get_all_reports():
         Retorna todos os relatos de situação agrupados em um array
     """
     allReports = RelatoDeSituacao.get_all()
-    return [report for report in allReports 
-            if (inicioAmostragem <= report.data_hora and report.data_hora <=terminoAmostragem)
-    ]
+    reports = []
+    for r in allReports:
+            if (
+                    inicioAmostragem <= r.data_hora and 
+                    r.data_hora <=terminoAmostragem and
+                    'cop' in r.relator and # todos tem que ter o COP
+                    r.relator['cop'] != 'COC' # desconsiderei COC
+                ):
+                    # transformando CCTI - SSA em CCDA - SSA
+                    if(r.relator['cop'] == 'CCTI - SSA'):
+                        r.relator['cop'] = 'CCDA - SSA'
+                    reports.append(r)
+    return reports
+        
+def get_dict_all_reports():
+    """
+        Retorna todos os relatos agrupados em um dicionário cuja chave é o nome do COP
+    """
+    dictionaryAllReports = {}
+    allCops = get_all_cops()
     
+    for cop in allCops:
+        dictionaryAllReports[cop] = []
+    dictionaryAllReports['TODOS'] = []
+
+    allReports = get_all_reports()
+    for report in allReports:
+        dictionaryAllReports['TODOS'].append(report)
+        dictionaryAllReports[report.relator['cop']].append(report)
+                
+    return dictionaryAllReports
+
 def get_reports_near_date(listReports,date,mask = '%Y/%m/%d'):
     """
     Retorna todas os relatos de situação de "listReports" nas quais o valor "date" seja igual, segundo "MASK", ao data_hora
@@ -513,7 +541,7 @@ def compute_statistics(serie):
 
     print "Size Data  = ",sizeData , "Minimo,Maximo = ",(minimum,maximum), "Média = ", arithmeticMean , "Variância = ", variance
 
-def interArrrival_time_distribution(cop,serie, nbins=30,stepInterval = 300,limit = 24*3600,cor='green'):
+def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='green'):
 
     """
         Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
@@ -522,7 +550,10 @@ def interArrrival_time_distribution(cop,serie, nbins=30,stepInterval = 300,limit
     arrivalTime = []
     #for i in serie[cop]:
     for i in serie:
-        arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+        if (hasattr(i,'reporting_date')): # é incidente
+            arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+        if (hasattr(i,'data_hora')): # é relato
+            arrivalTime.append(datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
     sortedArrivalTime =  sorted(arrivalTime)
     
     interArrivalTime = []
@@ -532,21 +563,19 @@ def interArrrival_time_distribution(cop,serie, nbins=30,stepInterval = 300,limit
     plt.close('all')
     fig = plt.figure()
 
-    qtde, bins, patches = plt.hist(interArrivalTime, nbins, range=(0,limit),facecolor=cor, alpha=0.5)
-    
-    poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
-
-    plt.plot(bins[:-1],qtde,'ro-',
-        bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
-    
-    fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais de incidentes")
-    plt.ylabel("Probabilidade (%)")
-    plt.xlabel("Intervalo (s)")
-    #plt.xticks(bins[:-1],rotation=90)
-    plt.grid(True)
-    fig.set_size_inches(18.5,10.5)
-    fig.savefig('interArrival_time_incidents_'+cop+'.png',dpi=96)
-    plt.close('all')
+    if(len(interArrivalTime)>0):
+        qtde, bins, patches = plt.hist(interArrivalTime, nbins, range=(0,limit),facecolor=cor, alpha=0.5)
+        poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
+        plt.plot(bins[:-1],qtde,'ro-',
+            bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+        fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais de incidentes")
+        plt.ylabel("Probabilidade (%)")
+        plt.xlabel("Intervalo (s)")
+        plt.xticks(bins[:-1],rotation=45)
+        plt.grid(True)
+        fig.set_size_inches(18.5,10.5)
+        fig.savefig('interArrival_time_'+cop+'.png',dpi=96)
+        plt.close('all')
 
     
 def interArrrival_distance_distribution(cop,serie, nbins=30,stepInterval = 1,limit = 10,cor='gray'):
@@ -694,6 +723,7 @@ def computeCluster(cop,serie):
     for c in range(0,k):
         for i in itensClusterizados[c]:
               ax.scatter(float(i.lat), float(i.lon), (i.reporting_date - menorTempo).total_seconds(),c=cores[c])
+    ax.set_title('Incidentes', fontsize=24)
     ax.set_xlabel('Latitude', fontsize=20)
     ax.set_ylabel('Longitude', fontsize=20)
     ax.set_zlabel('Tempo', fontsize=20)
@@ -722,73 +752,70 @@ if __name__ == "__main__":
     allPunctualActionsDict = get_dict_all_actions_by_type('PONTUAL')
     allIntervalActionsDict = get_dict_all_actions_by_type('INTERVALO')
     allIncidentsDict = get_dict_all_incidents()
-    
-    allReports = get_all_reports()
+    allReportsDict = get_dict_all_reports()
+
     allCops = get_all_cops()
     incidentsSerie = {}
     actionsSerie = {}
     punctualActionsSerie = {}
     intervalActionsSerie = {}
-    reportsSerie = []
+    reportsSerie = {}
     incidentsSerie['TODOS'] = []
     actionsSerie['TODOS'] = []
     punctualActionsSerie['TODOS'] = []
     intervalActionsSerie['TODOS'] = []
+    reportsSerie['TODOS'] = []
     for day in matchDays:
         #for day in mdays:
             incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
             actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
             punctualActionsSerie['TODOS'].append(len(get_actions_near_date(allPunctualActionsDict['TODOS'],day)))
             intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
-            reportsSerie.append(len(get_reports_near_date(allReports,day)))
+            reportsSerie['TODOS'].append(len(get_reports_near_date(allReportsDict['TODOS'],day)))
     for cop in allCops:
         incidentsSerie[cop]=[]
         actionsSerie[cop]=[]
         punctualActionsSerie[cop] = []
         intervalActionsSerie[cop] = []
+        reportsSerie[cop] = []
         for day in matchDays:
-        #for day in mdays:
-            #print cop
-            #print "Incidentes"
-            #print day, len(get_incidents_near_date(allIncidentsDict[cop],day))
             incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
-            #print "Acoes"
-            #print day, len(get_actions_near_date(allActionsDict[cop],day))
             actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
             punctualActionsSerie[cop].append(len(get_actions_near_date(allPunctualActionsDict[cop],day)))
-            #print "Acoes Pontuais"
-            #print day, len(get_actions_near_date(allPunctualActionsDict[cop],day))
             intervalActionsSerie[cop].append(len(get_actions_near_date(allIntervalActionsDict[cop],day)))
-            #print "Acoes Intervalo"
-            #print day, len(get_actions_near_date(allIntervalActionsDict[cop],day))
+            reportsSerie[cop].append(len(get_reports_near_date(allReportsDict[cop],day)))
                 
-    tmpQtdeAction = []
-    for cop in allCops:
-        for qtd in actionsSerie[cop]:
-            tmpQtdeAction.append(qtd)
-    #print set(tmpQtdeAction)
-
     # termino da geracao dos dados para estatisticas
     
     # inicio da criacao dos graficos
 
+    # cluster 3D
+    computeCluster('TODOS',allIncidentsDict['TODOS'])
     # cluster de ocorrência de incidentes
     incidents_location('TODOS',allIncidentsDict['TODOS'], stepInterval = 1,limit = 100) # unidade em km
     # intervalo em tempo de incidentes consecutivas
-    interArrrival_time_distribution('TODOS',allIncidentsDict['TODOS'], stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
+    interArrrival_time_distribution('incidentes_TODOS',allIncidentsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
+    # intevalo em tepo de relatos consecutivos
+    interArrrival_time_distribution('relatos_TODOS',allReportsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
     # intervalo em distancia (km) de incidentes consecutivos
     #interArrrival_distance_distribution('TODOS',allIncidentsDict, stepInterval = 1,limit = 50) # unidade em km
-    
+    # resumo TODOS
+    plot_resume_cop("Resumo_AcoesXIncidentes_TODOS.png",'TODOS',matchDays,incidentsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
+    plot_resume_cop("Resumo_AcoesXRelatos_TODOS.png",'TODOS',matchDays,reportsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
     for cop in allCops:
         # cluster de ocorrência de incidentes
         incidents_location(cop,allIncidentsDict[cop], stepInterval = 1,limit = 100) # unidade em km
         # intervalo em tempo de incidentes consecutivas
-        interArrrival_time_distribution(cop,allIncidentsDict[cop], stepInterval = 4 * 60,limit = 2*3600) # unidade em segundos
+        interArrrival_time_distribution('incidentes_'+ cop,allIncidentsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
+        # intervalo em tempo de relatos consecutivos
+        interArrrival_time_distribution('relatos_'+ cop,allReportsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
         # intervalo em distancia (km) de incidentes consecutivos
         interArrrival_distance_distribution(cop,allIncidentsDict[cop], nbins=10,limit = 5) # unidade em km
         #criacao dos clusters
         clusters, itensClusterizados = computeCluster(cop,allIncidentsDict[cop])
-        
+        #resumo de cops
+        plot_resume_cop("Resumo_AcoesXIncidentes_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
+        plot_resume_cop("Resumo_AcoesXRelatos_"+cop+".png",cop,matchDays,reportsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
         """
         for c in range(0,len(itensClusterizados)):
             #só posso fazer a contagem de intervalos se exister mais de um incidente no cluster
