@@ -71,11 +71,19 @@ def get_all_cops():
         Retorna todos os COPs baseado nas sincronizacoes
     """
     
-    allSincronizations = Sincronizacao.get_all()
+    #allSincronizations = Sincronizacao.get_all()
 
-    return set([sinc.cop_responsavel['id'] for sinc in allSincronizations 
-            if ((sinc.inicio >= inicioAmostragem) and (sinc.fim <=terminoAmostragem))
-            ])
+    #return set([sinc.cop_responsavel['id'] for sinc in allSincronizations 
+    #        if ((sinc.inicio >= inicioAmostragem) and (sinc.fim <=terminoAmostragem))
+    #        ])
+    return ['CCDA - BHZ',
+            'CCDA - BSB',
+            'CCDA - FOR',
+            'CCDA - REC',
+            'CCDA - RIO',
+            'CCDA - SSA',
+            'CC2 - FTC - SSA',
+            'CCTI - SSA']
 
     
 def get_dict_all_actions():
@@ -176,12 +184,17 @@ def get_all_incidents():
     """
     allIncidents = Incident.get_all()
     allCops = get_all_cops()
-    return [i for i in allIncidents 
+    incidents = []
+    for i in allIncidents:
                         if(
                             (i['operations_center'] in allCops) and
                             (inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
-                        )
-    ]
+                        ):
+                        # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
+                            if(i['operations_center'] == 'CCTI - SSA' or i['operations_center'] == 'CC2 - FTC - SSA'):
+                                i['operations_center'] = 'CCDA - SSA'
+                            incidents.append(i)
+    return incidents    
     
 def get_dict_all_incidents():
     """
@@ -216,16 +229,18 @@ def get_all_reports():
         Retorna todos os relatos de situação agrupados em um array
     """
     allReports = RelatoDeSituacao.get_all()
+    allCops = get_all_cops()
     reports = []
     for r in allReports:
             if (
                     inicioAmostragem <= r.data_hora and 
                     r.data_hora <=terminoAmostragem and
                     'cop' in r.relator and # todos tem que ter o COP
-                    r.relator['cop'] != 'COC' # desconsiderei COC
+                    r.relator['cop'] in allCops
+                    #r.relator['cop'] != 'COC' # desconsiderei COC
                 ):
-                    # transformando CCTI - SSA em CCDA - SSA
-                    if(r.relator['cop'] == 'CCTI - SSA'):
+                    # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
+                    if(r.relator['cop'] == 'CCTI - SSA' or r.relator['cop'] == 'CC2 - FTC - SSA'):
                         r.relator['cop'] = 'CCDA - SSA'
                     reports.append(r)
     return reports
@@ -552,13 +567,14 @@ def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='gre
     for i in serie:
         if (hasattr(i,'reporting_date')): # é incidente
             arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
-        if (hasattr(i,'data_hora')): # é relato
+        elif (hasattr(i,'data_hora')): # é relato
             arrivalTime.append(datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
     sortedArrivalTime =  sorted(arrivalTime)
-    
+
     interArrivalTime = []
-    for i in range(0,len(sortedArrivalTime)-1):
-        interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+    if(len(sortedArrivalTime)>0):
+        for i in range(0,len(sortedArrivalTime)-1):
+            interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
     
     plt.close('all')
     fig = plt.figure()
@@ -588,31 +604,32 @@ def interArrrival_distance_distribution(cop,serie, nbins=30,stepInterval = 1,lim
     interArrivalDistance = []
     #ordena sequencialmente no tempo os incidentes
     arrivalSequence = sorted(serie,key=lambda x: x.reporting_date)
-    for i in range(0,len(arrivalSequence)-1):
-        if(serie[i].lon and serie[i].lat and serie[i+1].lon and serie[i+1].lat):
-            interArrivalDistance.append(haversine(
-                float(serie[i+1].lon),float(serie[i+1].lat),
-                float(serie[i].lon),float(serie[i].lat)
-            ))
+    if(len(arrivalSequence)>0):
+        for i in range(0,len(arrivalSequence)-1):
+            if(serie[i].lon and serie[i].lat and serie[i+1].lon and serie[i+1].lat):
+                interArrivalDistance.append(haversine(
+                    float(serie[i+1].lon),float(serie[i+1].lat),
+                    float(serie[i].lon),float(serie[i].lat)
+                ))
 
     plt.close('all')
     fig = plt.figure()
+    if(len(interArrivalDistance)>0):
+        qtde, bins, patches = plt.hist(interArrivalDistance, nbins, range=(0,limit),facecolor=cor, alpha=0.5)
+        
+        poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
 
-    qtde, bins, patches = plt.hist(interArrivalDistance, nbins, range=(0,limit),facecolor=cor, alpha=0.5)
-    
-    poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
-
-    plt.plot(bins[:-1],qtde,'ro-',
-        bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
-    
-    fig.suptitle(cop+"\nIntervalo de distancia das ocorrencias sequenciais de incidentes")
-    plt.xlabel("Distancia (km)")
-    plt.ylabel("Probabilidade (%)")
-    #plt.xticks(bins[:-1],rotation=90)
-    plt.grid(True)
-    fig.set_size_inches(18.5,10.5)
-    fig.savefig('interArrival_distance_incidents_'+cop+'.png',dpi=96)
-    plt.close('all')
+        plt.plot(bins[:-1],qtde,'ro-',
+            bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+        
+        fig.suptitle(cop+"\nIntervalo de distancia das ocorrencias sequenciais de incidentes")
+        plt.xlabel("Distancia (km)")
+        plt.ylabel("Probabilidade (%)")
+        #plt.xticks(bins[:-1],rotation=90)
+        plt.grid(True)
+        fig.set_size_inches(18.5,10.5)
+        fig.savefig('interArrival_distance_incidents_'+cop+'.png',dpi=96)
+        plt.close('all')
     
 def incidents_location(cop,serie, stepInterval = 300,limit = 10000):
 
@@ -635,23 +652,24 @@ def incidents_location(cop,serie, stepInterval = 300,limit = 10000):
             lats.append(float(i.lat))
             longs.append(float(i.lon))
 
-    #centro de massa = media da latitude e longitude
-    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(lats)
-    mediaLat = arithmeticMean
-    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(longs)
-    mediaLon = arithmeticMean
+    if(len(lats)>0 and len(longs)>0):
+        #centro de massa = media da latitude e longitude
+        sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(lats)
+        mediaLat = arithmeticMean
+        sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(longs)
+        mediaLon = arithmeticMean
 
-    plt.close('all')
-    fig = plt.figure()
-    fig.suptitle(cop+"\nLocalizacao dos incidentes")
-    plt.xlabel("Longitude")
-    plt.ylabel("Latitude")
-    fig.set_size_inches(18.5,10.5)
-    plt.plot(longs,lats,"ro")
-    plt.plot(mediaLon,mediaLat,'b*')
-    plt.grid(True)
-    fig.savefig('incidents_location_'+cop+'.png',dpi=96)
-    plt.close('all')
+        plt.close('all')
+        fig = plt.figure()
+        fig.suptitle(cop+"\nLocalizacao dos incidentes")
+        plt.xlabel("Longitude")
+        plt.ylabel("Latitude")
+        fig.set_size_inches(18.5,10.5)
+        plt.plot(longs,lats,"ro")
+        plt.plot(mediaLon,mediaLat,'b*')
+        plt.grid(True)
+        fig.savefig('incidents_location_'+cop+'.png',dpi=96)
+        plt.close('all')
     
 def haversine(lon1, lat1, lon2, lat2):
     """
@@ -698,6 +716,7 @@ def computeCluster(cop,serie):
     k = int(math.floor(math.sqrt(len(latitudes)/4.0)))
     if (k==0): 
         k = 1
+    print cop
     clusters,distorcao = kmeans(features,k)
     
     #criando um vetor com a qtde de clusters necessarios
@@ -754,6 +773,8 @@ if __name__ == "__main__":
     allIncidentsDict = get_dict_all_incidents()
     allReportsDict = get_dict_all_reports()
 
+
+
     allCops = get_all_cops()
     incidentsSerie = {}
     actionsSerie = {}
@@ -802,6 +823,15 @@ if __name__ == "__main__":
     # resumo TODOS
     plot_resume_cop("Resumo_AcoesXIncidentes_TODOS.png",'TODOS',matchDays,incidentsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
     plot_resume_cop("Resumo_AcoesXRelatos_TODOS.png",'TODOS',matchDays,reportsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
+
+    allCops = ['CCDA - BHZ',
+            'CCDA - BSB',
+            'CCDA - FOR',
+            'CCDA - REC',
+            'CCDA - RIO',
+            'CCDA - SSA',
+            ]
+
     for cop in allCops:
         # cluster de ocorrência de incidentes
         incidents_location(cop,allIncidentsDict[cop], stepInterval = 1,limit = 100) # unidade em km
@@ -816,12 +846,12 @@ if __name__ == "__main__":
         #resumo de cops
         plot_resume_cop("Resumo_AcoesXIncidentes_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
         plot_resume_cop("Resumo_AcoesXRelatos_"+cop+".png",cop,matchDays,reportsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
-        """
-        for c in range(0,len(itensClusterizados)):
-            #só posso fazer a contagem de intervalos se exister mais de um incidente no cluster
-            if(len(itensClusterizados[c])>1):
-                interArrrival_distance_distribution(cop+str(c),itensClusterizados[c], stepInterval = 2,limit = 50) # unidade em segundos    
-        """
+        
+        #for c in range(0,len(itensClusterizados)):
+        #    #só posso fazer a contagem de intervalos se exister mais de um incidente no cluster
+        #    if(len(itensClusterizados[c])>1):
+        #        interArrrival_distance_distribution(cop+str(c),itensClusterizados[c], stepInterval = 2,limit = 50) # unidade em segundos    
+    
     """
     # contribuição em incidentes
     plot_graph_pie('pizzaIncidents.png',"Incidentes",allIncidentsDict)
@@ -910,4 +940,26 @@ if __name__ == "__main__":
         print "Total de ações intervalo", len(allIntervalActionsDict [cop])
         compute_statistics(intervalActionsSerie[cop])
     """
+    """
+    # mergeando dicionarios de incidentes com relatos
+    print "tamanho de incidentesTODOS = ", len(allIncidentsDict ['TODOS'])
+    print "tamanho de relatosTODOS = ", len(allReportsDict ['TODOS'])
+    allIncidentsDict['TODOS'] = allIncidentsDict ['TODOS'] + allReportsDict['TODOS']
+    print "tamanho de JUNTOS = ", len(allIncidentsDict ['TODOS'])
+    interArrrival_time_distribution('INCREL_TODOS',allIncidentsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
     
+    for cop in allCops:
+        allIncidentsDict[cop] = allIncidentsDict[cop] + allReportsDict[cop]
+
+    # mergeando series de incidentes com relatos
+    for d in range(0,len(matchDays)):
+        incidentsSerie['TODOS'][d] = incidentsSerie['TODOS'][d] + reportsSerie['TODOS'][d]
+        for cop in allCops:
+            incidentsSerie[cop][d] = incidentsSerie[cop][d] + reportsSerie[cop][d]
+            interArrrival_time_distribution('INCREL_'+ cop,allIncidentsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
+            plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
+
+    # intervalo em tempo de incidentes + relatos consecutivas
+    interArrrival_time_distribution('INCREL_TODOS',allIncidentsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
+    plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_TODOS.png",'TODOS',matchDays,incidentsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
+    """
