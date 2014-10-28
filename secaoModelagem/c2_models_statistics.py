@@ -18,8 +18,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 from incidentes.models import *
 
@@ -716,7 +716,6 @@ def computeCluster(cop,serie):
     k = int(math.floor(math.sqrt(len(latitudes)/4.0)))
     if (k==0): 
         k = 1
-    print cop
     clusters,distorcao = kmeans(features,k)
     
     #criando um vetor com a qtde de clusters necessarios
@@ -940,13 +939,12 @@ if __name__ == "__main__":
         print "Total de ações intervalo", len(allIntervalActionsDict [cop])
         compute_statistics(intervalActionsSerie[cop])
     """
-    """
+    
     # mergeando dicionarios de incidentes com relatos
-    print "tamanho de incidentesTODOS = ", len(allIncidentsDict ['TODOS'])
-    print "tamanho de relatosTODOS = ", len(allReportsDict ['TODOS'])
+    
     allIncidentsDict['TODOS'] = allIncidentsDict ['TODOS'] + allReportsDict['TODOS']
-    print "tamanho de JUNTOS = ", len(allIncidentsDict ['TODOS'])
     interArrrival_time_distribution('INCREL_TODOS',allIncidentsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
+#    incidents_location('TODOS',allIncidentsDict['TODOS'], stepInterval = 1,limit = 100) # unidade em km
     
     for cop in allCops:
         allIncidentsDict[cop] = allIncidentsDict[cop] + allReportsDict[cop]
@@ -957,9 +955,9 @@ if __name__ == "__main__":
         for cop in allCops:
             incidentsSerie[cop][d] = incidentsSerie[cop][d] + reportsSerie[cop][d]
             interArrrival_time_distribution('INCREL_'+ cop,allIncidentsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
+#            incidents_location('INCREL'+cop,allIncidentsDict[cop], stepInterval = 1,limit = 100) # unidade em km
             plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
 
-    # intervalo em tempo de incidentes + relatos consecutivas
-    interArrrival_time_distribution('INCREL_TODOS',allIncidentsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
+    
     plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_TODOS.png",'TODOS',matchDays,incidentsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
-    """
+    
