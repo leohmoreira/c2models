@@ -437,6 +437,66 @@ def plot_graph_bar_full(filename,title,axisX,
     fig.set_size_inches(18.5,10.5)
     fig.savefig(filename,dpi=96)
 
+def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
+
+    plt.close('all')
+    fig = plt.figure()
+
+    graphIncidentsActions = plt.subplot2grid((3,1),(0,0))      
+    graphIncidentsActions.set_title(cop+"\nIncidentes & Acoes - Correlacao: " + str(stats.pearsonr(actions,incidents)[0]))
+    graphIncidentsActions.set_ylabel("Quantidade")
+    graphIncidentsActions.set_xlabel("Dias")
+    linesIncidentsActions = graphIncidentsActions.plot(axisX,incidents, 'ro-',axisX,actions, 'bo-')
+    graphIncidentsActions.xaxis_date()
+    graphIncidentsActions.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphIncidentsActions.grid(True)
+    plt.legend(iter(linesIncidentsActions),('Incidentes','Acoes'),prop={'size':10},bbox_to_anchor=(1, 1.4))
+
+    graphReportsActions = plt.subplot2grid((3,1),(1,0))      
+    graphReportsActions.set_title(cop+"\nRelatos & Acoes - Correlacao: " + str(stats.pearsonr(actions,reports)[0]))
+    graphReportsActions.set_ylabel("Quantidade")
+    graphReportsActions.set_xlabel("Dias")
+    linesReportsActions = graphReportsActions.plot(axisX,reports, 'go-',axisX,actions, 'bo-')
+    graphReportsActions.xaxis_date()
+    graphReportsActions.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphReportsActions.grid(True)
+    plt.legend(iter(linesReportsActions),('Relatos','Acoes'),prop={'size':10},bbox_to_anchor=(1, 1.4))#, borderaxespad=0, bbox_to_anchor=(1.11, 0.5),prop={'size':12})
+
+    # correlacao entre incidentes e relatos
+    """
+    graphReportsIncidents = plt.subplot2grid((4,1),(2,0))      
+    graphReportsIncidents.set_title(cop+"\nRelatos & Incidentes - Correlacao: " + str(stats.pearsonr(incidents,reports)[0]))
+    graphReportsIncidents.set_ylabel("Quantidade")
+    graphReportsIncidents.set_xlabel("Dias")
+    linesReportsIncidents = graphReportsIncidents.plot(axisX,reports, 'go-',axisX,incidents, 'ro-')
+    graphReportsIncidents.xaxis_date()
+    graphReportsIncidents.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphReportsIncidents.grid(True)
+    plt.legend(iter(linesReportsIncidents),('Relatos','Incidentes'),prop={'size':10})
+    """     
+    # correlacao entre acoes e (incidentes + relatos)
+
+    incRel = [i+r for i,r in zip(incidents,reports)]
+
+    graphIncRelsActions = plt.subplot2grid((3,1),(2,0))      
+    graphIncRelsActions.set_title(cop+"\nIncidentes + Relatos & Acoes - Correlacao: " + str(stats.pearsonr(actions,incRel)[0]))
+    graphIncRelsActions.set_ylabel("Quantidade")
+    graphIncRelsActions.set_xlabel("Dias")
+    linesIncRelsActions = graphIncRelsActions.plot(axisX,incRel, 'co-',axisX,actions, 'bo-')
+    graphIncRelsActions.xaxis_date()
+    graphIncRelsActions.xaxis.set_major_formatter(DateFormatter("%d/%m"))
+    plt.xticks(axisX,rotation=90)
+    graphIncRelsActions.grid(True)
+    plt.legend(iter(linesIncRelsActions),('Incidentes + Relatos','Acoes'),prop={'size':10},bbox_to_anchor=(1, 1.4))
+
+    plt.tight_layout(pad=0.01, w_pad=0.01, h_pad=0.01)
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig(filename,dpi=96)
+
+"""
 def plot_resume_cop(filename,cop,axisX,incidents,actions,punctualActions,intervalActions):
 
     plt.close('all')
@@ -496,6 +556,7 @@ def plot_resume_cop(filename,cop,axisX,incidents,actions,punctualActions,interva
     plt.tight_layout(pad=0.01, w_pad=0.01, h_pad=0.01)
     fig.set_size_inches(18.5,10.5)
     fig.savefig(filename,dpi=96)
+"""
 
 def plot_graph_pie(filename,titulo,serie):
 
@@ -540,13 +601,13 @@ def graph_incidents_per_action(cop,incidents,actions):
     plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
     #plt.show()
 
-def funcExpoPoisson(x,t,lamb):
+def funcExpoPoisson(x,min,max):
 
-    return lamb*t * np.exp(- lamb*x*t)
+    return 1000 / (x * (np.log(max) - np.log(min)))
 
 def funcExpGenLinear(x,a,b,c,d,e,f):
 
-    return a * (b**(c*x)) + d * (e**(f*x))
+    return a * (b**(c*x)) + d * (e**(f*x))   
     
 def compute_statistics(serie):
     """
@@ -580,10 +641,12 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     fig = plt.figure()
 
     if(len(interArrivalTime)>0):
+       
         qtde, bins, patches = plt.hist(interArrivalTime, nbins, range=(0,limit),facecolor=cor, alpha=0.5)
         poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
         plt.plot(bins[:-1],qtde,'ro-',
-            bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+           bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+        
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Probabilidade (%)")
         plt.xlabel("Intervalo (s)")
@@ -850,9 +913,9 @@ if __name__ == "__main__":
     # intervalo em distancia (km) de incidentes consecutivos
     #interArrrival_distance_distribution('TODOS',allIncidentsDict, limit = 50) # unidade em km
     # resumo TODOS
-    plot_resume_cop("Resumo_AcoesXIncidentes_TODOS.png",'TODOS',matchDays,incidentsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
-    plot_resume_cop("Resumo_AcoesXRelatos_TODOS.png",'TODOS',matchDays,reportsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
-
+    plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
+    #plot_resume_cop("Resumo_AcoesXRelatos_TODOS.png",'TODOS',matchDays,reportsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
+    
     allCops = ['CCDA - BHZ',
             'CCDA - BSB',
             'CCDA - FOR',
@@ -871,14 +934,14 @@ if __name__ == "__main__":
         # intervalo em tempo de relatos consecutivos
         interArrrival_time_distribution('Intervalo_Tempo_Relatos_', cop,allReportsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
         # intervalo em distancia (km) de incidentes consecutivos
-        interArrrival_distance_distribution('incidentes','Intervalo_Distancia_Incidentes_',cop,allIncidentsDict[cop], nbins=10,limit = 5) # unidade em km
+    #    interArrrival_distance_distribution('incidentes','Intervalo_Distancia_Incidentes_',cop,allIncidentsDict[cop], nbins=10,limit = 5) # unidade em km
         # intervalo em distancia (km) de relatos consecutivos
-        interArrrival_distance_distribution('relatos','Intervalo_Distancia_Relatos_',cop,allReportsDict[cop], nbins=10,limit = 5) # unidade em km
+    #    interArrrival_distance_distribution('relatos','Intervalo_Distancia_Relatos_',cop,allReportsDict[cop], nbins=10,limit = 5) # unidade em km
         #criacao dos clusters
         clusters, itensClusterizados = computeCluster('Cluster3D_Incidentes_',cop,allIncidentsDict[cop])
         #resumo de cops
-        plot_resume_cop("Resumo_AcoesXIncidentes_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
-        plot_resume_cop("Resumo_AcoesXRelatos_"+cop+".png",cop,matchDays,reportsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
+        plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
+        #plot_resume_cop("Resumo_AcoesXRelatos_"+cop+".png",cop,matchDays,reportsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
         
         #for c in range(0,len(itensClusterizados)):
         #    #só posso fazer a contagem de intervalos se exister mais de um incidente no cluster
@@ -990,8 +1053,8 @@ if __name__ == "__main__":
             incidentsSerie[cop][d] = incidentsSerie[cop][d] + reportsSerie[cop][d]
             interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
 #            incidents_location('INCREL'+cop,allIncidentsDict[cop], stepInterval = 1,limit = 100) # unidade em km
-            plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
+#            plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
 
     
-    plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_TODOS.png",'TODOS',matchDays,incidentsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
+    #plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_TODOS.png",'TODOS',matchDays,incidentsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
     
