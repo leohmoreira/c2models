@@ -29,6 +29,15 @@ actionSize = 43200 #(12 horas em segundos)
 punctualActionSize = 0 #(1 hora em segundos)
 inicioAmostragem = datetime(2013,6,10,0,0,0)
 terminoAmostragem = datetime(2013,6,30,23,59,59)
+#COPs avaliados
+allCops = ['CCDA - BHZ',
+            'CCDA - BSB',
+            'CCDA - FOR',
+            'CCDA - REC',
+            'CCDA - RIO',
+            'CCDA - SSA',
+            'CC2 - FTC - SSA',
+            'CCTI - SSA']
 #localização do COPs
 latLongCops={} # (latitude,longitude)
 latLongCops['CC2 - FTC - SSA'] = (-12.97974,-38.48362)
@@ -66,33 +75,14 @@ cores = ['#f0f8ff',#ALICE BLUE
          '#ff6347',#TOMATO
          '#9acd32'#YELLOWGREEN
         ]
-def get_all_cops():
-    """
-        Retorna todos os COPs baseado nas sincronizacoes
-    """
-    
-    #allSincronizations = Sincronizacao.get_all()
 
-    #return set([sinc.cop_responsavel['id'] for sinc in allSincronizations 
-    #        if ((sinc.inicio >= inicioAmostragem) and (sinc.fim <=terminoAmostragem))
-    #        ])
-    return ['CCDA - BHZ',
-            'CCDA - BSB',
-            'CCDA - FOR',
-            'CCDA - REC',
-            'CCDA - RIO',
-            'CCDA - SSA',
-            'CC2 - FTC - SSA',
-            'CCTI - SSA']
-
-    
 def get_dict_all_actions():
     """
         Retorna todas as ações agrupadas em um dicionário cuja chave é o nome do COP
     """
     allSincronizations = Sincronizacao.get_all()
     dictionaryAllActions = {}
-    allCops = get_all_cops()
+    #allCops = get_all_cops()
     for cop in allCops:
         dictionaryAllActions[cop] = []
     dictionaryAllActions['TODOS'] = []
@@ -118,7 +108,7 @@ def get_dict_all_actions_by_type(actionType):
     """
     allSincronizations = Sincronizacao.get_all()
     dictionaryAllActions = {}
-    allCops = get_all_cops()
+    #allCops = get_all_cops()
     for cop in allCops:
         dictionaryAllActions[cop] = []
     dictionaryAllActions['TODOS'] = []
@@ -154,7 +144,7 @@ def get_all_actions():
 
     allSincronizations = Sincronizacao.get_all()
     allActions = []
-    allCops = get_all_cops()
+    #allCops = get_all_cops()
     for sinc in allSincronizations:
         for action in sinc.acoes:
             if (
@@ -183,7 +173,7 @@ def get_all_incidents():
         Retorna todos os incidentes agrupados em um array
     """
     allIncidents = Incident.get_all()
-    allCops = get_all_cops()
+    #allCops = get_all_cops()
     incidents = []
     for i in allIncidents:
                         if(
@@ -201,7 +191,7 @@ def get_dict_all_incidents():
         Retorna todos os incidentes agrupados em um dicionário cuja chave é o nome do COP
     """
     dictionaryAllIncidents = {}
-    allCops = get_all_cops()
+    #allCops = get_all_cops()
     
     for cop in allCops:
         dictionaryAllIncidents[cop] = []
@@ -229,7 +219,7 @@ def get_all_reports():
         Retorna todos os relatos de situação agrupados em um array
     """
     allReports = RelatoDeSituacao.get_all()
-    allCops = get_all_cops()
+    #allCops = get_all_cops()
     reports = []
     for r in allReports:
             if (
@@ -250,7 +240,7 @@ def get_dict_all_reports():
         Retorna todos os relatos agrupados em um dicionário cuja chave é o nome do COP
     """
     dictionaryAllReports = {}
-    allCops = get_all_cops()
+    #allCops = get_all_cops()
     
     for cop in allCops:
         dictionaryAllReports[cop] = []
@@ -786,20 +776,39 @@ def computeCluster(filename,cop,serie):
     tempo = []
     cluster3DLatLong =[]
     serieItens =[]
+    
     for i in serie:
-        
-        if(cop == 'TODOS' and i.lon and i.lat):
-            latitudes.append(float(i.lat))
-            longitudes.append(float(i.lon))
-            tempo.append(i.reporting_date)
-            cluster3DLatLong.append([float(i.lat),float(i.lon)])
-            serieItens.append(i)
-        elif(i.lon and i.lat and haversine(float(latLongCops[cop][1]),float(latLongCops[cop][0]),float(i.lon),float(i.lat))<=50):
-            latitudes.append(float(i.lat))
-            longitudes.append(float(i.lon))
-            tempo.append(i.reporting_date)
-            cluster3DLatLong.append([float(i.lat),float(i.lon)])
-            serieItens.append(i)
+        if(hasattr(i,'reporting_date')): # é incidentes
+            if(cop == 'TODOS' and i.lon and i.lat):
+                latitudes.append(float(i.lat))
+                longitudes.append(float(i.lon))
+                tempo.append(i.reporting_date)
+                cluster3DLatLong.append([float(i.lat),float(i.lon)])
+                serieItens.append(i)
+                
+            elif(i.lon and i.lat and haversine(float(latLongCops[cop][1]),float(latLongCops[cop][0]),float(i.lon),float(i.lat))<=50):
+                latitudes.append(float(i.lat))
+                longitudes.append(float(i.lon))
+                tempo.append(i.reporting_date)
+                cluster3DLatLong.append([float(i.lat),float(i.lon)])
+                serieItens.append(i)
+                
+        elif(hasattr(i,'data_hora') and hasattr(i.localizacao,'lat') and hasattr(i.localizacao,'lon')): # é relato
+            if(cop == 'TODOS' and hasattr(i.localizacao,'lat') and hasattr(i.localizacao,'lon')):
+                latitudes.append(float(i.localizacao['lat']))
+                longitudes.append(float(i.localizacao['lon']))
+                tempo.append(i.data_hora)
+                cluster3DLatLong.append([float(i.localizacao['lat']),float(i.localizacao['lon'])])
+                serieItens.append(i)
+                
+            elif(hasattr(i.localizacao,'lat') and hasattr(i.localizacao,'lon') and
+                haversine(float(latLongCops[cop][1]),float(latLongCops[cop][0]),float(i.localizacao['lon']),float(i.localizacao['lat']))<=50):
+                latitudes.append(float(i.localizacao['lat']))
+                longitudes.append(float(i.localizacao['lon']))
+                tempo.append(i.data_hora)
+                cluster3DLatLong.append([float(i.localizacao['lat']),float(i.localizacao['lon'])])
+                serieItens.append(i)
+                
     #clusters geograficos
     features  = array(zip(latitudes,longitudes))
     # escolhi pegar o maior valor menor q sqrt(n/2)
@@ -831,7 +840,10 @@ def computeCluster(filename,cop,serie):
     colors=['y','b','r']
     for c in range(0,k):
         for i in itensClusterizados[c]:
-              ax.scatter(float(i.lat), float(i.lon), (i.reporting_date - menorTempo).total_seconds(),c=cores[c])
+            if(hasattr(i,'reporting_date') and i.lon and i.lat): # é incidentes
+                ax.scatter(float(i.lat), float(i.lon), (i.reporting_date - menorTempo).total_seconds(),c='r',s=100)
+            elif(hasattr(i,'data_hora') and hasattr(i.localizacao,'lat') and hasattr(i.localizacao,'lon')): # é relato
+                ax.scatter(float(i.localizacao['lat']), float(i.localizacao['lon']), (i.data_hora - menorTempo).total_seconds(),c='g',s=100)
     ax.set_title('Ocorrencias', fontsize=24)
     ax.set_xlabel('Latitude', fontsize=20)
     ax.set_ylabel('Longitude', fontsize=20)
@@ -862,199 +874,123 @@ if __name__ == "__main__":
     allIntervalActionsDict = get_dict_all_actions_by_type('INTERVALO')
     allIncidentsDict = get_dict_all_incidents()
     allReportsDict = get_dict_all_reports()
+    allIncidentsReportsDict = {}
 
-
-
-    allCops = get_all_cops()
+    #allCops = get_all_cops()
     incidentsSerie = {}
     actionsSerie = {}
     punctualActionsSerie = {}
     intervalActionsSerie = {}
     reportsSerie = {}
+    incidentsReportsSerie = {}
+
     incidentsSerie['TODOS'] = []
     actionsSerie['TODOS'] = []
     punctualActionsSerie['TODOS'] = []
     intervalActionsSerie['TODOS'] = []
     reportsSerie['TODOS'] = []
+    incidentsReportsSerie['TODOS'] = []
     for day in matchDays:
         #for day in mdays:
             incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
             actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
-            punctualActionsSerie['TODOS'].append(len(get_actions_near_date(allPunctualActionsDict['TODOS'],day)))
-            intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
+        #    punctualActionsSerie['TODOS'].append(len(get_actions_near_date(allPunctualActionsDict['TODOS'],day)))
+        #    intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
             reportsSerie['TODOS'].append(len(get_reports_near_date(allReportsDict['TODOS'],day)))
+    
+    # agrupar incidentes e relatos
+    incidentsReportsSerie['TODOS'] = [i + r for i,r in zip(incidentsSerie['TODOS'],reportsSerie['TODOS'])]
+    allIncidentsReportsDict['TODOS'] = allIncidentsDict['TODOS'] + allReportsDict['TODOS']
+
     for cop in allCops:
         incidentsSerie[cop]=[]
         actionsSerie[cop]=[]
         punctualActionsSerie[cop] = []
         intervalActionsSerie[cop] = []
         reportsSerie[cop] = []
+        incidentsReportsSerie[cop] = []
+
         for day in matchDays:
             incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
             actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
-            punctualActionsSerie[cop].append(len(get_actions_near_date(allPunctualActionsDict[cop],day)))
-            intervalActionsSerie[cop].append(len(get_actions_near_date(allIntervalActionsDict[cop],day)))
             reportsSerie[cop].append(len(get_reports_near_date(allReportsDict[cop],day)))
-                
+            # agrupar incidentes e relatos
+            incidentsReportsSerie[cop] = [i + r for i,r in zip(incidentsSerie[cop],reportsSerie[cop])]
+            allIncidentsReportsDict[cop] = allIncidentsDict[cop] + allReportsDict[cop]
+    
     # termino da geracao dos dados para estatisticas
     
     # inicio da criacao dos graficos
 
     # cluster 3D
-    computeCluster('Cluster3D_Incidentes_','TODOS',allIncidentsDict['TODOS'])
+    computeCluster('Cluster3D_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'])
     # cluster de ocorrência de incidentes
     incidents_location('Localizacao_Incidentes_','TODOS',allIncidentsDict['TODOS']) # unidade em km
     # cluster de ocorrência de relatos
     incidents_location('Localizacao_Relatos_','TODOS',allReportsDict['TODOS']) # unidade em km
+    # cluster de ocorrência de incidentes e relatos
+    incidents_location('Localizacao_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS']) # unidade em km
     # intervalo em tempo de incidentes consecutivas
     interArrrival_time_distribution('Intervalo_Tempo_Incidentes_','TODOS',allIncidentsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
-    # intevalo em tepo de relatos consecutivos
+    # intevalo em tempo de relatos consecutivos
     interArrrival_time_distribution('Intervalo_Tempo_Relatos_','TODOS',allReportsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
-    # intervalo em distancia (km) de incidentes consecutivos
-    #interArrrival_distance_distribution('TODOS',allIncidentsDict, limit = 50) # unidade em km
+    # intevalo em tempo de incidentes + relatos consecutivos
+    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
     # resumo TODOS
     plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
-    #plot_resume_cop("Resumo_AcoesXRelatos_TODOS.png",'TODOS',matchDays,reportsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
-    
-    allCops = ['CCDA - BHZ',
-            'CCDA - BSB',
-            'CCDA - FOR',
-            'CCDA - REC',
-            'CCDA - RIO',
-            'CCDA - SSA',
-            ]
+        
+    #cops para os quais sao criados os graficos
+    graphicsFromCops = ['CCDA - BHZ',
+                        'CCDA - BSB',
+                        'CCDA - FOR',
+                        'CCDA - REC',
+                        'CCDA - RIO',
+                        'CCDA - SSA',
+                        ]
 
-    for cop in allCops:
+    for cop in graphicsFromCops:
         # cluster de ocorrência de incidentes
         incidents_location('Localizacao_Incidentes_',cop,allIncidentsDict[cop]) # unidade em km
         # cluster de ocorrência de relatos
         incidents_location('Localizacao_Relatos_',cop,allReportsDict[cop]) # unidade em km
+        # cluster de ocorrência de incidentes e relatos
+        incidents_location('Localizacao_IncidentesRelatos_',cop,allIncidentsReportsDict[cop]) # unidade em km
         # intervalo em tempo de incidentes consecutivas
         interArrrival_time_distribution('Intervalo_Tempo_Incidentes_',cop,allIncidentsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
         # intervalo em tempo de relatos consecutivos
         interArrrival_time_distribution('Intervalo_Tempo_Relatos_', cop,allReportsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
-        # intervalo em distancia (km) de incidentes consecutivos
-    #    interArrrival_distance_distribution('incidentes','Intervalo_Distancia_Incidentes_',cop,allIncidentsDict[cop], nbins=10,limit = 5) # unidade em km
-        # intervalo em distancia (km) de relatos consecutivos
-    #    interArrrival_distance_distribution('relatos','Intervalo_Distancia_Relatos_',cop,allReportsDict[cop], nbins=10,limit = 5) # unidade em km
+        # intevalo em tempo de incidentes + relatos consecutivos
+        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
         #criacao dos clusters
-        clusters, itensClusterizados = computeCluster('Cluster3D_Incidentes_',cop,allIncidentsDict[cop])
+        clusters, itensClusterizados = computeCluster('Cluster3D_IncidentesRelatos_',cop,allIncidentsReportsDict[cop])
         #resumo de cops
         plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
-        #plot_resume_cop("Resumo_AcoesXRelatos_"+cop+".png",cop,matchDays,reportsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
         
         #for c in range(0,len(itensClusterizados)):
         #    #só posso fazer a contagem de intervalos se exister mais de um incidente no cluster
         #    if(len(itensClusterizados[c])>1):
         #        interArrrival_distance_distribution(cop+str(c),itensClusterizados[c], limit = 50) # unidade em segundos    
     
-    """
-    # contribuição em incidentes
-    plot_graph_pie('pizzaIncidents.png',"Incidentes",allIncidentsDict)
-
-    # contribuição em acoes
-    plot_graph_pie('pizzaAcoes.png',"Acoes",allActionsDict)
-
-
-    # barra incidentes por dia
-    plot_graph_bar_full("bar_incidentes_todos.png","Incidentes",matchDays,
-                        incidentsSerie['TODOS'],'TODOS','r',
-                        incidentsSerie['CC2 - FTC - SSA'],'CC2 - FTC - SSA','#0000FF',
-                        incidentsSerie['CCDA - BHZ'],'CCDA - BHZ','#A52A2A',
-                        incidentsSerie['CCDA - BSB'],'CCDA - BSB','#DEB887',
-                        incidentsSerie['CCDA - FOR'],'CCDA - FOR','#7FFF00',
-                        incidentsSerie['CCDA - REC'],'CCDA - REC','#D2691E',
-                        incidentsSerie['CCDA - RIO'],'CCDA - RIO','#9932CC',
-                        incidentsSerie['CCDA - SSA'],'CCDA - SSA','#808080',
-                        )
-
-    # barra acoes por dia
-    plot_graph_bar_full("bar_actions_todos.png","Acoes",matchDays,
-                        actionsSerie['TODOS'],'TODOS','r',
-                        actionsSerie['CC2 - FTC - SSA'],'CC2 - FTC - SSA','#0000FF',
-                        actionsSerie['CCDA - BHZ'],'CCDA - BHZ','#A52A2A',
-                        actionsSerie['CCDA - BSB'],'CCDA - BSB','#DEB887',
-                        actionsSerie['CCDA - FOR'],'CCDA - FOR','#7FFF00',
-                        actionsSerie['CCDA - REC'],'CCDA - REC','#D2691E',
-                        actionsSerie['CCDA - RIO'],'CCDA - RIO','#9932CC',
-                        actionsSerie['CCDA - SSA'],'CCDA - SSA','#808080',
-                        )
-
-    # Incidentes e Açoes por dia 
-    plot_total('incidentes_actions_todos.png',matchDays,
-        incidentsSerie['TODOS'],actionsSerie['TODOS'],
-        incidentsSerie['CCDA - RIO'],actionsSerie['CCDA - RIO'],
-        incidentsSerie['CCDA - BSB'],actionsSerie['CCDA - BSB'],
-        incidentsSerie['CCDA - SSA'],actionsSerie['CCDA - SSA'],
-        incidentsSerie['CCDA - REC'],actionsSerie['CCDA - REC'],
-        incidentsSerie['CCDA - FOR'],actionsSerie['CCDA - FOR'],
-        incidentsSerie['CCDA - BHZ'],actionsSerie['CCDA - BHZ'])
-
-    for cop in allCops:
-        #incidentes por COP por dia
-        plot_graph_bar("incidentes_"+cop+".png",cop + " - Incidentes",matchDays,incidentsSerie[cop],"Incidentes",'r')
-        #acoes por COP por dia
-        plot_graph_bar("actions_"+cop+".png",cop + " - Acoes",matchDays,actionsSerie[cop],"Acoes",'b')
-        #acoes por COP pontuais por dia
-        plot_graph_bar("punctualActions_"+cop+".png",cop + " - Acoes Pontuais",matchDays,punctualActionsSerie[cop],"Acoes",'b')
-        #acoes intervalo por COP por dia
-        plot_graph_bar("intervalActions_"+cop+".png",cop + " - Acoes Intervalo",matchDays,intervalActionsSerie[cop],"Acoes",'b')
-        #Relacao incidentes vs Acoes por COP por dia
-        plot_graph("incidentes_actions_"+cop+".png",cop + " - Incidentes & Acoes",matchDays,incidentsSerie[cop],actionsSerie[cop],('Incidentes','Acoes'))
-        #Resumo
-        plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
-    
-    #Relatos de situacao por dia
-    plot_graph_bar("bar_incidentes.png","Incidentes",matchDays,incidentsSerie['TODOS'],"Incidentes",'r')
-
-    #Incidentes por dia
-    plot_graph_bar("bar_relatosDeSituacao.png","Relatos de Situacao",matchDays,reportsSerie,"Relatos",'g')
-
     # Dados finais
 
     print '-' * 100
+    print 'TODOS'
     print "Total de incidentes", len(allIncidentsDict['TODOS'])
     compute_statistics(incidentsSerie['TODOS'])
+    print "Total de relatos", len(allReportsDict['TODOS'])
+    compute_statistics(reportsSerie['TODOS'])
     print "Total de ações", len(allActionsDict['TODOS'])
     compute_statistics(actionsSerie['TODOS'])
-    print "Total de ações pontuais", len(allPunctualActionsDict['TODOS'])
-    compute_statistics(punctualActionsSerie['TODOS'])
-    print "Total de ações intervalo", len(allIntervalActionsDict ['TODOS'])
-    compute_statistics(intervalActionsSerie['TODOS'])
     print '-' * 100
     
 
-    for cop in allCops:
+    for cop in graphicsFromCops:
         print '-' * 100
         print cop
         print "Total de incidentes", len(allIncidentsDict[cop])
         compute_statistics(incidentsSerie[cop])
+        print "Total de relatos", len(allReportsDict[cop])
+        compute_statistics(reportsSerie['TODOS'])
         print "Total de ações", len(allActionsDict[cop])
         compute_statistics(actionsSerie[cop])
-        print "Total de ações pontuais", len(allPunctualActionsDict[cop])
-        compute_statistics(punctualActionsSerie[cop])
-        print "Total de ações intervalo", len(allIntervalActionsDict [cop])
-        compute_statistics(intervalActionsSerie[cop])
-    """
-    
-    # mergeando dicionarios de incidentes com relatos
-    
-    allIncidentsDict['TODOS'] = allIncidentsDict ['TODOS'] + allReportsDict['TODOS']
-    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
-#    incidents_location('TODOS',allIncidentsDict['TODOS']) # unidade em km
-    
-    for cop in allCops:
-        allIncidentsDict[cop] = allIncidentsDict[cop] + allReportsDict[cop]
-
-    # mergeando series de incidentes com relatos
-    for d in range(0,len(matchDays)):
-        incidentsSerie['TODOS'][d] = incidentsSerie['TODOS'][d] + reportsSerie['TODOS'][d]
-        for cop in allCops:
-            incidentsSerie[cop][d] = incidentsSerie[cop][d] + reportsSerie[cop][d]
-            interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
-#            incidents_location('INCREL'+cop,allIncidentsDict[cop], stepInterval = 1,limit = 100) # unidade em km
-#            plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_"+cop+".png",cop,matchDays,incidentsSerie[cop],actionsSerie[cop],punctualActionsSerie[cop],intervalActionsSerie[cop])
-
-    
-    #plot_resume_cop("Resumo2_AcoesXIncidentesRelatos_TODOS.png",'TODOS',matchDays,incidentsSerie['TODOS'],actionsSerie['TODOS'],punctualActionsSerie['TODOS'],intervalActionsSerie['TODOS'])
-    
+            
