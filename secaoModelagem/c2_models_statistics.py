@@ -591,13 +591,14 @@ def graph_incidents_per_action(cop,incidents,actions):
     plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
     #plt.show()
 
-def funcExpoPoisson(x,min,max):
+def funcExpoPoisson(x,a,b,c,d):
 
-    return 1000 / (x * (np.log(max) - np.log(min)))
+    return (a - np.exp(-b * x)) + (c - np.exp(-d * x))
 
-def funcExpGenLinear(x,a,b,c,d,e,f):
+def funcExpGenLinear(x,a,d,f):
 
-    return a * (b**(c*x)) + d * (e**(f*x))   
+    #return a * (b**(c*x)) + d * (e**(f*x))   
+    return a * (np.exp(-x)) + d * ((0.9999)**(f*x))
         
 def compute_statistics(serie):
     """
@@ -634,8 +635,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
        
         qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
         totalQtde = np.sum(qtde)
+        
         poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
-        print cop, 'coeficientes = ',poptLinear
+        #print cop, 'coeficientes = ',poptLinear
         plt.plot(bins[:-1],qtde,'ro-',
            bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
         
@@ -647,14 +649,19 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig.set_size_inches(18.5,10.5)
         fig.savefig(filename+cop+'.png',dpi=96)
         plt.close('all')
-        """
+        
         fig = plt.figure()
         totalQtde = np.sum(qtde)
         percentagemQtde = [float(q)/totalQtde for q in qtde]
-        print percentagemQtde
-        poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(percentagemQtde))
-        plt.plot(bins[:-1],percentagemQtde,'ro-',
-           bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+        
+        z = np.polyfit(bins[:-1], percentagemQtde, 10)
+        p = np.poly1d(z)
+        
+        poptPerc, pocvPerc = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(percentagemQtde))
+        print cop, 'coeficientes = ',poptPerc
+        plt.plot(np.array(bins[:-1]),percentagemQtde,'ro-',
+            np.array(bins[:-1]),funcExpGenLinear(np.array(bins[:-1]),*poptPerc),'b^-',
+            np.array(bins[:-1]),p(bins[:-1]),'g^-')
         
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Probabilidade (%)")
@@ -664,7 +671,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig.set_size_inches(18.5,10.5)
         fig.savefig('percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')
-        """
+        
     
 def interArrrival_distance_distribution(tipo,filename,cop,serie, nbins=30,limit = 10,cor='gray'):
 
