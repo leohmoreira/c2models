@@ -18,8 +18,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 from incidentes.models import *
 
@@ -591,14 +591,20 @@ def graph_incidents_per_action(cop,incidents,actions):
     plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
     #plt.show()
 
+def funcGenPareto(x,a,c):
+
+    return a * np.power(( 1 + c * x),(-1 - (1/c)))
+    
+
 def funcExpoPoisson(x,a,b,c,d):
 
     return (a - np.exp(-b * x)) + (c - np.exp(-d * x))
 
-def funcExpGenLinear(x,a,d,f):
+def funcExpGenLinear(x,a,d):
 
     #return a * (b**(c*x)) + d * (e**(f*x))   
-    return a * (np.exp(-x)) + d * ((0.9999)**(f*x))
+    
+    return a * (np.exp(-d*x)) #+ d * ((0.9999)**(f*x))
         
 def compute_statistics(serie):
     """
@@ -637,9 +643,11 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         totalQtde = np.sum(qtde)
         
         poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
+        poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
         #print cop, 'coeficientes = ',poptLinear
         plt.plot(bins[:-1],qtde,'ro-',
-           bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+           bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-',
+            bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-')
         
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Quantidade")
@@ -653,20 +661,33 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig = plt.figure()
         totalQtde = np.sum(qtde)
         percentagemQtde = [float(q)/totalQtde for q in qtde]
+        maximum = np.max(bins[:-1])
+        axisX = [float(i)/maximum for i in bins[:-1]]
+        axisX = np.array(axisX)
         
-        z = np.polyfit(bins[:-1], percentagemQtde, 10)
+        #z = np.polyfit(bins[:-1], percentagemQtde, 10)
+        z = np.polyfit(axisX, percentagemQtde, 10)
         p = np.poly1d(z)
         
-        poptPerc, pocvPerc = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(percentagemQtde))
+        #poptPerc, pocvPerc = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(percentagemQtde))
+        poptExp, pocvExp = curve_fit(funcExpGenLinear,axisX,np.array(percentagemQtde))
+        poptPerc, pocvPerc = curve_fit(funcGenPareto,axisX,np.array(percentagemQtde))
         print cop, 'coeficientes = ',poptPerc
-        plt.plot(np.array(bins[:-1]),percentagemQtde,'ro-',
-            np.array(bins[:-1]),funcExpGenLinear(np.array(bins[:-1]),*poptPerc),'b^-',
-            np.array(bins[:-1]),p(bins[:-1]),'g^-')
+        #plt.plot(np.array(bins[:-1]),percentagemQtde,'ro-',
+        #    np.array(bins[:-1]),funcExpGenLinear(np.array(bins[:-1]),*poptPerc),'b^-',
+        #    np.array(bins[:-1]),p(bins[:-1]),'g^-')
+
+        plt.plot(axisX,percentagemQtde,'ro-',
+            axisX,funcGenPareto(axisX,*poptPerc),'g^-',
+            axisX,funcExpGenLinear(axisX,*poptExp),'b^-',
+         #   axisX,p(axisX),'g^-'
+         )
         
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Probabilidade (%)")
         plt.xlabel("Intervalo (s)")
-        plt.xticks(bins[:-1],rotation=45)
+        #plt.xticks(bins[:-1],rotation=45)
+        plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
         fig.savefig('percentagem_'+filename+cop+'.png',dpi=96)
