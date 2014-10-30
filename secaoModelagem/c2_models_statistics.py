@@ -18,8 +18,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 from incidentes.models import *
 
@@ -593,7 +593,7 @@ def graph_incidents_per_action(cop,incidents,actions):
 
 def funcGenPareto(x,a,c):
 
-    return a * np.power(( 1 + c * x),(-1 - (1/c)))
+    return a * np.power(( 1 + c * x/(7200.0)),(-1 - (1/c)))
     
 
 def funcExpoPoisson(x,a,b,c,d):
@@ -604,7 +604,7 @@ def funcExponential(x,a,b):
 
     #return a * (b**(c*x)) + d * (e**(f*x))   
     
-    return a * (np.exp(-b*x)) #+ d * ((0.9999)**(f*x))
+    return a * (np.exp(-b*x/(7200.0))) #+ d * ((0.9999)**(f*x))
         
 def compute_statistics(serie):
     """
@@ -642,12 +642,12 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
         totalQtde = np.sum(qtde)
         
-        poptLinear, pocvLinear = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
-        poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
+    #    poptLinear, pocvLinear = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
+    #    poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
         #print cop, 'coeficientes = ',poptLinear
-        plt.plot(bins[:-1],qtde,'ro-',
-           bins[:-1],funcExponential(np.array(bins[:-1]),*poptLinear),'b^-',
-            bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-')
+    #    plt.plot(bins[:-1],qtde,'ro-',
+    #       bins[:-1],funcExponential(np.array(bins[:-1]),*poptLinear),'b^-',
+    #        bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-')
         
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Quantidade")
@@ -665,30 +665,50 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         axisX = [float(i)/maximum for i in bins[:-1]]
         axisX = np.array(axisX)
         
+        axisX = bins[:-1]
+
         #z = np.polyfit(bins[:-1], percentagemQtde, 10)
         z = np.polyfit(axisX, percentagemQtde, 10)
         p = np.poly1d(z)
         
         #poptPerc, pocvPerc = curve_fit(funcExponential,np.array(bins[:-1]),np.array(percentagemQtde))
         poptExp, pocvExp = curve_fit(funcExponential,axisX,np.array(percentagemQtde))
-        poptPerc, pocvPerc = curve_fit(funcGenPareto,axisX,np.array(percentagemQtde))
-        print cop, 'coeficientes = ',poptPerc
+        poptPareto, pocvPareto = curve_fit(funcGenPareto,axisX,np.array(percentagemQtde))
+        
+        # calculco do coeficiente de determincao (R2) - Cel Dieguez
+
+        ss_res = np.dot((percentagemQtde - funcExponential(axisX, *poptExp)),(percentagemQtde - funcExponential(axisX, *poptExp)))
+        ymean = np.mean(percentagemQtde)
+        ss_tot = np.dot((percentagemQtde-ymean),(percentagemQtde-ymean))
+        r2Exponencial = 1-ss_res/ss_tot
+
+        ss_res = np.dot((percentagemQtde - funcGenPareto(axisX, *poptPareto)),(percentagemQtde - funcGenPareto(axisX, *poptPareto)))
+        ymean = np.mean(percentagemQtde)
+        ss_tot = np.dot((percentagemQtde-ymean),(percentagemQtde-ymean))
+        r2Pareto = 1-ss_res/ss_tot
+
+        #print cop, 'coeficientes = ',poptPareto
         #plt.plot(np.array(bins[:-1]),percentagemQtde,'ro-',
-        #    np.array(bins[:-1]),funcExponential(np.array(bins[:-1]),*poptPerc),'b^-',
+        #    np.array(bins[:-1]),funcExponential(np.array(bins[:-1]),*poptPareto),'b^-',
         #    np.array(bins[:-1]),p(bins[:-1]),'g^-')
 
-        linesGrafico = plt.plot(axisX,percentagemQtde,'ro-',
-            axisX,funcGenPareto(axisX,*poptPerc),'g*-',
-            axisX,funcExponential(axisX,*poptExp),'b^-',
+        linesGrafico = plt.plot(axisX,percentagemQtde,'ro-',label='Real',linewidth=3)
+        plt.plot(axisX,funcGenPareto(axisX,*poptPareto),'g*-',label='Pareto',linewidth=3)
+        plt.plot(axisX,funcExponential(axisX,*poptExp),'b^-',label='Exponencial',linewidth=3)
          #   axisX,p(axisX),'g^-'
-         )
-        plt.legend(iter(linesGrafico),('Real','Pareto Generalizada','Exponencial'),prop={'size':10})
+        # )
+        #plt.legend(iter(linesGrafico),('Real','Pareto Generalizada','Exponencial'),prop={'size':10})
+        plt.legend(prop={'size':12})
+        plt.bar(axisX,percentagemQtde,width=axisX[1],color="#a9a9a9")
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Probabilidade (%)")
         plt.xlabel("Intervalo (s)")
         #plt.xticks(bins[:-1],rotation=45)
-        plt.xticks(axisX,rotation=45)
+        plt.xticks(axisX,rotation=60)
         plt.grid(True)
+
+        fig.text(0.67,.78,"R2 - Exponencial = " + str(r2Exponencial),fontsize=16,color='b')
+        fig.text(0.67,.72,"R2 - Pareto = " + str(r2Pareto),fontsize=16,color='g')
         fig.set_size_inches(18.5,10.5)
         fig.savefig('percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')
@@ -978,11 +998,11 @@ if __name__ == "__main__":
     # cluster de ocorrência de incidentes e relatos
     incidents_location('Localizacao_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS']) # unidade em km
     # intervalo em tempo de incidentes consecutivas
-    interArrrival_time_distribution('Intervalo_Tempo_Incidentes_','TODOS',allIncidentsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
+    interArrrival_time_distribution('Intervalo_Tempo_Incidentes_','TODOS',allIncidentsDict['TODOS'], nbins=25,limit = 300 + 2*3600) # unidade em segundos
     # intevalo em tempo de relatos consecutivos
-    interArrrival_time_distribution('Intervalo_Tempo_Relatos_','TODOS',allReportsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
+    interArrrival_time_distribution('Intervalo_Tempo_Relatos_','TODOS',allReportsDict['TODOS'], nbins=25,limit = 300 + 2*3600) # unidade em segundos
     # intevalo em tempo de incidentes + relatos consecutivos
-    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 2*3600) # unidade em segundos
+    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=25,limit = 300 + 2*3600) # unidade em segundos
     # resumo TODOS
     plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
         
@@ -1003,11 +1023,11 @@ if __name__ == "__main__":
         # cluster de ocorrência de incidentes e relatos
         incidents_location('Localizacao_IncidentesRelatos_',cop,allIncidentsReportsDict[cop]) # unidade em km
         # intervalo em tempo de incidentes consecutivas
-        interArrrival_time_distribution('Intervalo_Tempo_Incidentes_',cop,allIncidentsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
+        interArrrival_time_distribution('Intervalo_Tempo_Incidentes_',cop,allIncidentsDict[cop], nbins=25,limit = 300 + 2*3600) # unidade em segundos
         # intervalo em tempo de relatos consecutivos
-        interArrrival_time_distribution('Intervalo_Tempo_Relatos_', cop,allReportsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
+        interArrrival_time_distribution('Intervalo_Tempo_Relatos_', cop,allReportsDict[cop], nbins=25,limit = 2*3600) # unidade em segundos
         # intevalo em tempo de incidentes + relatos consecutivos
-        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=24,limit = 2*3600) # unidade em segundos
+        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=25,limit = 300 + 2*3600) # unidade em segundos
         #criacao dos clusters
         clusters, itensClusterizados = computeCluster('Cluster3D_IncidentesRelatos_',cop,allIncidentsReportsDict[cop])
         #resumo de cops
