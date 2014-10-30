@@ -600,11 +600,11 @@ def funcExpoPoisson(x,a,b,c,d):
 
     return (a - np.exp(-b * x)) + (c - np.exp(-d * x))
 
-def funcExpGenLinear(x,a,d):
+def funcExponential(x,a,b):
 
     #return a * (b**(c*x)) + d * (e**(f*x))   
     
-    return a * (np.exp(-d*x)) #+ d * ((0.9999)**(f*x))
+    return a * (np.exp(-b*x)) #+ d * ((0.9999)**(f*x))
         
 def compute_statistics(serie):
     """
@@ -642,11 +642,11 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
         totalQtde = np.sum(qtde)
         
-        poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
+        poptLinear, pocvLinear = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
         poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
         #print cop, 'coeficientes = ',poptLinear
         plt.plot(bins[:-1],qtde,'ro-',
-           bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-',
+           bins[:-1],funcExponential(np.array(bins[:-1]),*poptLinear),'b^-',
             bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-')
         
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
@@ -669,20 +669,20 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         z = np.polyfit(axisX, percentagemQtde, 10)
         p = np.poly1d(z)
         
-        #poptPerc, pocvPerc = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(percentagemQtde))
-        poptExp, pocvExp = curve_fit(funcExpGenLinear,axisX,np.array(percentagemQtde))
+        #poptPerc, pocvPerc = curve_fit(funcExponential,np.array(bins[:-1]),np.array(percentagemQtde))
+        poptExp, pocvExp = curve_fit(funcExponential,axisX,np.array(percentagemQtde))
         poptPerc, pocvPerc = curve_fit(funcGenPareto,axisX,np.array(percentagemQtde))
         print cop, 'coeficientes = ',poptPerc
         #plt.plot(np.array(bins[:-1]),percentagemQtde,'ro-',
-        #    np.array(bins[:-1]),funcExpGenLinear(np.array(bins[:-1]),*poptPerc),'b^-',
+        #    np.array(bins[:-1]),funcExponential(np.array(bins[:-1]),*poptPerc),'b^-',
         #    np.array(bins[:-1]),p(bins[:-1]),'g^-')
 
-        plt.plot(axisX,percentagemQtde,'ro-',
-            axisX,funcGenPareto(axisX,*poptPerc),'g^-',
-            axisX,funcExpGenLinear(axisX,*poptExp),'b^-',
+        linesGrafico = plt.plot(axisX,percentagemQtde,'ro-',
+            axisX,funcGenPareto(axisX,*poptPerc),'g*-',
+            axisX,funcExponential(axisX,*poptExp),'b^-',
          #   axisX,p(axisX),'g^-'
          )
-        
+        plt.legend(iter(linesGrafico),('Real','Pareto Generalizada','Exponencial'),prop={'size':10})
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Probabilidade (%)")
         plt.xlabel("Intervalo (s)")
@@ -733,10 +733,10 @@ def interArrrival_distance_distribution(tipo,filename,cop,serie, nbins=30,limit 
     if(len(interArrivalDistance)>0):
         qtde, bins, patches = plt.hist(interArrivalDistance, nbins, range=(0,limit),facecolor=cor, alpha=0.5)
         
-        poptLinear, pocvLinear = curve_fit(funcExpGenLinear,np.array(bins[:-1]),np.array(qtde))
+        poptLinear, pocvLinear = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
 
         plt.plot(bins[:-1],qtde,'ro-',
-            bins[:-1],funcExpGenLinear(np.array(bins[:-1]),*poptLinear),'b^-')
+            bins[:-1],funcExponential(np.array(bins[:-1]),*poptLinear),'b^-')
         
         fig.suptitle(cop+"\nIntervalo de distancia das ocorrencias sequenciais")
         plt.xlabel("Distancia (km)")
