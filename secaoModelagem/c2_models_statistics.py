@@ -18,8 +18,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 from incidentes.models import *
 
@@ -75,6 +75,15 @@ cores = ['#f0f8ff',#ALICE BLUE
          '#ff6347',#TOMATO
          '#9acd32'#YELLOWGREEN
         ]
+matchDays = [datetime(2013,6,15,0,0,0),datetime(2013,6,16,0,0,0),datetime(2013,6,17,0,0,0),datetime(2013,6,19,0,0,0),datetime(2013,6,20,0,0,0),
+                 datetime(2013,6,22,0,0,0),datetime(2013,6,23,0,0,0),datetime(2013,6,26,0,0,0),datetime(2013,6,27,0,0,0),datetime(2013,6,30,0,0,0)]
+    
+mdays = [#datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2013,6,13),
+        #datetime(2013,6,14),
+        datetime(2013,6,15),datetime(2013,6,16),datetime(2013,6,17),datetime(2013,6,18),datetime(2013,6,19),
+        datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
+        datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
+        #datetime(2013,7,1)]
 
 def get_dict_all_actions():
     """
@@ -591,20 +600,23 @@ def graph_incidents_per_action(cop,incidents,actions):
     plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
     #plt.show()
 
-def funcGenPareto(x,a,c):
+def funcGenPareto(x,a):
 
-    return a * np.power(( 1 + c * x/(7200.0)),(-1 - (1/c)))
+    normalizador = np.max(x)
+    minimo = np.min(x)
+    #return a * np.power(( 1 + c * x/b),(-1 - (1/c)))
+    return (a * (minimo**a))/(np.power(x,a+1))
     
-
 def funcExpoPoisson(x,a,b,c,d):
 
+    normalizador = np.max(x)
     return (a - np.exp(-b * x)) + (c - np.exp(-d * x))
 
-def funcExponential(x,a,b):
+def funcExponential(x,a,b,c):
 
-    #return a * (b**(c*x)) + d * (e**(f*x))   
-    
-    return a * (np.exp(-b*x/(7200.0))) #+ d * ((0.9999)**(f*x))
+    normalizador = np.max(x)    
+    #return a * (np.exp(-b*x/normalizador)) 
+    return a * (np.exp(-b*x/c))
         
 def compute_statistics(serie):
     """
@@ -620,31 +632,40 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
         Salva em arquivo
     """
+   
     arrivalTime = []
-    
+
     for i in serie:
         if (hasattr(i,'reporting_date')): # é incidente
+        #    if (datetime.strptime(datetime.strftime(i.reporting_date,'%Y/%m/%d'),'%Y/%m/%d') == datetime(2013,6,20,0,0,0)):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
         elif (hasattr(i,'data_hora')): # é relato
+        #    if (datetime.strptime(datetime.strftime(i.data_hora,'%Y/%m/%d'),'%Y/%m/%d') == datetime(2013,6,20,0,0,0)):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+    
     sortedArrivalTime =  sorted(arrivalTime)
 
     interArrivalTime = []
     if(len(sortedArrivalTime)>0):
         for i in range(0,len(sortedArrivalTime)-1):
-            interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
-    
+        #    interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+            if((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds() > 0):
+                interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+               
     plt.close('all')
     fig = plt.figure()
 
     if(len(interArrivalTime)>0):
        
         qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
+        bins = bins[1:]
+        qtde = qtde[0:-1]
+        print "-----------=====",bins[0],bins[1]
         totalQtde = np.sum(qtde)
         
     #    poptLinear, pocvLinear = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
     #    poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
-        #print cop, 'coeficientes = ',poptLinear
+    #    print cop, 'coeficientes = ',poptLinear
     #    plt.plot(bins[:-1],qtde,'ro-',
     #       bins[:-1],funcExponential(np.array(bins[:-1]),*poptLinear),'b^-',
     #        bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-')
@@ -662,8 +683,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         totalQtde = np.sum(qtde)
         percentagemQtde = [float(q)/totalQtde for q in qtde]
         maximum = np.max(bins[:-1])
-        axisX = [float(i)/maximum for i in bins[:-1]]
-        axisX = np.array(axisX)
+    #    axisX = [float(i)/maximum for i in bins[:-1]]
+    #    axisX = np.array(axisX)
         
         axisX = bins[:-1]
 
@@ -675,6 +696,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         poptExp, pocvExp = curve_fit(funcExponential,axisX,np.array(percentagemQtde))
         poptPareto, pocvPareto = curve_fit(funcGenPareto,axisX,np.array(percentagemQtde))
         
+        print cop,"Coeficientes Pareto = ", poptPareto
+        compute_statistics(interArrivalTime)
         # calculco do coeficiente de determincao (R2) - Cel Dieguez
 
         ss_res = np.dot((percentagemQtde - funcExponential(axisX, *poptExp)),(percentagemQtde - funcExponential(axisX, *poptExp)))
@@ -920,20 +943,45 @@ def computeCluster(filename,cop,serie):
     
     return clusters,itensClusterizados
 
+def qtdePacoteTime(filename,cop,serie, nbins=30,limit = 24*3600,cor='green'):
+
+    """
+        Calcula a qtde de chegadas de pacotes em cada slot de tempo
+        Salva em arquivo
+    """
+    arrivalTime = []
+    
+    for i in serie:
+        if (hasattr(i,'reporting_date')): # é incidente
+            arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+        elif (hasattr(i,'data_hora')): # é relato
+            arrivalTime.append(datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+    sortedArrivalTime =  sorted(arrivalTime)
+
+    interArrivalTime = []
+    if(len(sortedArrivalTime)>0):
+        for i in range(0,len(sortedArrivalTime)-1):
+            interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+    
+    qtdeNoIntervalo = 0
+    qtdes=[]
+    tempo = 0
+    for t in range(0,len(interArrivalTime)):
+        tempo = tempo + interArrivalTime[t]
+        qtdeNoIntervalo = qtdeNoIntervalo + 1
+        if(tempo > 300):
+            qtdes.append(qtdeNoIntervalo)
+            tempo = 0
+            qtdeNoIntervalo = 0
+
+    print cop, "No intervalo = ", qtdes
+    print cop, "total = ", np.sum(qtdes)
+    
 if __name__ == "__main__":
     """
         Loop principal
     """
-    
-    matchDays = [datetime(2013,6,15,0,0,0),datetime(2013,6,16,0,0,0),datetime(2013,6,17,0,0,0),datetime(2013,6,19,0,0,0),datetime(2013,6,20,0,0,0),
-                 datetime(2013,6,22,0,0,0),datetime(2013,6,23,0,0,0),datetime(2013,6,26,0,0,0),datetime(2013,6,27,0,0,0),datetime(2013,6,30,0,0,0)]
-    
-    mdays = [#datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2013,6,13),
-            #datetime(2013,6,14),
-            datetime(2013,6,15),datetime(2013,6,16),datetime(2013,6,17),datetime(2013,6,18),datetime(2013,6,19),
-            datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
-            datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
-            #datetime(2013,7,1)]
+        
     #matchDays = mdays
     # inicio da geracao dos dados para estatisticas
     allActionsDict = get_dict_all_actions()
@@ -998,11 +1046,15 @@ if __name__ == "__main__":
     # cluster de ocorrência de incidentes e relatos
     incidents_location('Localizacao_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS']) # unidade em km
     # intervalo em tempo de incidentes consecutivas
-    interArrrival_time_distribution('Intervalo_Tempo_Incidentes_','TODOS',allIncidentsDict['TODOS'], nbins=25,limit = 300 + 2*3600) # unidade em segundos
+#    interArrrival_time_distribution('Intervalo_Tempo_Incidentes_','TODOS',allIncidentsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
     # intevalo em tempo de relatos consecutivos
-    interArrrival_time_distribution('Intervalo_Tempo_Relatos_','TODOS',allReportsDict['TODOS'], nbins=25,limit = 300 + 2*3600) # unidade em segundos
+#    interArrrival_time_distribution('Intervalo_Tempo_Relatos_','TODOS',allReportsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
     # intevalo em tempo de incidentes + relatos consecutivos
-    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=25,limit = 300 + 2*3600) # unidade em segundos
+    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
+
+    # contagem de pacotes
+    #qtdePacoteTime('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
+
     # resumo TODOS
     plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
         
@@ -1023,15 +1075,18 @@ if __name__ == "__main__":
         # cluster de ocorrência de incidentes e relatos
         incidents_location('Localizacao_IncidentesRelatos_',cop,allIncidentsReportsDict[cop]) # unidade em km
         # intervalo em tempo de incidentes consecutivas
-        interArrrival_time_distribution('Intervalo_Tempo_Incidentes_',cop,allIncidentsDict[cop], nbins=25,limit = 300 + 2*3600) # unidade em segundos
+    #    interArrrival_time_distribution('Intervalo_Tempo_Incidentes_',cop,allIncidentsDict[cop], nbins=60,limit = 3600) # unidade em segundos
         # intervalo em tempo de relatos consecutivos
-        interArrrival_time_distribution('Intervalo_Tempo_Relatos_', cop,allReportsDict[cop], nbins=25,limit = 2*3600) # unidade em segundos
+    #    interArrrival_time_distribution('Intervalo_Tempo_Relatos_', cop,allReportsDict[cop], nbins=60,limit = 3600) # unidade em segundos
         # intevalo em tempo de incidentes + relatos consecutivos
-        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=25,limit = 300 + 2*3600) # unidade em segundos
+        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=60,limit = 3600) # unidade em segundos
         #criacao dos clusters
-        clusters, itensClusterizados = computeCluster('Cluster3D_IncidentesRelatos_',cop,allIncidentsReportsDict[cop])
+    #    clusters, itensClusterizados = computeCluster('Cluster3D_IncidentesRelatos_',cop,allIncidentsReportsDict[cop])
         #resumo de cops
         plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
+
+         # contagem de pacotes
+        #qtdePacoteTime('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=60,limit = 3600) # unidade em segundos
         
         #for c in range(0,len(itensClusterizados)):
         #    #só posso fazer a contagem de intervalos se exister mais de um incidente no cluster
