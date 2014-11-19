@@ -18,17 +18,20 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
+
 from incidentes.models import *
 
 #Constantes
 dateDistanceLimit = 43200 #(12 horas em segundos)
 actionSize = 43200 #(12 horas em segundos)
 punctualActionSize = 0 #(1 hora em segundos)
-inicioAmostragem = datetime(2013,6,10,0,0,0)
-terminoAmostragem = datetime(2013,6,30,23,59,59)
+#inicioAmostragem = datetime(2013,6,10,0,0,0)
+#terminoAmostragem = datetime(2013,6,30,23,59,59)
+inicioAmostragem = datetime(2014,6,12,0,0,0)
+terminoAmostragem = datetime(2014,7,13,23,59,59)
 #COPs avaliados
 allCops = ['CCDA - BHZ',
             'CCDA - BSB',
@@ -84,6 +87,15 @@ mdays = [#datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2
         datetime(2013,6,20),datetime(2013,6,21),datetime(2013,6,22),datetime(2013,6,23),datetime(2013,6,24),
         datetime(2013,6,25),datetime(2013,6,26),datetime(2013,6,27),datetime(2013,6,28),datetime(2013,6,29),datetime(2013,6,30)]
         #datetime(2013,7,1)]
+
+copadays = [datetime(2014,6,12),datetime(2014,6,13),datetime(2014,6,14),datetime(2014,6,15),datetime(2014,6,16),
+            datetime(2014,6,17),datetime(2014,6,18),datetime(2014,6,19),datetime(2014,6,20),datetime(2014,6,21),
+            datetime(2014,6,22),datetime(2014,6,23),datetime(2014,6,24),datetime(2014,6,25),datetime(2014,6,26),
+            datetime(2014,6,28),datetime(2014,6,29),datetime(2014,6,30),datetime(2014,7,1),datetime(2014,7,4),
+            datetime(2014,7,5),datetime(2014,7,8),datetime(2014,7,9),datetime(2014,7,12),datetime(2014,7,13),
+            ]
+
+matchDays = copadays
 
 def get_dict_all_actions():
     """
@@ -185,14 +197,14 @@ def get_all_incidents():
     #allCops = get_all_cops()
     incidents = []
     for i in allIncidents:
-                        if(
-                            (i['operations_center'] in allCops) and
-                            (inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
-                        ):
-                        # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
-                            if(i['operations_center'] == 'CCTI - SSA' or i['operations_center'] == 'CC2 - FTC - SSA'):
-                                i['operations_center'] = 'CCDA - SSA'
-                            incidents.append(i)
+        if(
+            (i['operations_center']['id'] in allCops) and
+            (inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
+        ):
+        # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
+            if(i['operations_center']['id'] == 'CCTI - SSA' or i['operations_center']['id'] == 'CC2 - FTC - SSA'):
+                i['operations_center']['id'] = 'CCDA - SSA'
+            incidents.append(i)
     return incidents    
     
 def get_dict_all_incidents():
@@ -209,8 +221,8 @@ def get_dict_all_incidents():
     allIncidents = get_all_incidents()
     for incident in allIncidents:
         dictionaryAllIncidents['TODOS'].append(incident)
-        dictionaryAllIncidents[incident['operations_center']].append(incident)
-                
+        dictionaryAllIncidents[incident['operations_center']['id']].append(incident)
+
     return dictionaryAllIncidents
 
 
@@ -591,7 +603,7 @@ def graph_incidents_per_action(cop,incidents,actions):
     for a in sorted(incAction):
         tmpAction.append(a)
         tmpInc.append(incAction[a])
-    print cop, " === ",tmpAction
+    
     #popt, pocv = curve_fit(func,tmpAction,tmpInc)
     #print popt
     plt.close('all')
@@ -1038,13 +1050,13 @@ if __name__ == "__main__":
     # inicio da criacao dos graficos
 
     # cluster 3D
-    computeCluster('Cluster3D_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'])
+#    computeCluster('Cluster3D_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'])
     # cluster de ocorrência de incidentes
-    incidents_location('Localizacao_Incidentes_','TODOS',allIncidentsDict['TODOS']) # unidade em km
+#    incidents_location('Localizacao_Incidentes_','TODOS',allIncidentsDict['TODOS']) # unidade em km
     # cluster de ocorrência de relatos
-    incidents_location('Localizacao_Relatos_','TODOS',allReportsDict['TODOS']) # unidade em km
+#    incidents_location('Localizacao_Relatos_','TODOS',allReportsDict['TODOS']) # unidade em km
     # cluster de ocorrência de incidentes e relatos
-    incidents_location('Localizacao_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS']) # unidade em km
+#    incidents_location('Localizacao_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS']) # unidade em km
     # intervalo em tempo de incidentes consecutivas
 #    interArrrival_time_distribution('Intervalo_Tempo_Incidentes_','TODOS',allIncidentsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
     # intevalo em tempo de relatos consecutivos
@@ -1069,11 +1081,11 @@ if __name__ == "__main__":
 
     for cop in graphicsFromCops:
         # cluster de ocorrência de incidentes
-        incidents_location('Localizacao_Incidentes_',cop,allIncidentsDict[cop]) # unidade em km
+    #    incidents_location('Localizacao_Incidentes_',cop,allIncidentsDict[cop]) # unidade em km
         # cluster de ocorrência de relatos
-        incidents_location('Localizacao_Relatos_',cop,allReportsDict[cop]) # unidade em km
+    #    incidents_location('Localizacao_Relatos_',cop,allReportsDict[cop]) # unidade em km
         # cluster de ocorrência de incidentes e relatos
-        incidents_location('Localizacao_IncidentesRelatos_',cop,allIncidentsReportsDict[cop]) # unidade em km
+    #    incidents_location('Localizacao_IncidentesRelatos_',cop,allIncidentsReportsDict[cop]) # unidade em km
         # intervalo em tempo de incidentes consecutivas
     #    interArrrival_time_distribution('Intervalo_Tempo_Incidentes_',cop,allIncidentsDict[cop], nbins=60,limit = 3600) # unidade em segundos
         # intervalo em tempo de relatos consecutivos
