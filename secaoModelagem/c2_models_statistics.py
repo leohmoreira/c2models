@@ -97,6 +97,34 @@ copadays = [datetime(2014,6,12),datetime(2014,6,13),datetime(2014,6,14),datetime
 
 matchDays = copadays
 
+def get_available_cops():
+    """
+        Retorna todos os cops existentes no intervalo de amostragem
+    """
+    allIncidents = Incident.get_all()
+    cops = []
+    for i in allIncidents:
+        if(inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem):
+            cops.append(i['operations_center']['id'])
+
+    allReports = RelatoDeSituacao.get_all()
+    
+    for r in allReports:
+        if (
+                inicioAmostragem <= r.data_hora and 
+                r.data_hora <=terminoAmostragem and
+                'cop' in r.relator and # todos tem que ter o COP
+                'id' in r.relator['cop']  # todos tem que ter o id
+                
+                #r.relator['cop'] != 'COC' # desconsiderei COC
+            ):
+               # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
+               # if(r.relator['cop'] == 'CCTI - SSA' or r.relator['cop'] == 'CC2 - FTC - SSA'):
+               #     r.relator['cop'] = 'CCDA - SSA'
+                cops.append(r.relator['cop']['id'])
+    return set(cops)
+
+
 def get_dict_all_actions():
     """
         Retorna todas as ações agrupadas em um dicionário cuja chave é o nome do COP
@@ -202,8 +230,8 @@ def get_all_incidents():
             (inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
         ):
         # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
-            if(i['operations_center']['id'] == 'CCTI - SSA' or i['operations_center']['id'] == 'CC2 - FTC - SSA'):
-                i['operations_center']['id'] = 'CCDA - SSA'
+        #    if(i['operations_center']['id'] == 'CCTI - SSA' or i['operations_center']['id'] == 'CC2 - FTC - SSA'):
+        #        i['operations_center']['id'] = 'CCDA - SSA'
             incidents.append(i)
     return incidents    
     
@@ -243,17 +271,18 @@ def get_all_reports():
     #allCops = get_all_cops()
     reports = []
     for r in allReports:
-            if (
-                    inicioAmostragem <= r.data_hora and 
-                    r.data_hora <=terminoAmostragem and
-                    'cop' in r.relator and # todos tem que ter o COP
-                    r.relator['cop'] in allCops
-                    #r.relator['cop'] != 'COC' # desconsiderei COC
-                ):
-                    # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
-                    if(r.relator['cop'] == 'CCTI - SSA' or r.relator['cop'] == 'CC2 - FTC - SSA'):
-                        r.relator['cop'] = 'CCDA - SSA'
-                    reports.append(r)
+        if (
+                inicioAmostragem <= r.data_hora and 
+                r.data_hora <=terminoAmostragem and
+                'cop' in r.relator and # todos tem que ter o COP
+                'id' in r.relator['cop'] and # todos tem que ter o COP
+                r.relator['cop']['id'] in allCops
+                #r.relator['cop'] != 'COC' # desconsiderei COC
+            ):
+               # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
+               # if(r.relator['cop'] == 'CCTI - SSA' or r.relator['cop'] == 'CC2 - FTC - SSA'):
+               #     r.relator['cop'] = 'CCDA - SSA'
+                reports.append(r)
     return reports
         
 def get_dict_all_reports():
@@ -270,7 +299,7 @@ def get_dict_all_reports():
     allReports = get_all_reports()
     for report in allReports:
         dictionaryAllReports['TODOS'].append(report)
-        dictionaryAllReports[report.relator['cop']].append(report)
+        dictionaryAllReports[report.relator['cop']['id']].append(report)
                 
     return dictionaryAllReports
 
@@ -993,7 +1022,10 @@ if __name__ == "__main__":
     """
         Loop principal
     """
-        
+    
+    allCops = get_available_cops()
+
+    print allCops
     #matchDays = mdays
     # inicio da geracao dos dados para estatisticas
     allActionsDict = get_dict_all_actions()
@@ -1071,6 +1103,7 @@ if __name__ == "__main__":
     plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
         
     #cops para os quais sao criados os graficos
+    
     graphicsFromCops = ['CCDA - BHZ',
                         'CCDA - BSB',
                         'CCDA - FOR',
@@ -1079,6 +1112,7 @@ if __name__ == "__main__":
                         'CCDA - SSA',
                         ]
 
+    graphicsFromCops = allCops
     for cop in graphicsFromCops:
         # cluster de ocorrência de incidentes
     #    incidents_location('Localizacao_Incidentes_',cop,allIncidentsDict[cop]) # unidade em km
