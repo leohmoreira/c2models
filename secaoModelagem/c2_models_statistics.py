@@ -18,8 +18,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
@@ -690,15 +690,18 @@ def funcGenPareto(x,a,b,c):
 
     normalizador = np.max(x)
     minimo = np.min(x)
-    return a * np.power(( 1 + c * x/b),(-1 - (1/c)))
+    #---> valendo return a * np.power(( 1 + c * x/b),(-1 - (1/c)))
     #return (a * (minimo**a))/(np.power(x,a+1))
+
+    return (a * np.power(b,a))/(np.power(((x/normalizador) + b),a + 1))
+
     
 def funcExpoPoisson(x,a,b,c,d):
 
     normalizador = np.max(x)
     return (a - np.exp(-b * x)) + (c - np.exp(-d * x))
 
-def funcExponential(x,a,b,c):
+def funcExponential(x,a,b):
 
     normalizador = np.max(x)    
     return a * (np.exp(-b*x/normalizador)) 
@@ -743,16 +746,21 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     if(len(interArrivalTime)>0):
        
         qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
+        #qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,np.max(interArrivalTime)),facecolor=cor, alpha=0.5)
                    
         poptExp, pocvExp = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
-    #    poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
+        poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
     #    print cop, 'coeficientes = ',poptLinear
         plt.plot(bins[:-1],qtde,'ro-',
-            bins[:-1],funcExponential(np.array(bins[:-1]),*poptExp),'b^-'
-        #    bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-'
+            bins[:-1],funcExponential(np.array(bins[:-1]),*poptExp),'b^-',
+            bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-'
         )
         
-        print cop , ' R2 = ', computeR2(qtde,funcExponential(np.array(bins[:-1]),*poptExp))
+        print cop , ' EXPO R2 = ', computeR2(qtde,funcExponential(np.array(bins[:-1]),*poptExp))
+        print cop , ' PARETO R2 = ', computeR2(qtde,funcGenPareto(np.array(bins[:-1]),*poptPareto))
+
+        compute_statistics(interArrivalTime)
+
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Quantidade")
         plt.xlabel("Intervalo (s)")
@@ -1131,7 +1139,7 @@ if __name__ == "__main__":
     # intevalo em tempo de relatos consecutivos
 #    interArrrival_time_distribution('Intervalo_Tempo_Relatos_','TODOS',allReportsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
     # intevalo em tempo de incidentes + relatos consecutivos
-    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=45,limit = 3 * 3600) # unidade em segundos
+    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
 
     # contagem de pacotes
     #qtdePacoteTime('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
@@ -1141,14 +1149,14 @@ if __name__ == "__main__":
         
     #cops para os quais sao criados os graficos
     
-    graphicsFromCops = ['CCDA - MAO', 
+    graphicsFromCops = ['CCDA - RIO',
+                        'CCDA - MAO', 
                         'CCDA - NAT',
                         'CCDA - FOR',
                         'CCDA - REC',
                         'CCDA - BHZ',
                         'CCDA - BSB',
                         'CCDA - SAO',
-                        'CCDA - RIO',
                         'CCDA - SSA',
                         'CCDA - CTB',
                         'CCDA - POA',
@@ -1168,7 +1176,7 @@ if __name__ == "__main__":
         # intervalo em tempo de relatos consecutivos
     #    interArrrival_time_distribution('Intervalo_Tempo_Relatos_', cop,allReportsDict[cop], nbins=60,limit = 3600) # unidade em segundos
         # intevalo em tempo de incidentes + relatos consecutivos
-        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=45,limit = 3 * 3600) # unidade em segundos
+        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=60,limit = 1 * 3600) # unidade em segundos
         #criacao dos clusters
     #    clusters, itensClusterizados = computeCluster('Cluster3D_IncidentesRelatos_',cop,allIncidentsReportsDict[cop])
         #resumo de cops
