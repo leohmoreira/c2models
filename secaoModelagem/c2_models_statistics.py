@@ -61,13 +61,19 @@ allCopsCopaMundo = [
 
 #localização do COPs
 latLongCops={} # (latitude,longitude)
-latLongCops['CC2 - FTC - SSA'] = (-12.97974,-38.48362)
+
 latLongCops['CCDA - BHZ'] = (-19.88866,-43.93903)
 latLongCops['CCDA - BSB'] = (-15.79388,-47.88271)
 latLongCops['CCDA - FOR'] = (-3.7889,-38.5193)
 latLongCops['CCDA - REC'] = (-8.046,-34.937)
 latLongCops['CCDA - RIO'] = (-22.90597,-43.21631)
 latLongCops['CCDA - SSA'] = (-12.97974,-38.48362)
+latLongCops['CCDA - SAO'] = (-23.549825,-46.634957)
+latLongCops['CCDA - CGB'] = (-15.60284,-56.12089)
+latLongCops['CCDA - CTB'] = (-25.42467,-49.26803)
+latLongCops['CCDA - MAO'] = (-3.09176,-60.02779)
+latLongCops['CCDA - NAT'] = (-5.779625,-35.19978)
+latLongCops['CCDA - POA'] = (-30.03521,-51.2176)
 
 #paleta com 25 cores
 cores = ['#f0f8ff',#ALICE BLUE
@@ -117,8 +123,6 @@ matchDays = copadays
 
 def changeCop(cop):
 
-    #print 'testando ',cop
-
     maceio = u"GCL Maceió"
     ftCentroNorte = u"FT Centro Norte (1º BI Mtz)"
     bdaInfMec = u"15º BDA INF MEC"
@@ -128,14 +132,12 @@ def changeCop(cop):
         return 'CCDA - MAO'
 
     if cop.encode("utf-8") == maceio.encode("utf-8"):
-        print "maceio"
         return 'CCDA - REC'
 
     if cop == 'CCom_BPEB_CCDA_Bsb':
         return 'CCDA - BSB'
     
     if cop.encode("utf-8") == ftCentroNorte.encode("utf-8"):
-        print "ftCentroNorte"
         return 'CCDA - RIO'
 
     if cop == 'CC2 - FTC - SSA' or cop == 'CCTI - SSA':
@@ -145,7 +147,6 @@ def changeCop(cop):
         return 'CCDA - CTB'
 
     if cop.encode("utf-8") == ftCentroSul.encode("utf-8"):
-        print "ftCentroSul"
         return 'CCDA - POA'
 
     return cop
@@ -156,8 +157,7 @@ def get_available_cops():
     """
     allIncidents = Incident.get_all()
     cops = []
-    maceio = u"GCL Maceió"
-    maceio = u"15º BDA INF MEC"
+    
     for i in allIncidents:
         if(inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem):
             cops.append(i['operations_center']['id'])
@@ -182,7 +182,6 @@ def get_dict_all_actions():
     """
     allSincronizations = Sincronizacao.get_all()
     dictionaryAllActions = {}
-    #allCops = get_all_cops()
     for cop in allCops:
         dictionaryAllActions[cop] = []
     dictionaryAllActions['TODOS'] = []
@@ -208,7 +207,6 @@ def get_dict_all_actions_by_type(actionType):
     """
     allSincronizations = Sincronizacao.get_all()
     dictionaryAllActions = {}
-    #allCops = get_all_cops()
     for cop in allCops:
         dictionaryAllActions[cop] = []
     dictionaryAllActions['TODOS'] = []
@@ -319,7 +317,7 @@ def get_all_reports():
         Retorna todos os relatos de situação agrupados em um array
     """
     allReports = RelatoDeSituacao.get_all()
-    #allCops = get_all_cops()
+    
     reports = []
     for r in allReports:
         if (
@@ -328,12 +326,7 @@ def get_all_reports():
                 'cop' in r.relator and # todos tem que ter o COP
                 'id' in r.relator['cop'] and # todos tem que ter o COP
                 r.relator['cop']['id'] in allCops
-                #r.relator['cop'] != 'COC' # desconsiderei COC
             ):
-               # transformando CCTI - SSA e CC2 - FTC - SSA em CCDA - SSA
-               # if(r.relator['cop'] == 'CCTI - SSA' or r.relator['cop'] == 'CC2 - FTC - SSA'):
-               #     r.relator['cop'] = 'CCDA - SSA'
-
                 r.relator['cop']['id'] = changeCop(r.relator['cop']['id'])
                 reports.append(r)
     return reports
@@ -343,8 +336,7 @@ def get_dict_all_reports():
         Retorna todos os relatos agrupados em um dicionário cuja chave é o nome do COP
     """
     dictionaryAllReports = {}
-    #allCops = get_all_cops()
-    
+        
     for cop in allCops:
         dictionaryAllReports[cop] = []
     dictionaryAllReports['TODOS'] = []
@@ -731,10 +723,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     print cop
     for i in serie:
         if (hasattr(i,'reporting_date')): # é incidente
-        #    if (datetime.strptime(datetime.strftime(i.reporting_date,'%Y/%m/%d'),'%Y/%m/%d') == datetime(2013,6,20,0,0,0)):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
         elif (hasattr(i,'data_hora')): # é relato
-        #    if (datetime.strptime(datetime.strftime(i.data_hora,'%Y/%m/%d'),'%Y/%m/%d') == datetime(2013,6,20,0,0,0)):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
     
     sortedArrivalTime =  sorted(arrivalTime)
@@ -745,6 +735,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         #    interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
             if((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds() > 0):
                 interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+            
                
     plt.close('all')
     fig = plt.figure()
@@ -753,14 +744,15 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
        
         qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
                    
-        print cop, 'qtde = ', len(qtde), ' bins = ', len(bins)
-    #    poptLinear, pocvLinear = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
+        poptExp, pocvExp = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
     #    poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
     #    print cop, 'coeficientes = ',poptLinear
-        plt.plot(bins[:-1],qtde,'ro-')
-    #        bins[:-1],funcExponential(np.array(bins[:-1]),*poptLinear),'b^-',
-    #        bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-')
+        plt.plot(bins[:-1],qtde,'ro-',
+            bins[:-1],funcExponential(np.array(bins[:-1]),*poptExp),'b^-'
+        #    bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-'
+        )
         
+        print cop , ' R2 = ', computeR2(qtde,funcExponential(np.array(bins[:-1]),*poptExp))
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Quantidade")
         plt.xlabel("Intervalo (s)")
@@ -770,27 +762,22 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig.savefig(filename+cop+'.png',dpi=96)
         plt.close('all')
         
-        
+        """
+        ---> PARTE DO CALCULO DE PORCENTAGEM
         totalQtde = np.sum(qtde)
         if totalQtde > 0:
             fig = plt.figure()
             percentagemQtde = [float(q)/totalQtde for q in qtde]
-            maximum = np.max(bins[:-1])
-            
+            maximum = np.max(bins[:-1])      
             axisX = bins[:-1]
 
-            #z = np.polyfit(bins[:-1], percentagemQtde, 10)
-            z = np.polyfit(axisX, percentagemQtde, 10)
-            p = np.poly1d(z)
-            
-            #poptPerc, pocvPerc = curve_fit(funcExponential,np.array(bins[:-1]),np.array(percentagemQtde))
-        #    poptExp, pocvExp = curve_fit(funcExponential,axisX,np.array(percentagemQtde))
-        #    poptPareto, pocvPareto = curve_fit(funcGenPareto,axisX,np.array(percentagemQtde))
+            poptExp, pocvExp = curve_fit(funcExponential,axisX,np.array(percentagemQtde))
+            poptPareto, pocvPareto = curve_fit(funcGenPareto,axisX,np.array(percentagemQtde))
             
         #    print cop,"Coeficientes Pareto = ", poptPareto
         #    compute_statistics(interArrivalTime)
             # calculco do coeficiente de determincao (R2) - Cel Dieguez
-            """
+            
             ss_res = np.dot((percentagemQtde - funcExponential(axisX, *poptExp)),(percentagemQtde - funcExponential(axisX, *poptExp)))
             ymean = np.mean(percentagemQtde)
             ss_tot = np.dot((percentagemQtde-ymean),(percentagemQtde-ymean))
@@ -800,33 +787,30 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             ymean = np.mean(percentagemQtde)
             ss_tot = np.dot((percentagemQtde-ymean),(percentagemQtde-ymean))
             r2Pareto = 1-ss_res/ss_tot
-            """
+            
             #print cop, 'coeficientes = ',poptPareto
-            #plt.plot(np.array(bins[:-1]),percentagemQtde,'ro-',
-            #    np.array(bins[:-1]),funcExponential(np.array(bins[:-1]),*poptPareto),'b^-',
-            #    np.array(bins[:-1]),p(bins[:-1]),'g^-')
-
+            
             linesGrafico = plt.plot(axisX,percentagemQtde,'ro-',label='Real',linewidth=3)
-        #    plt.plot(axisX,funcGenPareto(axisX,*poptPareto),'g*-',label='Pareto',linewidth=3)
-        #    plt.plot(axisX,funcExponential(axisX,*poptExp),'b^-',label='Exponencial',linewidth=3)
-             #   axisX,p(axisX),'g^-'
-            # )
-            #plt.legend(iter(linesGrafico),('Real','Pareto Generalizada','Exponencial'),prop={'size':10})
+            plt.plot(axisX,funcGenPareto(axisX,*poptPareto),'g*-',label='Pareto',linewidth=3)
+            plt.plot(axisX,funcExponential(axisX,*poptExp),'b^-',label='Exponencial',linewidth=3)
+                       
+            plt.legend(iter(linesGrafico),('Real','Pareto Generalizada','Exponencial'),prop={'size':10})
             plt.legend(prop={'size':12})
             plt.bar(axisX,percentagemQtde,width=axisX[1],color="#a9a9a9")
             fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
             plt.ylabel("Probabilidade (%)")
             plt.xlabel("Intervalo (s)")
-            #plt.xticks(bins[:-1],rotation=45)
+            
             plt.xticks(axisX,rotation=60)
             plt.grid(True)
 
-        #    fig.text(0.67,.78,"R2 - Exponencial = " + str(r2Exponencial),fontsize=16,color='b')
-        #    fig.text(0.67,.72,"R2 - Pareto = " + str(r2Pareto),fontsize=16,color='g')
+            fig.text(0.67,.78,"R2 - Exponencial = " + str(r2Exponencial),fontsize=16,color='b')
+            fig.text(0.67,.72,"R2 - Pareto = " + str(r2Pareto),fontsize=16,color='g')
             fig.set_size_inches(18.5,10.5)
             fig.savefig('percentagem_'+filename+cop+'.png',dpi=96)
             plt.close('all')
-    print cop, ' ok'    
+            """
+    print cop, ' ok'  
     
 def interArrrival_distance_distribution(tipo,filename,cop,serie, nbins=30,limit = 10,cor='gray'):
 
@@ -947,6 +931,16 @@ def haversine(lon1, lat1, lon2, lat2):
     c = 2 * asin(sqrt(a)) 
     km = 6367 * c
     return km
+
+def computeR2(y, fy):
+
+    #y = percentagemQtde 
+    #fy = funcGenPareto(axisX, *poptPareto))
+
+    ss_res = np.dot((y - fy),(y - fy))
+    ymean = np.mean(y)
+    ss_tot = np.dot((y-ymean),(y-ymean))
+    return 1-ss_res/ss_tot #coeficiente R2
 
 def computeCluster(filename,cop,serie):
     """
@@ -1075,9 +1069,6 @@ if __name__ == "__main__":
     
     allCops = get_available_cops()
 
-    #print allCops
-    #matchDays = mdays
-    # inicio da geracao dos dados para estatisticas
     allActionsDict = get_dict_all_actions()
     allPunctualActionsDict = get_dict_all_actions_by_type('PONTUAL')
     allIntervalActionsDict = get_dict_all_actions_by_type('INTERVALO')
@@ -1085,7 +1076,6 @@ if __name__ == "__main__":
     allReportsDict = get_dict_all_reports()
     allIncidentsReportsDict = {}
 
-    #allCops = get_all_cops()
     incidentsSerie = {}
     actionsSerie = {}
     punctualActionsSerie = {}
@@ -1100,11 +1090,8 @@ if __name__ == "__main__":
     reportsSerie['TODOS'] = []
     incidentsReportsSerie['TODOS'] = []
     for day in matchDays:
-        #for day in mdays:
             incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
             actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
-        #    punctualActionsSerie['TODOS'].append(len(get_actions_near_date(allPunctualActionsDict['TODOS'],day)))
-        #    intervalActionsSerie['TODOS'].append(len(get_actions_near_date(allIntervalActionsDict['TODOS'],day)))
             reportsSerie['TODOS'].append(len(get_reports_near_date(allReportsDict['TODOS'],day)))
     
     # agrupar incidentes e relatos
@@ -1144,7 +1131,7 @@ if __name__ == "__main__":
     # intevalo em tempo de relatos consecutivos
 #    interArrrival_time_distribution('Intervalo_Tempo_Relatos_','TODOS',allReportsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
     # intevalo em tempo de incidentes + relatos consecutivos
-    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
+    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=45,limit = 3 * 3600) # unidade em segundos
 
     # contagem de pacotes
     #qtdePacoteTime('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit = 3600) # unidade em segundos
@@ -1181,7 +1168,7 @@ if __name__ == "__main__":
         # intervalo em tempo de relatos consecutivos
     #    interArrrival_time_distribution('Intervalo_Tempo_Relatos_', cop,allReportsDict[cop], nbins=60,limit = 3600) # unidade em segundos
         # intevalo em tempo de incidentes + relatos consecutivos
-        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=60,limit = 3600) # unidade em segundos
+        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=45,limit = 3 * 3600) # unidade em segundos
         #criacao dos clusters
     #    clusters, itensClusterizados = computeCluster('Cluster3D_IncidentesRelatos_',cop,allIncidentsReportsDict[cop])
         #resumo de cops
@@ -1196,7 +1183,7 @@ if __name__ == "__main__":
         #        interArrrival_distance_distribution(cop+str(c),itensClusterizados[c], limit = 50) # unidade em segundos    
     
     # Dados finais
-    """
+    
     print '-' * 100
     print 'TODOS'
     print "Total de incidentes", len(allIncidentsDict['TODOS'])
@@ -1217,4 +1204,4 @@ if __name__ == "__main__":
         compute_statistics(reportsSerie['TODOS'])
         print "Total de ações", len(allActionsDict[cop])
         compute_statistics(actionsSerie[cop])
-    """     
+    
