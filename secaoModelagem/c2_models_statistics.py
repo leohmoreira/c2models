@@ -724,11 +724,43 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
    
     arrivalTime = []
     print cop
+    ocorrenciasDias = []
+    ocorrenciasHoras = []
+    ocorrencias = [0] * 24
+    
     for i in serie:
         if (hasattr(i,'reporting_date')): # é incidente
+        #    if(10<=int(datetime.strftime(i.reporting_date,"%H"))<=23):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+        #    ocorrenciasDias.append(datetime.strftime(i.reporting_date,"%m%d"))
+            ocorrenciasHoras.append(int(datetime.strftime(i.reporting_date,"%H")))
+            ocorrencias[int(datetime.strftime(i.reporting_date,"%H"))] = ocorrencias[int(datetime.strftime(i.reporting_date,"%H"))] + 1
         elif (hasattr(i,'data_hora')): # é relato
+        #    if(10<=int(datetime.strftime(i.data_hora,"%H"))<=23):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
+        #    ocorrenciasDias.append(datetime.strftime(i.data_hora,"%m%d"))
+            ocorrenciasHoras.append(int(datetime.strftime(i.data_hora,"%H")))
+            ocorrencias[int(datetime.strftime(i.data_hora,"%H"))] = ocorrencias[int(datetime.strftime(i.data_hora,"%H"))] + 1
+    
+    # Criando grafico com distribuico de incidentes+relatos pelas horas do dia
+
+    #print collections.Counter(ocorrenciasDias)
+    #print 'por hora', collections.Counter(ocorrenciasHoras)
+    qtde, bins, patches = plt.hist(ocorrenciasHoras, 24,facecolor='r', alpha=0.5)
+   
+    plt.close('all')
+    fig = plt.figure()
+    #plt.plot(range(0,24),qtde,'bo-')
+    #plt.plot(range(0,24),ocorrencias,'r*-')
+    plt.bar(range(0,24),ocorrencias, align='center')
+    fig.suptitle(cop+"\nQtde de Info por hora do  dia")
+    plt.ylabel("Quantidade")
+    plt.xlabel("hora")
+    plt.xticks(range(0,24),rotation=45)
+    plt.grid(True)
+    fig.set_size_inches(18.5,10.5)
+    fig.savefig('HORA_'+cop+'.png',dpi=96)
+    plt.close('all')
     
     sortedArrivalTime =  sorted(arrivalTime)
 
