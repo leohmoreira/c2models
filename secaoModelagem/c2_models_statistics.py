@@ -690,10 +690,10 @@ def funcGenPareto(x,a,b,c):
 
     normalizador = np.max(x)
     minimo = np.min(x)
-    #---> valendo return a * np.power(( 1 + c * x/b),(-1 - (1/c)))
+    return a * np.power(( 1 + c * x/normalizador),(-1 - (1/c)))
     #return (a * (minimo**a))/(np.power(x,a+1))
 
-    return (a * np.power(b,a))/(np.power(((x/normalizador) + b),a + 1))
+    #return (a * np.power(b,a))/(np.power(((x/normalizador) + b),a + 1))
 
     
 def funcExpoPoisson(x,a,b,c,d):
@@ -724,29 +724,31 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
    
     arrivalTime = []
     print cop
-    ocorrenciasDias = []
-    ocorrenciasHoras = []
+    
     ocorrencias = [0] * 24
+    semfiltro = 0
     
     for i in serie:
+        semfiltro = semfiltro + 1
         if (hasattr(i,'reporting_date')): # é incidente
         #    if(10<=int(datetime.strftime(i.reporting_date,"%H"))<=23):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
-        #    ocorrenciasDias.append(datetime.strftime(i.reporting_date,"%m%d"))
-            ocorrenciasHoras.append(int(datetime.strftime(i.reporting_date,"%H")))
-            ocorrencias[int(datetime.strftime(i.reporting_date,"%H"))] = ocorrencias[int(datetime.strftime(i.reporting_date,"%H"))] + 1
+            
+            #if datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d"),"%Y-%m-%d") in matchDays :
+            ocorrencias[int(datetime.strftime(i.reporting_date,"%H"))] = ocorrencias[int(datetime.strftime(i.reporting_date,"%H"))] + 1    
+
         elif (hasattr(i,'data_hora')): # é relato
         #    if(10<=int(datetime.strftime(i.data_hora,"%H"))<=23):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
-        #    ocorrenciasDias.append(datetime.strftime(i.data_hora,"%m%d"))
-            ocorrenciasHoras.append(int(datetime.strftime(i.data_hora,"%H")))
+            #if datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d"),"%Y-%m-%d") in matchDays :
             ocorrencias[int(datetime.strftime(i.data_hora,"%H"))] = ocorrencias[int(datetime.strftime(i.data_hora,"%H"))] + 1
     
     # Criando grafico com distribuico de incidentes+relatos pelas horas do dia
 
     #print collections.Counter(ocorrenciasDias)
     #print 'por hora', collections.Counter(ocorrenciasHoras)
-    qtde, bins, patches = plt.hist(ocorrenciasHoras, 24,facecolor='r', alpha=0.5)
+    print 'sem filtro = ',semfiltro, ' com filtro = ', np.sum(ocorrencias)
+    qtde, bins, patches = plt.hist(ocorrencias, 24,facecolor='r', alpha=0.5)
    
     plt.close('all')
     fig = plt.figure()
