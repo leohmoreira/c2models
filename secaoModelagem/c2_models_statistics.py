@@ -18,8 +18,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
@@ -686,26 +686,25 @@ def graph_incidents_per_action(cop,incidents,actions):
     plt.savefig('qtdeIncxQtdAccoes_'+cop+'.png',dpi=96)
     #plt.show()
 
-def funcGenPareto(x,a,b,c):
+def funcGenPareto(x,A,c):
 
     normalizador = np.max(x)
-    minimo = np.min(x)
-    return a * np.power(( 1 + c * x/normalizador),(-1 - (1/c)))
-    #return (a * (minimo**a))/(np.power(x,a+1))
-
-    #return (a * np.power(b,a))/(np.power(((x/normalizador) + b),a + 1))
-
     
-def funcExpoPoisson(x,a,b,c,d):
+    minimo = np.min(x)
+    # -> return a * np.power(( 1 + c * x/normalizador),(-1 - (1/c)))
 
+    return A * c / np.power(1 + x/normalizador, c+1)
+    
+ 
+def funcExponential(x,A,a):
+
+    normalizador = 60    
+    return A * a * (np.exp(-a*x)) 
+    
+def funcLomax(x,A,a,b):
+    
     normalizador = np.max(x)
-    return (a - np.exp(-b * x)) + (c - np.exp(-d * x))
-
-def funcExponential(x,a,b):
-
-    normalizador = np.max(x)    
-    return a * (np.exp(-b*x/normalizador)) 
-    #return a * (np.exp(-b*x/c))
+    return A *(a * b**a) / (np.power(x+b,a+1))
         
 def compute_statistics(serie):
     """
@@ -747,7 +746,6 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
 
     #print collections.Counter(ocorrenciasDias)
     #print 'por hora', collections.Counter(ocorrenciasHoras)
-    print 'sem filtro = ',semfiltro, ' com filtro = ', np.sum(ocorrencias)
     qtde, bins, patches = plt.hist(ocorrencias, 24,facecolor='r', alpha=0.5)
    
     plt.close('all')
@@ -781,17 +779,21 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
        
         qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
         #qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,np.max(interArrivalTime)),facecolor=cor, alpha=0.5)
-                   
+        bins = [b/60.0 for b in bins]
+        plt.close('all')
+        fig = plt.figure()                
         poptExp, pocvExp = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
-        poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
+        #poptPareto, pocvPareto = curve_fit(funcGenPareto,np.array(bins[:-1]),np.array(qtde))
+    #    poptPareto, pocvPareto = curve_fit(funcLomax,np.array(bins[:-1]),np.array(qtde))
     #    print cop, 'coeficientes = ',poptLinear
         plt.plot(bins[:-1],qtde,'ro-',
             bins[:-1],funcExponential(np.array(bins[:-1]),*poptExp),'b^-',
-            bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-'
+            #bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-'
+        #    bins[:-1],funcLomax(np.array(bins[:-1]),*poptPareto),'g^-'
         )
         
         print cop , ' EXPO R2 = ', computeR2(qtde,funcExponential(np.array(bins[:-1]),*poptExp))
-        print cop , ' PARETO R2 = ', computeR2(qtde,funcGenPareto(np.array(bins[:-1]),*poptPareto))
+       #print cop , ' PARETO R2 = ', computeR2(qtde,funcGenPareto(np.array(bins[:-1]),*poptPareto))
 
         compute_statistics(interArrivalTime)
 
@@ -1225,7 +1227,7 @@ if __name__ == "__main__":
         #        interArrrival_distance_distribution(cop+str(c),itensClusterizados[c], limit = 50) # unidade em segundos    
     
     # Dados finais
-    
+    """
     print '-' * 100
     print 'TODOS'
     print "Total de incidentes", len(allIncidentsDict['TODOS'])
@@ -1247,3 +1249,4 @@ if __name__ == "__main__":
         print "Total de ações", len(allActionsDict[cop])
         compute_statistics(actionsSerie[cop])
     
+    """
