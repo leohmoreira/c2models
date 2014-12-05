@@ -730,16 +730,12 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     for i in serie:
         semfiltro = semfiltro + 1
         if (hasattr(i,'reporting_date')): # é incidente
-        #    if(10<=int(datetime.strftime(i.reporting_date,"%H"))<=23):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
             
-            #if datetime.strptime(datetime.strftime(i.reporting_date,"%Y-%m-%d"),"%Y-%m-%d") in matchDays :
             ocorrencias[int(datetime.strftime(i.reporting_date,"%H"))] = ocorrencias[int(datetime.strftime(i.reporting_date,"%H"))] + 1    
 
         elif (hasattr(i,'data_hora')): # é relato
-        #    if(10<=int(datetime.strftime(i.data_hora,"%H"))<=23):
             arrivalTime.append(datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))
-            #if datetime.strptime(datetime.strftime(i.data_hora,"%Y-%m-%d"),"%Y-%m-%d") in matchDays :
             ocorrencias[int(datetime.strftime(i.data_hora,"%H"))] = ocorrencias[int(datetime.strftime(i.data_hora,"%H"))] + 1
     
     # Criando grafico com distribuico de incidentes+relatos pelas horas do dia
@@ -777,9 +773,11 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
 
     if(len(interArrivalTime)>0):
        
-        qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
-        #qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,np.max(interArrivalTime)),facecolor=cor, alpha=0.5)
+        #qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,limit),facecolor=cor, alpha=0.5)
+        qtde, bins, patches = plt.hist(interArrivalTime, nbins,range=(0,np.max(interArrivalTime)),facecolor=cor, alpha=0.5)
+        
         bins = [b/60.0 for b in bins]
+
         plt.close('all')
         fig = plt.figure()                
         poptExp, pocvExp = curve_fit(funcExponential,np.array(bins[:-1]),np.array(qtde))
@@ -790,6 +788,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             bins[:-1],funcExponential(np.array(bins[:-1]),*poptExp),'b^-',
             #bins[:-1],funcGenPareto(np.array(bins[:-1]),*poptPareto),'g^-'
         #    bins[:-1],funcLomax(np.array(bins[:-1]),*poptPareto),'g^-'
+        #     bins[:-1],novo,'y*-'
         )
         
         print cop , ' EXPO R2 = ', computeR2(qtde,funcExponential(np.array(bins[:-1]),*poptExp))
