@@ -357,8 +357,9 @@ def funcExponential(x,A,a):
     
 def funcLomax(x,A,a):
     
-    return A *(a) * (np.power(x+1,-a-1))
-    #return A *(a) * (np.power(x,-a))
+    #--return A *(a) * (np.power(x+1,-a-1))
+    return A *(a) / (np.power(x+1,a+1))
+    
 
 def funcMista(x,A,a,B,b):
         
@@ -434,7 +435,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     axisX = []
     #for t in np.arange(0,np.max(interArrivalTime),60):
     for t in np.arange(0,3600,60):
-        qtdeInterArrivalTime.append(len([q for q in interArrivalTime if (t < q <= (t+60))]))
+        # a qtde eh armazenada como float por causa de divisao ... para resultar em float
+        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= (t+60))])))
         axisX.append(1 + t/60.0)
     plt.close('all')
     fig = plt.figure()
@@ -445,28 +447,52 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig = plt.figure()                
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime)
         poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime)
-        #poptWeibull, pocvWeibull = curve_fit(funcWeibull,np.array(axisX),qtdeInterArrivalTime)
-            
-        plt.plot(axisX,funcExponential(np.array(axisX),*poptExp),'b^-',lw=5)
-        plt.plot(axisX,funcLomax(np.array(axisX),*poptLomax),'go:')
-        #plt.plot(axisX,funcWeibull(np.array(axisX),*poptWeibull),'yp:')
-        plt.plot(axisX,qtdeInterArrivalTime,'r*-')
+          
+        plt.plot(axisX,funcExponential(np.array(axisX),*poptExp),'b^-')
+        plt.plot(axisX,funcLomax(np.array(axisX),*poptLomax),'g*-')
+        plt.plot(axisX,qtdeInterArrivalTime,'ro-')
         
-
         print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
         print 'Parametos = ',poptExp
         print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
         print 'Parametos = ',poptLomax
-
-        #compute_statistics(interArrivalTime)
-
+        
         fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
         plt.ylabel("Quantidade")
         plt.xlabel("Intervalo (s)")
-        #plt.xticks(axisX,rotation=45)
+        plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
         fig.savefig(filename+cop+'.png',dpi=96)
+        plt.close('all')
+
+        # porcentagem
+
+        total = np.sum(qtdeInterArrivalTime)
+
+        qtdeInterArrivalTime = [q/float(total) for q in qtdeInterArrivalTime]
+
+        plt.close('all')
+        fig = plt.figure()                
+        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime)
+        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime)
+          
+        plt.plot(axisX,funcExponential(np.array(axisX),*poptExp),'b^-')
+        plt.plot(axisX,funcLomax(np.array(axisX),*poptLomax),'g*-')
+        plt.plot(axisX,qtdeInterArrivalTime,'ro-')
+        
+        print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        print 'Parametos = ',poptExp
+        print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        print 'Parametos = ',poptLomax
+        
+        fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
+        plt.ylabel("Quantidade")
+        plt.xlabel("Intervalo (s)")
+        plt.xticks(axisX,rotation=45)
+        plt.grid(True)
+        fig.set_size_inches(18.5,10.5)
+        fig.savefig('percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')    
     print cop, ' ok'  
      
@@ -541,7 +567,7 @@ if __name__ == "__main__":
                         'CCDA - FOR',
                         'CCDA - REC',
                         'CCDA - BHZ',
-                        #'CCDA - BSB',
+                        'CCDA - BSB',
                         'CCDA - SAO',
                         'CCDA - SSA',
                         'CCDA - CTB',
