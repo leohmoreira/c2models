@@ -3,6 +3,7 @@ from math import radians, cos, sin, asin, sqrt
 from scipy.misc import factorial
 from datetime import datetime
 from scipy.optimize import curve_fit
+import os
 import math
 import calendar
 import collections
@@ -286,7 +287,7 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
 
     plt.close('all')
     fig = plt.figure()
-
+    """
     graphIncidentsActions = plt.subplot2grid((3,1),(0,0))      
     graphIncidentsActions.set_title(cop+"\nIncidentes & Acoes - Correlacao: " + str(stats.pearsonr(actions,incidents)[0]))
     graphIncidentsActions.set_ylabel("Quantidade")
@@ -308,7 +309,7 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
     plt.xticks(axisX,rotation=90)
     graphReportsActions.grid(True)
     plt.legend(iter(linesReportsActions),('Relatos','Acoes'),prop={'size':10},bbox_to_anchor=(1, 1.4))#, borderaxespad=0, bbox_to_anchor=(1.11, 0.5),prop={'size':12})
-
+    """
     # correlacao entre incidentes e relatos
     """
     graphReportsIncidents = plt.subplot2grid((4,1),(2,0))      
@@ -326,20 +327,20 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
 
     incRel = [i+r for i,r in zip(incidents,reports)]
 
-    graphIncRelsActions = plt.subplot2grid((3,1),(2,0))      
-    graphIncRelsActions.set_title(cop+"\nIncidentes + Relatos & Acoes - Correlacao: " + str(stats.pearsonr(actions,incRel)[0]))
-    graphIncRelsActions.set_ylabel("Quantidade")
-    graphIncRelsActions.set_xlabel("Dias")
-    linesIncRelsActions = graphIncRelsActions.plot(axisX,incRel, 'co-',axisX,actions, 'bo-')
+    graphIncRelsActions = plt.subplot2grid((1,1),(0,0))      
+    graphIncRelsActions.set_title(cop+"\nPearson Correlation: " + str(stats.pearsonr(actions,incRel)[0]))
+    graphIncRelsActions.set_ylabel("Quantity [Units]")
+    graphIncRelsActions.set_xlabel("Days")
+    linesIncRelsActions = graphIncRelsActions.plot(axisX,incRel, 'g^-',axisX,actions, 'bo-')
     graphIncRelsActions.xaxis_date()
-    graphIncRelsActions.xaxis.set_major_formatter(DateFormatter("%d/%m"))
-    plt.xticks(axisX,rotation=90)
+    graphIncRelsActions.xaxis.set_major_formatter(DateFormatter("%B,%d"))
+    plt.xticks(axisX,rotation=45)
     graphIncRelsActions.grid(True)
-    plt.legend(iter(linesIncRelsActions),('Incidentes + Relatos','Acoes'),prop={'size':10},bbox_to_anchor=(1, 1.4))
-
+    plt.legend(iter(linesIncRelsActions),('Information','Actions'),prop={'size':12},bbox_to_anchor=(1, 1))
     plt.tight_layout(pad=0.01, w_pad=0.01, h_pad=0.01)
     fig.set_size_inches(18.5,10.5)
-    fig.savefig(filename,dpi=96)
+    os.mkdir(cop)
+    fig.savefig(cop+'/'+filename,dpi=96)
 
 def funcGenPareto(x,A,c):
 
@@ -357,8 +358,10 @@ def funcExponential(x,A,a):
     
 def funcLomax(x,A,a):
     
-    #--return A *(a) * (np.power(x+1,-a-1))
+    
     return A *(a) / (np.power(x+1,a+1))
+    # Pareto com 2 parametros
+    #return A *(a* (b**a)) / (np.power(x+b,a+1))
     
 
 def funcMista(x,A,a,B,b):
@@ -409,7 +412,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
         Salva em arquivo
     """
-   
+    os.mkdir(cop)   
     arrivalTime = []
     print cop
     
@@ -463,7 +466,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
-        fig.savefig(filename+cop+'.png',dpi=96)
+        fig.savefig(cop+'/'+filename+cop+'.png',dpi=96)
         plt.close('all')
 
         # porcentagem
@@ -492,7 +495,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
-        fig.savefig('percentagem_'+filename+cop+'.png',dpi=96)
+        fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')    
     print cop, ' ok'  
      
