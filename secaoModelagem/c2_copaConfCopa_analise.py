@@ -339,7 +339,8 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
     plt.legend(iter(linesIncRelsActions),('Information','Actions'),prop={'size':12},bbox_to_anchor=(1, 1))
     plt.tight_layout(pad=0.01, w_pad=0.01, h_pad=0.01)
     fig.set_size_inches(18.5,10.5)
-    os.mkdir(cop)
+    if(os.path.exists==False):
+        os.mkdir(cop)   
     fig.savefig(cop+'/'+filename,dpi=96)
 
 def funcGenPareto(x,A,c):
@@ -397,13 +398,15 @@ def info_distribution(filename,cop,serie, nbins=30,limit = 24*3600,cor='green'):
     plt.close('all')
     fig = plt.figure()
     plt.bar(range(0,24),ocorrencias, align='center')
-    fig.suptitle(cop+"\nDistribuicao das informacoes por horas do  dia")
-    plt.ylabel("Quantidade")
-    plt.xlabel("Hora")
+    fig.suptitle(cop+"\nInformation Distribution")
+    plt.ylabel("Quantity [Units]")
+    plt.xlabel("Hour")
     plt.xticks(range(0,24),rotation=45)
     plt.grid(True)
     fig.set_size_inches(18.5,10.5)
-    fig.savefig('HORA_'+cop+'.png',dpi=96)
+    if(os.path.exists==False):
+        os.mkdir(cop)   
+    fig.savefig(cop+'/'+'HORA_'+cop+'.png',dpi=96)
     plt.close('all')
 
 def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600,cor='green'):
@@ -412,7 +415,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
         Salva em arquivo
     """
-    os.mkdir(cop)   
+    if(os.path.exists==False):
+        os.mkdir(cop)   
+
     arrivalTime = []
     print cop
     
@@ -451,20 +456,23 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime)
         poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime)
           
-        plt.plot(axisX,funcExponential(np.array(axisX),*poptExp),'b^-')
-        plt.plot(axisX,funcLomax(np.array(axisX),*poptLomax),'g*-')
-        plt.plot(axisX,qtdeInterArrivalTime,'ro-')
+        seriesPlotted = plt.plot(
+            axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
+            axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
+            axisX,qtdeInterArrivalTime,'ro-'
+        )
         
         print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
         print 'Parametos = ',poptExp
         print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
         print 'Parametos = ',poptLomax
         
-        fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
-        plt.ylabel("Quantidade")
-        plt.xlabel("Intervalo (s)")
+        fig.suptitle(cop+"\nInter-arrival time")
+        plt.ylabel("Quantity [Units]")
+        plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
+        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.set_size_inches(18.5,10.5)
         fig.savefig(cop+'/'+filename+cop+'.png',dpi=96)
         plt.close('all')
@@ -480,21 +488,25 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime)
         poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime)
           
-        plt.plot(axisX,funcExponential(np.array(axisX),*poptExp),'b^-')
-        plt.plot(axisX,funcLomax(np.array(axisX),*poptLomax),'g*-')
-        plt.plot(axisX,qtdeInterArrivalTime,'ro-')
+        seriesPlotted = plt.plot(
+            axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
+            axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
+            axisX,qtdeInterArrivalTime,'ro-'
+        )
         
+        #slope, intercept, r_value, p_value, std_err = stats.linregress(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
         print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
         print 'Parametos = ',poptExp
         print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
         print 'Parametos = ',poptLomax
         
-        fig.suptitle(cop+"\nIntervalo de tempo em ocorrencias sequenciais")
-        plt.ylabel("Quantidade")
-        plt.xlabel("Intervalo (s)")
+        fig.suptitle(cop+"\nInter-arrival time")
+        plt.ylabel("Quantity [%]")
+        plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
+        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')    
     print cop, ' ok'  
@@ -560,6 +572,7 @@ if __name__ == "__main__":
     # inicio da criacao dos graficos
 
     interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
+    info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
     plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
         
     #cops para os quais sao criados os graficos  
@@ -579,6 +592,7 @@ if __name__ == "__main__":
 
     for cop in graphicsFromCops:
         interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=60,limit = 1 * 3600) # unidade em segundos
+        info_distribution('Distribuicao de Info por horas',cop,allIncidentsReportsDict[cop], nbins=24,limit = 24*3600,cor='green')
         plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
 
     # Dados finais
