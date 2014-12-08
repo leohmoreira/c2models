@@ -357,19 +357,19 @@ def funcGenPareto(x,A,c):
  
 def funcExponential(x,A,a):
 
-    return a * (np.exp(-a*x)) 
+    return A * a * (np.exp(-a*x)) 
     
 def funcLomax(x,A,a):
     
     
-    return (a) / (np.power(x+1,a+1))
+    return A * (a) / (np.power(x+1,a+1))
     # Pareto com 2 parametros
     #return A *(a* (b**a)) / (np.power(x+b,a+1))
     
 
-def funcMista(x,A,a,B,b):
+def funcMista(x,A,a,b):
         
-    return A *(a) * (np.power(x,-a)) + B * b * (np.exp(-b*x)) 
+    return A *((a * (np.power(x,-a))) + (b * (np.exp(-b*x)))) 
 
 def funcWeibull(x,A,a):
     return A * a * np.power(x,a-1)*np.exp(-np.power(x,a))
@@ -417,7 +417,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
         Salva em arquivo
     """
-    if(os.path.exists==False):
+    if(os.path.exists(cop)==False):
         os.mkdir(cop)   
 
     arrivalTime = []
@@ -456,11 +456,13 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig = plt.figure()                
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime)
         poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime)
+        poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime)
           
         seriesPlotted = plt.plot(
-            axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
-            axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
-            axisX,qtdeInterArrivalTime,'ro-'
+             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
+             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
+             axisX,qtdeInterArrivalTime,'ro-',
+             axisX,funcMista(np.array(axisX),*poptMista),'y*-',
         )
         """
         #quantidade
@@ -475,17 +477,21 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         resultados[cop].append(poptLomax[1])
         resultados[cop].append(computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax)))
         """
-        #print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        #print 'Parametos = ',poptExp
-        #print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        #print 'Parametos = ',poptLomax
+        print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        print 'Parametos = ',poptExp
+        print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        print 'Parametos = ',poptLomax
+
+        print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
+        print 'Parametos = ',poptMista
 
         fig.suptitle(cop+"\nInter-arrival time")
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
-        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
+        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real','Mista'),prop={'size':12},bbox_to_anchor=(1, 1))
+        #plt.legend(iter(seriesPlotted),('Real','Mista'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.set_size_inches(18.5,10.5)
         fig.savefig(cop+'/'+filename+cop+'.png',dpi=96)
         plt.close('all')
@@ -500,22 +506,26 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig = plt.figure()                
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime)
         poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime)
-          
+        poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime)
+
         seriesPlotted = plt.plot(
             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
-            axisX,qtdeInterArrivalTime,'ro-'
+            axisX,qtdeInterArrivalTime,'ro-',
+            axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
         )
         
-        #print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        #print 'Parametos = ',poptExp
-        #print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        #print 'Parametos = ',poptLomax
-        
+        print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        print 'Parametos = ',poptExp
+        print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        print 'Parametos = ',poptLomax
+        print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
+        print 'Parametos = ',poptMista
+
         # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
         
         # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
-        
+        """
         #percentagem
         resultados[cop] = []
         resultados[cop].append('Exponential')
@@ -527,10 +537,10 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         resultados[cop].append(poptLomax[0])
         resultados[cop].append(poptLomax[1])
         resultados[cop].append(computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax)))
-
+        """
         
-        print cop,' | ',resultados[cop][0],' | ',resultados[cop][1],' | ', resultados[cop][2],' | ', resultados[cop][3]
-        print cop,' | ',resultados[cop][4],' | ',resultados[cop][5],' | ', resultados[cop][6],' | ', resultados[cop][7]
+        #print cop,' | ',resultados[cop][0],' | ',resultados[cop][1],' | ', resultados[cop][2],' | ', resultados[cop][3]
+        #print cop,' | ',resultados[cop][4],' | ',resultados[cop][5],' | ', resultados[cop][6],' | ', resultados[cop][7]
         
         fig.suptitle(cop+"\nInter-arrival time")
         plt.ylabel("Quantity [%]")
@@ -538,7 +548,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
-        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
+        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real','Mista'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')    
     
@@ -615,7 +625,7 @@ if __name__ == "__main__":
         
     #cops para os quais sao criados os graficos  
     graphicsFromCops = [
-                        #'CCDA - RIO',
+                        'CCDA - RIO',
                         'CCDA - MAO', 
                         'CCDA - NAT',
                         'CCDA - FOR',
@@ -625,8 +635,9 @@ if __name__ == "__main__":
                         'CCDA - SAO',
                         'CCDA - SSA',
                         'CCDA - CTB',
-                        #'CCDA - POA',
-                        'CCDA - CGB']
+                        'CCDA - POA',
+                        'CCDA - CGB'
+                        ]
 
     for cop in graphicsFromCops:
         interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=60,limit = 1 * 3600) # unidade em segundos
