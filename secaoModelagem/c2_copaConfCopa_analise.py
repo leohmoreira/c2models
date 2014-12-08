@@ -74,7 +74,9 @@ copadays = [datetime(2014,6,12),datetime(2014,6,13),datetime(2014,6,14),datetime
             ]
 
 matchDays = copadays
-
+# globais
+resultados = {}
+# CCCDA | Distribuicao | Parametro1 | Parametro2 | Coef A | CoefR2 
 def changeCop(cop):
 
     maceio = u"GCL Maceió"
@@ -355,12 +357,12 @@ def funcGenPareto(x,A,c):
  
 def funcExponential(x,A,a):
 
-    return A * a * (np.exp(-a*x)) 
+    return a * (np.exp(-a*x)) 
     
 def funcLomax(x,A,a):
     
     
-    return A *(a) / (np.power(x+1,a+1))
+    return (a) / (np.power(x+1,a+1))
     # Pareto com 2 parametros
     #return A *(a* (b**a)) / (np.power(x+b,a+1))
     
@@ -419,8 +421,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         os.mkdir(cop)   
 
     arrivalTime = []
-    print cop
-    
+        
     ocorrencias = [0] * 24
        
     for i in serie:
@@ -461,12 +462,24 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,qtdeInterArrivalTime,'ro-'
         )
-        
-        print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        print 'Parametos = ',poptExp
-        print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        print 'Parametos = ',poptLomax
-        
+        """
+        #quantidade
+        resultados[cop] = []
+        resultados[cop].append('Exponential')
+        resultados[cop].append(poptExp[0])
+        resultados[cop].append(poptExp[1])
+        resultados[cop].append(computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp)))
+
+        resultados[cop].append('Lomax')
+        resultados[cop].append(poptLomax[0])
+        resultados[cop].append(poptLomax[1])
+        resultados[cop].append(computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax)))
+        """
+        #print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        #print 'Parametos = ',poptExp
+        #print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        #print 'Parametos = ',poptLomax
+
         fig.suptitle(cop+"\nInter-arrival time")
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
@@ -494,11 +507,30 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             axisX,qtdeInterArrivalTime,'ro-'
         )
         
-        #slope, intercept, r_value, p_value, std_err = stats.linregress(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        print 'Parametos = ',poptExp
-        print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        print 'Parametos = ',poptLomax
+        #print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        #print 'Parametos = ',poptExp
+        #print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        #print 'Parametos = ',poptLomax
+        
+        # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
+        
+        # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
+        
+        #percentagem
+        resultados[cop] = []
+        resultados[cop].append('Exponential')
+        resultados[cop].append(poptExp[0])
+        resultados[cop].append(poptExp[1])
+        resultados[cop].append(computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp)))
+
+        resultados[cop].append('Lomax')
+        resultados[cop].append(poptLomax[0])
+        resultados[cop].append(poptLomax[1])
+        resultados[cop].append(computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax)))
+
+        
+        print cop,' | ',resultados[cop][0],' | ',resultados[cop][1],' | ', resultados[cop][2],' | ', resultados[cop][3]
+        print cop,' | ',resultados[cop][4],' | ',resultados[cop][5],' | ', resultados[cop][6],' | ', resultados[cop][7]
         
         fig.suptitle(cop+"\nInter-arrival time")
         plt.ylabel("Quantity [%]")
@@ -509,18 +541,24 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')    
-    print cop, ' ok'  
+    
+    #print cop, ' ok'  
      
 def computeR2(y, fy):
 
     #y = percentagemQtde 
     #fy = funcGenPareto(axisX, *poptPareto))
-
+    
+    """
     ss_res = np.dot((y - fy),(y - fy))
     ymean = np.mean(y)
     ss_tot = np.dot((y-ymean),(y-ymean))
     return 1-ss_res/ss_tot #coeficiente R2
-
+    """
+    ybarra = np.sum(y)/float(len(y))
+    numerador = float(np.sum([np.power(yi - fyi,2) for yi,fyi in zip(y,fy)]))
+    denominador = float(np.sum([np.power(yi - ybarra,2) for yi in y]))
+    return 1 - numerador/denominador
     
 if __name__ == "__main__":
     """
