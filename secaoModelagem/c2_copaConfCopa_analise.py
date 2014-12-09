@@ -357,7 +357,7 @@ def funcGenPareto(x,A,c):
  
 def funcExponential(x,A,a):
 
-    return A * a * (np.exp(-a*x)) 
+    return  A * a * (np.exp(-a*x)) 
     
 def funcLomax(x,A,a):
     
@@ -369,7 +369,8 @@ def funcLomax(x,A,a):
 
 def funcMista(x,A,a,b):
         
-    return A *((a * (np.power(x,-a))) + (b * (np.exp(-b*x)))) 
+    #return A *((a / (np.power(x+1,a+1))) + (b * (np.exp(-b*x))))
+    return A * ((a / np.power(x+1,a+1)) + (b * (np.exp(-b*x))))
 
 def funcWeibull(x,A,a):
     return A * a * np.power(x,a-1)*np.exp(-np.power(x,a))
@@ -451,94 +452,85 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     fig = plt.figure()
 
     if(len(interArrivalTime)>0):
-       
+        
         plt.close('all')
-        fig = plt.figure()                
-        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime)
-        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime)
-        poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime)
+        fig = plt.figure()      
+        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        #poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
           
         seriesPlotted = plt.plot(
              axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
              axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
              axisX,qtdeInterArrivalTime,'ro-',
-             axisX,funcMista(np.array(axisX),*poptMista),'y*-',
+        #     axisX,funcMista(np.array(axisX),*poptMista),'y*-',
         )
-        """
-        #quantidade
-        resultados[cop] = []
-        resultados[cop].append('Exponential')
-        resultados[cop].append(poptExp[0])
-        resultados[cop].append(poptExp[1])
-        resultados[cop].append(computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp)))
+       
+        expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        #print cop , ' EXPO R2 = ', expoR2
+        #print 'Parametos = ',poptExp
+        #print cop , ' Lomax R2 = ', lomaxR2
+        #print 'Parametos = ',poptLomax
+        if(expoR2 > lomaxR2):
+            print cop, ' Quantidade  = Exponencial - R2 = ', expoR2
+        else:
+            print cop, ' Quantidade = Lomax - R2 = ', lomaxR2
+        print 'Parametros =', poptExp , ' Coef R2 = ', expoR2
+        print 'Parametros =', poptLomax , ' Coef R2 = ', lomaxR2
 
-        resultados[cop].append('Lomax')
-        resultados[cop].append(poptLomax[0])
-        resultados[cop].append(poptLomax[1])
-        resultados[cop].append(computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax)))
-        """
-        print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        print 'Parametos = ',poptExp
-        print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        print 'Parametos = ',poptLomax
-
-        print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
-        print 'Parametos = ',poptMista
+    #    print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
+    #    print 'Parametos = ',poptMista
 
         fig.suptitle(cop+"\nInter-arrival time")
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
-        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real','Mista'),prop={'size':12},bbox_to_anchor=(1, 1))
+        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
         #plt.legend(iter(seriesPlotted),('Real','Mista'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.set_size_inches(18.5,10.5)
         fig.savefig(cop+'/'+filename+cop+'.png',dpi=96)
         plt.close('all')
-
+        """
         # porcentagem
-
+        
         total = np.sum(qtdeInterArrivalTime)
 
         qtdeInterArrivalTime = [q/float(total) for q in qtdeInterArrivalTime]
 
         plt.close('all')
         fig = plt.figure()                
-        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime)
-        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime)
-        poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime)
+        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+    #    poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
 
         seriesPlotted = plt.plot(
             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,qtdeInterArrivalTime,'ro-',
-            axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
+        #    axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
         )
         
-        print cop , ' EXPO R2 = ', computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        print 'Parametos = ',poptExp
-        print cop , ' Lomax R2 = ', computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        print 'Parametos = ',poptLomax
-        print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
-        print 'Parametos = ',poptMista
+        expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        #print cop , ' EXPO R2 = ', expoR2
+        #print 'Parametos = ',poptExp
+        #print cop , ' Lomax R2 = ', lomaxR2
+        #print 'Parametos = ',poptLomax
+        if(expoR2 > lomaxR2):
+            print cop, ' PDF com A = Exponencial - R2 = ', expoR2
+        else:
+            print cop, ' PDF com A = Lomax - R2 = ', lomaxR2
+        print 'Parametros =', poptExp , ' Coef R2 = ', expoR2
+        print 'Parametros =', poptLomax , ' Coef R2 = ', lomaxR2
+    #    print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
+    #    print 'Parametos = ',poptMista
 
         # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
         
         # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
-        """
-        #percentagem
-        resultados[cop] = []
-        resultados[cop].append('Exponential')
-        resultados[cop].append(poptExp[0])
-        resultados[cop].append(poptExp[1])
-        resultados[cop].append(computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp)))
-
-        resultados[cop].append('Lomax')
-        resultados[cop].append(poptLomax[0])
-        resultados[cop].append(poptLomax[1])
-        resultados[cop].append(computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax)))
-        """
-        
+                
         #print cop,' | ',resultados[cop][0],' | ',resultados[cop][1],' | ', resultados[cop][2],' | ', resultados[cop][3]
         #print cop,' | ',resultados[cop][4],' | ',resultados[cop][5],' | ', resultados[cop][6],' | ', resultados[cop][7]
         
@@ -548,11 +540,10 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
-        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real','Mista'),prop={'size':12},bbox_to_anchor=(1, 1))
+        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')    
-    
-    #print cop, ' ok'  
+        """
      
 def computeR2(y, fy):
 
@@ -631,7 +622,7 @@ if __name__ == "__main__":
                         'CCDA - FOR',
                         'CCDA - REC',
                         'CCDA - BHZ',
-                        'CCDA - BSB',
+                        #'CCDA - BSB',
                         'CCDA - SAO',
                         'CCDA - SSA',
                         'CCDA - CTB',
