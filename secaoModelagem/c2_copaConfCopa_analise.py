@@ -19,8 +19,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
@@ -29,8 +29,10 @@ from incidentes.models import *
 dateDistanceLimit = 43200 #(12 horas em segundos)
 actionSize = 43200 #(12 horas em segundos)
 punctualActionSize = 0 #(1 hora em segundos)
-inicioAmostragem = datetime(2014,6,12,0,0,0)
-terminoAmostragem = datetime(2014,7,13,23,59,59)
+#inicioAmostragem = datetime(2014,6,12,0,0,0)
+#terminoAmostragem = datetime(2014,7,13,23,59,59)
+inicioAmostragem = datetime(2013,6,15,0,0,0)
+terminoAmostragem = datetime(2013,6,30,23,59,59)
 #COPs avaliados
 allCopsCopaConf = ['CCDA - BHZ',
             'CCDA - BSB',
@@ -116,7 +118,8 @@ def get_available_cops():
     
     for i in allIncidents:
         if(inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem):
-            cops.append(i['operations_center']['id'])
+            #cops.append(i['operations_center']['id'])
+            cops.append(i['operations_center'])
                 
     allReports = RelatoDeSituacao.get_all()
     
@@ -124,10 +127,12 @@ def get_available_cops():
         if (
                 inicioAmostragem <= r.data_hora and 
                 r.data_hora <=terminoAmostragem and
-                'cop' in r.relator and # todos tem que ter o COP
-                'id' in r.relator['cop']  # todos tem que ter o id               
+                'cop' in r.relator 
+                # and # todos tem que ter o COP
+                # 'id' in r.relator['cop']  # todos tem que ter o id               
             ):
-                cops.append(r.relator['cop']['id'])
+                #cops.append(r.relator['cop']['id'])
+                cops.append(r.relator['cop'])
     
     return set(cops)
 
@@ -198,11 +203,13 @@ def get_all_incidents():
     incidents = []
     for i in allIncidents:
         if(
-            (i['operations_center']['id'] in allCops) and
+            #(i['operations_center']['id'] in allCops) and
+            (i['operations_center'] in allCops) and
             (inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
         ):
         
-            i['operations_center']['id'] = changeCop(i['operations_center']['id'])
+            #i['operations_center']['id'] = changeCop(i['operations_center']['id'])
+            i['operations_center'] = changeCop(i['operations_center'])
             incidents.append(i)
             
     return incidents    
@@ -221,8 +228,8 @@ def get_dict_all_incidents():
     allIncidents = get_all_incidents()
     for incident in allIncidents:
         dictionaryAllIncidents['TODOS'].append(incident)
-        dictionaryAllIncidents[incident['operations_center']['id']].append(incident)
-
+        #dictionaryAllIncidents[incident['operations_center']['id']].append(incident)
+        dictionaryAllIncidents[incident['operations_center']].append(incident)
     return dictionaryAllIncidents
 
 
@@ -246,11 +253,13 @@ def get_all_reports():
         if (
                 inicioAmostragem <= r.data_hora and 
                 r.data_hora <=terminoAmostragem and
-                'cop' in r.relator and # todos tem que ter o COP
-                'id' in r.relator['cop'] and # todos tem que ter o COP
-                r.relator['cop']['id'] in allCops
+                'cop' in r.relator 
+                #and # todos tem que ter o COP
+                #'id' in r.relator['cop'] and # todos tem que ter o COP
+                #r.relator['cop']['id'] in allCops
             ):
-                r.relator['cop']['id'] = changeCop(r.relator['cop']['id'])
+                #r.relator['cop']['id'] = changeCop(r.relator['cop']['id'])
+                r.relator['cop'] = changeCop(r.relator['cop'])
                 reports.append(r)
     return reports
         
@@ -267,7 +276,8 @@ def get_dict_all_reports():
     allReports = get_all_reports()
     for report in allReports:
         dictionaryAllReports['TODOS'].append(report)
-        dictionaryAllReports[report.relator['cop']['id']].append(report)
+        #dictionaryAllReports[report.relator['cop']['id']].append(report)
+        dictionaryAllReports[report.relator['cop']].append(report)
                 
     return dictionaryAllReports
 
@@ -355,14 +365,14 @@ def funcGenPareto(x,A,c):
     return A * c / np.power(1 + x/normalizador, c+1)
     
  
-def funcExponential(x,A,a):
+def funcExponential(x,a):
 
-    return  A * a * (np.exp(-a*x)) 
+    return  a * (np.exp(-a*x)) 
     
-def funcLomax(x,A,a):
+def funcLomax(x,a):
     
     
-    return A * (a) / (np.power(x+1,a+1))
+    return (a) / (np.power(x+1,a+1))
     # Pareto com 2 parametros
     #return A *(a* (b**a)) / (np.power(x+b,a+1))
     
@@ -452,7 +462,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     fig = plt.figure()
 
     if(len(interArrivalTime)>0):
-        
+        """
         plt.close('all')
         fig = plt.figure()      
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
@@ -543,7 +553,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
         plt.close('all')    
-        """
+        
      
 def computeR2(y, fy):
 
@@ -617,17 +627,17 @@ if __name__ == "__main__":
     #cops para os quais sao criados os graficos  
     graphicsFromCops = [
                         'CCDA - RIO',
-                        'CCDA - MAO', 
-                        'CCDA - NAT',
+                        #'CCDA - MAO', 
+                        #'CCDA - NAT',
                         'CCDA - FOR',
                         'CCDA - REC',
                         'CCDA - BHZ',
-                        #'CCDA - BSB',
-                        'CCDA - SAO',
+                        'CCDA - BSB',
+                        #'CCDA - SAO',
                         'CCDA - SSA',
-                        'CCDA - CTB',
-                        'CCDA - POA',
-                        'CCDA - CGB'
+                        #'CCDA - CTB',
+                        #'CCDA - POA',
+                        #'CCDA - CGB'
                         ]
 
     for cop in graphicsFromCops:
