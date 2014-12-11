@@ -128,11 +128,11 @@ def get_available_cops():
                 inicioAmostragem <= r.data_hora and 
                 r.data_hora <=terminoAmostragem and
                 'cop' in r.relator 
-                # and # todos tem que ter o COP
-                # 'id' in r.relator['cop']  # todos tem que ter o id               
+                 and # todos tem que ter o COP
+                 'id' in r.relator['cop']  # todos tem que ter o id               
             ):
-                #cops.append(r.relator['cop']['id'])
-                cops.append(r.relator['cop'])
+                cops.append(r.relator['cop']['id'])
+                #cops.append(r.relator['cop'])
     
     return set(cops)
 
@@ -203,13 +203,13 @@ def get_all_incidents():
     incidents = []
     for i in allIncidents:
         if(
-            #(i['operations_center']['id'] in allCops) and
-            (i['operations_center'] in allCops) and
+            (i['operations_center']['id'] in allCops) and
+            #(i['operations_center'] in allCops) and
             (inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
         ):
         
-            #i['operations_center']['id'] = changeCop(i['operations_center']['id'])
-            i['operations_center'] = changeCop(i['operations_center'])
+            i['operations_center']['id'] = changeCop(i['operations_center']['id'])
+            #i['operations_center'] = changeCop(i['operations_center'])
             incidents.append(i)
             
     return incidents    
@@ -228,8 +228,8 @@ def get_dict_all_incidents():
     allIncidents = get_all_incidents()
     for incident in allIncidents:
         dictionaryAllIncidents['TODOS'].append(incident)
-        #dictionaryAllIncidents[incident['operations_center']['id']].append(incident)
-        dictionaryAllIncidents[incident['operations_center']].append(incident)
+        dictionaryAllIncidents[incident['operations_center']['id']].append(incident)
+        #dictionaryAllIncidents[incident['operations_center']].append(incident)
     return dictionaryAllIncidents
 
 
@@ -254,12 +254,12 @@ def get_all_reports():
                 inicioAmostragem <= r.data_hora and 
                 r.data_hora <=terminoAmostragem and
                 'cop' in r.relator 
-                #and # todos tem que ter o COP
-                #'id' in r.relator['cop'] and # todos tem que ter o COP
-                #r.relator['cop']['id'] in allCops
+                and # todos tem que ter o COP
+                'id' in r.relator['cop'] and # todos tem que ter o COP
+                r.relator['cop']['id'] in allCops
             ):
-                #r.relator['cop']['id'] = changeCop(r.relator['cop']['id'])
-                r.relator['cop'] = changeCop(r.relator['cop'])
+                r.relator['cop']['id'] = changeCop(r.relator['cop']['id'])
+                #r.relator['cop'] = changeCop(r.relator['cop'])
                 reports.append(r)
     return reports
         
@@ -276,8 +276,8 @@ def get_dict_all_reports():
     allReports = get_all_reports()
     for report in allReports:
         dictionaryAllReports['TODOS'].append(report)
-        #dictionaryAllReports[report.relator['cop']['id']].append(report)
-        dictionaryAllReports[report.relator['cop']].append(report)
+        dictionaryAllReports[report.relator['cop']['id']].append(report)
+        #dictionaryAllReports[report.relator['cop']].append(report)
                 
     return dictionaryAllReports
 
