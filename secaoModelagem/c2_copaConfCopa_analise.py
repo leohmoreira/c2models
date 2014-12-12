@@ -29,10 +29,10 @@ from incidentes.models import *
 dateDistanceLimit = 43200 #(12 horas em segundos)
 actionSize = 43200 #(12 horas em segundos)
 punctualActionSize = 0 #(1 hora em segundos)
-#inicioAmostragem = datetime(2014,6,12,0,0,0)
-#terminoAmostragem = datetime(2014,7,13,23,59,59)
-inicioAmostragem = datetime(2013,6,15,0,0,0)
-terminoAmostragem = datetime(2013,6,30,23,59,59)
+inicioAmostragem = datetime(2014,6,12,0,0,0)
+terminoAmostragem = datetime(2014,7,13,23,59,59)
+#inicioAmostragem = datetime(2013,6,15,0,0,0)
+#terminoAmostragem = datetime(2013,6,30,23,59,59)
 #COPs avaliados
 allCopsCopaConf = ['CCDA - BHZ',
             'CCDA - BSB',
@@ -118,8 +118,8 @@ def get_available_cops():
     
     for i in allIncidents:
         if(inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem):
-            #cops.append(i['operations_center']['id'])
-            cops.append(i['operations_center'])
+            cops.append(i['operations_center']['id'])
+            #cops.append(i['operations_center'])
                 
     allReports = RelatoDeSituacao.get_all()
     
@@ -367,7 +367,8 @@ def funcGenPareto(x,A,c):
  
 def funcExponential(x,a):
 
-    return  a * (np.exp(-a*x)) 
+    #return  a * (np.exp(-a*x)) 
+    return  1 - np.exp(-a*x) 
     
 def funcLomax(x,a):
     
@@ -377,10 +378,10 @@ def funcLomax(x,a):
     #return A *(a* (b**a)) / (np.power(x+b,a+1))
     
 
-def funcMista(x,A,a,b):
+def funcMista(x,a,b):
         
     #return A *((a / (np.power(x+1,a+1))) + (b * (np.exp(-b*x))))
-    return A * ((a / np.power(x+1,a+1)) + (b * (np.exp(-b*x))))
+    return (a * np.exp(-a*x)) + (b * (np.exp(-b*x)))
 
 def funcWeibull(x,A,a):
     return A * a * np.power(x,a-1)*np.exp(-np.power(x,a))
@@ -511,29 +512,34 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
 
         plt.close('all')
         fig = plt.figure()                
-        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-    #    poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        #poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        #poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
 
         seriesPlotted = plt.plot(
-            axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
-            axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
+        #    axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
+        #    axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,qtdeInterArrivalTime,'ro-',
-        #    axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
+            axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
         )
         
-        expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        #expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        #lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        mistaR2 = computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
+        print cop , ' Mista R2 = ', mistaR2
+        print 'Parametos = ',poptMista
         #print cop , ' EXPO R2 = ', expoR2
         #print 'Parametos = ',poptExp
         #print cop , ' Lomax R2 = ', lomaxR2
         #print 'Parametos = ',poptLomax
+        """
         if(expoR2 > lomaxR2):
             print cop, ' PDF com A = Exponencial - R2 = ', expoR2
         else:
             print cop, ' PDF com A = Lomax - R2 = ', lomaxR2
         print 'Parametros =', poptExp , ' Coef R2 = ', expoR2
         print 'Parametros =', poptLomax , ' Coef R2 = ', lomaxR2
+        """
     #    print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
     #    print 'Parametos = ',poptMista
 
@@ -552,7 +558,25 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig.set_size_inches(18.5,10.5)
         plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
         fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
-        plt.close('all')    
+        fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
+        plt.close('all')
+
+        # CDF
+        valor = 0;
+        cdf = []
+        for q in qtdeInterArrivalTime:
+            valor = valor + q
+            cdf.append(valor)
+
+        poptExpo, pocvExpo = curve_fit(funcExponential,np.array(axisX),cdf,maxfev=2000)
+        expoR2 = computeR2(cdf,funcExponential(np.array(axisX),*poptExpo))
+        print 'ajuste cdf R2 = ', expoR2, ' parametros = ',poptExpo
+        plt.close('all')
+        fig = plt.figure()
+        plt.plot(axisX,cdf,'ro-',
+            axisX,funcExponential(np.array(axisX),*poptExpo),'y*-'
+        )
+        plt.show()
         
      
 def computeR2(y, fy):
@@ -627,17 +651,17 @@ if __name__ == "__main__":
     #cops para os quais sao criados os graficos  
     graphicsFromCops = [
                         'CCDA - RIO',
-                        #'CCDA - MAO', 
-                        #'CCDA - NAT',
+                        'CCDA - MAO', 
+                        'CCDA - NAT',
                         'CCDA - FOR',
                         'CCDA - REC',
                         'CCDA - BHZ',
-                        'CCDA - BSB',
-                        #'CCDA - SAO',
+                        #'CCDA - BSB',
+                        'CCDA - SAO',
                         'CCDA - SSA',
-                        #'CCDA - CTB',
-                        #'CCDA - POA',
-                        #'CCDA - CGB'
+                        'CCDA - CTB',
+                        'CCDA - POA',
+                        'CCDA - CGB'
                         ]
 
     for cop in graphicsFromCops:

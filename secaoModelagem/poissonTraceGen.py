@@ -13,7 +13,9 @@ trace = []
 traceInterval = []
 axisX = []
 alfa = 0.196
-qtdeSimulacoes = 10
+qtdeSimulacoes = 3
+a=0.37608875
+b=0.4577469
 for v in range(0,qtdeSimulacoes):
 	print 'Simulando ', v, 'de ', qtdeSimulacoes
 	trace.append([])
@@ -22,10 +24,20 @@ for v in range(0,qtdeSimulacoes):
 	axisX = []
 	to= 0
 	random.seed()
-	while to < 30 * 24 * 60:
-		to = to + random.expovariate(alfa)
-		trace[v].append(to)
 
+	while to < 1 * 24 * 60:
+		to = to - (np.log(np.random.uniform(0.0,1.0))/a)
+		#to = to + random.expovariate(a)
+		print to
+		trace[v].append(to)
+	"""to = 0
+	random.seed()
+	while to < 30 * 24 * 60:
+		to = to + random.expovariate(b)
+		trace[v].append(to)
+	
+	trace[v] = sorted(trace[v])
+	"""
 	for i in range(0,len(trace[v])-1):
 		traceInterval[v].append(trace[v][i+1] - trace[v][i])
 
@@ -48,11 +60,12 @@ print len(axisX), len(traceSerieFinal)
 funcao=[]
 funcaoX=[]
 for t in np.arange(1,60):
-	funcao.append(alfa * np.exp(-alfa*t))
+	funcao.append(a * np.exp(-a*t))
 	funcaoX.append(t)
 plt.close('all')
 fig = plt.figure()
-plt.plot(funcaoX,funcao,'bo-',
+plt.plot(
+	funcaoX,funcao,'bo-',
 	axisX,traceSerieFinal,'r*-',
 	#axisXB,traceSerieB,'g*-'
 	)
