@@ -19,12 +19,14 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
-
+from scipy.stats import lomax,expon
+import scipy.stats
+import numpy as np
 #Constantes
 dateDistanceLimit = 43200 #(12 horas em segundos)
 actionSize = 43200 #(12 horas em segundos)
@@ -357,26 +359,23 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
 
 def funcGenPareto(x,A,c):
 
-    normalizador = np.max(x)
-    
-    minimo = np.min(x)
-    # -> return a * np.power(( 1 + c * x/normalizador),(-1 - (1/c)))
-
-    return A * c / np.power(1 + x/normalizador, c+1)
+    return (a) / (np.power(x+1,a+1))
     
  
 def funcExponential(x,a):
 
-    #return  a * (np.exp(-a*x)) 
-    return  1 - np.exp(-a*x) 
+    return  a * (np.exp(-a*x)) 
+    #return expon.pdf(x,a)
     
 def funcLomax(x,a):
     
-    
     return (a) / (np.power(x+1,a+1))
+    #return lomax.pdf(x,a)
     # Pareto com 2 parametros
     #return A *(a* (b**a)) / (np.power(x+b,a+1))
     
+def cdfPareto(x,a,b):
+    return scipy.stats.johnsonsu.cdf(x,a,b)
 
 def funcMista(x,a,b):
         
@@ -449,18 +448,21 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     if(len(sortedArrivalTime)>0):
         for i in range(0,len(sortedArrivalTime)-1):
             if((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds() > 0):
-                interArrivalTime.append((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())
+                interArrivalTime.append(((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())/60.0)
             
     
     qtdeInterArrivalTime = []
     axisX = []
     #for t in np.arange(0,np.max(interArrivalTime),60):
-    for t in np.arange(0,3600,60):
+    #for t in np.arange(0,3600,60):
+    for t in np.arange(0,30,1):
         # a qtde eh armazenada como float por causa de divisao ... para resultar em float
-        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= (t+60))])))
-        axisX.append(1 + t/60.0)
+        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t <= q < (t+1))])))
+        #axisX.append(1 + t/60.0)
+        axisX.append(t)
     plt.close('all')
     fig = plt.figure()
+
 
     if(len(interArrivalTime)>0):
         """
@@ -507,31 +509,31 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         # porcentagem
         
         total = np.sum(qtdeInterArrivalTime)
-
         qtdeInterArrivalTime = [q/float(total) for q in qtdeInterArrivalTime]
 
+        
         plt.close('all')
         fig = plt.figure()                
-        #poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-        #poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-        poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        #poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
 
         seriesPlotted = plt.plot(
-        #    axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
-        #    axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
+            axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
+            axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,qtdeInterArrivalTime,'ro-',
-            axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
+        #    axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
         )
         
-        #expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        #lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        mistaR2 = computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
-        print cop , ' Mista R2 = ', mistaR2
-        print 'Parametos = ',poptMista
-        #print cop , ' EXPO R2 = ', expoR2
-        #print 'Parametos = ',poptExp
-        #print cop , ' Lomax R2 = ', lomaxR2
-        #print 'Parametos = ',poptLomax
+        expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        #mistaR2 = computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
+        #print cop , ' Mista R2 = ', mistaR2
+        #print 'Parametos = ',poptMista
+        print cop , ' EXPO R2 = ', expoR2
+        print 'Parametos = ',poptExp
+        print cop , ' Lomax R2 = ', lomaxR2
+        print 'Parametos = ',poptLomax
         """
         if(expoR2 > lomaxR2):
             print cop, ' PDF com A = Exponencial - R2 = ', expoR2
@@ -561,6 +563,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
         plt.close('all')
 
+        """
         # CDF
         valor = 0;
         cdf = []
@@ -568,16 +571,19 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             valor = valor + q
             cdf.append(valor)
 
-        poptExpo, pocvExpo = curve_fit(funcExponential,np.array(axisX),cdf,maxfev=2000)
-        expoR2 = computeR2(cdf,funcExponential(np.array(axisX),*poptExpo))
-        print 'ajuste cdf R2 = ', expoR2, ' parametros = ',poptExpo
+        #poptExpo, pocvExpo = curve_fit(cdfPareto,np.array(axisX),cdf,maxfev=2000)
+        #expoR2 = computeR2(cdf,cdfPareto(np.array(axisX),*poptExpo))
+        #print 'ajuste cdf R2 = ', expoR2, ' parametros = ',poptExpo
+        )
         plt.close('all')
         fig = plt.figure()
-        plt.plot(axisX,cdf,'ro-',
-            axisX,funcExponential(np.array(axisX),*poptExpo),'y*-'
+        plt.plot(
+         #   axisX,cdf,'ro-',
+            axisX,scipy.stats.johnsonsu.cdf(np.array(axisX),*param),'y*-'
         )
-        plt.show()
-        
+        fig.savefig('porcentagem/cdf_'+filename+cop+'.png',dpi=96)
+        plt.close('all')        
+        """
      
 def computeR2(y, fy):
 
