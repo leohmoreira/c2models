@@ -24,7 +24,7 @@ lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
-from scipy.stats import lomax,expon
+from scipy.stats import lomax,expon,pareto
 import scipy.stats
 import numpy as np
 #Constantes
@@ -365,12 +365,12 @@ def funcGenPareto(x,A,c):
 def funcExponential(x,a):
 
     return  a * (np.exp(-a*x)) 
-    #return expon.pdf(x,a)
     
 def funcLomax(x,a):
     
-    return (a) / (np.power(x+1,a+1))
+    return (a) / (np.power(x,a+1))
     #return lomax.pdf(x,a)
+    #return pareto.pdf(x,a)
     # Pareto com 2 parametros
     #return A *(a* (b**a)) / (np.power(x+b,a+1))
     
@@ -457,9 +457,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     #for t in np.arange(0,3600,60):
     for t in np.arange(0,30,1):
         # a qtde eh armazenada como float por causa de divisao ... para resultar em float
-        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t <= q < (t+1))])))
+        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= (t+1))])))
         #axisX.append(1 + t/60.0)
-        axisX.append(t)
+        axisX.append(t+1)
     plt.close('all')
     fig = plt.figure()
 
