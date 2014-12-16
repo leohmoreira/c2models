@@ -19,14 +19,15 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
-from scipy.stats import lomax,expon,pareto
+from scipy.stats import lomax,expon,pareto,bayes_mvs
 import scipy.stats
 import numpy as np
+import random
 #Constantes
 dateDistanceLimit = 43200 #(12 horas em segundos)
 actionSize = 43200 #(12 horas em segundos)
@@ -368,7 +369,7 @@ def funcExponential(x,a):
     
 def funcLomax(x,a):
     
-    return (a) / (np.power(x,a+1))
+    return (a) / (np.power(x+1,a+1))
     #return lomax.pdf(x,a)
     #return pareto.pdf(x,a)
     # Pareto com 2 parametros
@@ -457,9 +458,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     #for t in np.arange(0,3600,60):
     for t in np.arange(0,30,1):
         # a qtde eh armazenada como float por causa de divisao ... para resultar em float
-        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= (t+1))])))
+        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t <= q < (t+1))])))
         #axisX.append(1 + t/60.0)
-        axisX.append(t+1)
+        axisX.append(t)
     plt.close('all')
     fig = plt.figure()
 
@@ -518,13 +519,14 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
         #poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
 
+        """
         seriesPlotted = plt.plot(
             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,qtdeInterArrivalTime,'ro-',
         #    axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
         )
-        
+        """
         expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
         lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
         #mistaR2 = computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
@@ -552,6 +554,84 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         #print cop,' | ',resultados[cop][0],' | ',resultados[cop][1],' | ', resultados[cop][2],' | ', resultados[cop][3]
         #print cop,' | ',resultados[cop][4],' | ',resultados[cop][5],' | ', resultados[cop][6],' | ', resultados[cop][7]
         
+        
+        #simulando
+        qtdeSimulacoes = 100
+        traceSerie = []
+        trace = []
+        traceInterval = []
+        axisX = []
+        for v in range(0,qtdeSimulacoes):
+            print 'Simulando ', v, 'de ', qtdeSimulacoes
+            trace.append([])
+            traceInterval.append([])
+            traceSerie.append([])
+            axisX = []
+            to= 0
+            random.seed()
+            
+            while to < 30 * 24 * 60:
+                #to = to -np.log(1-np.random.uniform(0.0,1.0))/a
+                to = to + np.random.pareto(poptLomax[0])
+                #to = to + np.random.exponential(1/a)
+
+                #print to
+                trace[v].append(to)
+            
+            #traceInterval[v] = np.random.pareto(a,1000)
+            #traceInterval[v] = np.random.exponential(1/a,1000)
+            
+            for i in range(0,len(trace[v])-1):
+                traceInterval[v].append(trace[v][i+1] - trace[v][i])
+
+            for t in np.arange(0,30,1):        
+                    traceSerie[v].append(float(len([q for q in traceInterval[v] if (t <= q < (t+1))])))
+                    axisX.append(t)
+            
+            total = np.sum(traceSerie[v])
+            if(total > 0):
+                traceSerie[v] = [q/float(total) for q in traceSerie[v]]
+            else:
+                v = v -1
+
+        traceSerieFinal=[]
+        lower=[]
+        upper=[]
+        media=[]
+        posicao=[]
+        for x in range(0,len(traceSerie[0])):
+            posicao=[]
+            valor=0
+            for q in range(0,qtdeSimulacoes):
+                valor = valor + traceSerie[q][x]
+                posicao.append(traceSerie[q][x])
+            valor = valor/float(qtdeSimulacoes)
+            icmedia = str(bayes_mvs(posicao,0.99)).split(')),')[0]
+            icmedia = icmedia.replace(" ","")
+            icmedia = icmedia.replace("(","")
+            icmedia = icmedia.replace(")","")
+            m,l,u = icmedia.split(',')
+            
+            media.append(float(m))
+            lower.append(float(l))
+            upper.append(float(u))
+            traceSerieFinal.append(valor)
+        
+        plt.plot(
+            #axisX,funcao,'bo-',
+            
+            )
+
+        seriesPlotted = plt.plot(
+            axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
+            axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
+            axisX,qtdeInterArrivalTime,'ro-',
+        #    axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
+            axisX,lower,'g.:',
+            axisX,upper,'g.:',
+            axisX,media,'g.--',
+        )
+
         fig.suptitle(cop+"\nInter-arrival time")
         plt.ylabel("Quantity [%]")
         plt.xlabel("Interval [minutes]")

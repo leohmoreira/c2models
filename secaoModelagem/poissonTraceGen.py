@@ -14,9 +14,9 @@ traceInterval = []
 axisX = []
 #alfa = 0.37608875
 alfa = 0.703
-qtdeSimulacoes = 3
-a= 0.43352948
-#a=0.70544781
+qtdeSimulacoes = 100
+a= 0.43045898
+
 
 b=-2.673e-4
 plt.close('all')
@@ -29,7 +29,6 @@ for v in range(0,qtdeSimulacoes):
 	axisX = []
 	to= 0
 	random.seed()
-
 	
 	while to < 30 * 24 * 60:
 		#to = to -np.log(1-np.random.uniform(0.0,1.0))/a
@@ -47,8 +46,7 @@ for v in range(0,qtdeSimulacoes):
 
 	for t in np.arange(0,30,1):        
 	        traceSerie[v].append(float(len([q for q in traceInterval[v] if (t <= q < (t+1))])))
-	        axisX.append(t+1)
-	
+	        axisX.append(t)
 	
 	total = np.sum(traceSerie[v])
 	if(total > 0):
@@ -59,6 +57,8 @@ for v in range(0,qtdeSimulacoes):
 traceSerieFinal=[]
 lower=[]
 upper=[]
+media=[]
+posicao=[]
 for x in range(0,len(traceSerie[0])):
 	posicao=[]
 	valor=0
@@ -66,22 +66,33 @@ for x in range(0,len(traceSerie[0])):
 		valor = valor + traceSerie[q][x]
 		posicao.append(traceSerie[q][x])
 	valor = valor/float(qtdeSimulacoes)
-	m,l,u = bayes_mvs(posicao,0.99)
-	print u
-	#lower.append(l)
-	#upper.append(u)
+	icmedia = str(bayes_mvs(posicao,0.99)).split(')),')[0]
+	icmedia = icmedia.replace(" ","")
+	icmedia = icmedia.replace("(","")
+	icmedia = icmedia.replace(")","")
+	m,l,u = icmedia.split(',')
+	
+
+	media.append(float(m))
+	lower.append(float(l))
+	upper.append(float(u))
+	
 	traceSerieFinal.append(valor)
-print len(axisX), len(traceSerieFinal)
+
+
 funcao=[]
-funcaoX=[]
-for t in np.arange(1,30,1):
-	funcao.append(a/float(np.power(t,a+1)))
+"""
+for t in np.arange(0,30,1):
+	funcao.append(a/float(np.power(t+1,a+1)))
 	#funcao.append(a*np.exp(-a*t))
-	funcaoX.append(t)
+	axisX.append(t)
+axisX = axisX
+"""
 plt.plot(
-	funcaoX,funcao,'bo-',
-	#funcaoX,lower,'ro-',
-	#funcaoX,upper,'go-'
+	#axisX,funcao,'bo-',
+	axisX,lower,'ro--',
+	axisX,upper,'go--',
+	axisX,media,'yo-',
 	)
 fig.suptitle("Inter-arrival time")
 plt.ylabel("Quantity [Units]")
