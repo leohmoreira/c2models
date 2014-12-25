@@ -365,7 +365,7 @@ def funcGenPareto(x,A,c):
  
 def funcExponential(x,a,b):
 
-    return  (np.exp(-a*x))
+    return  1.0 - (np.exp(-a*x))
     
 def funcLomax(x,a):
     
@@ -459,7 +459,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     for t in np.arange(0,60,1):
         # a qtde eh armazenada como float por causa de divisao ... para resultar em float
         #qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= (t+1))])))
-        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (q > t)])))
+        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
         #axisX.append(1 + t/60.0)
         axisX.append(t)
     plt.close('all')
