@@ -370,7 +370,7 @@ def funcExponential(x,a,b):
 def funcLomax(x,a):
     
     #return (a) / (np.power(x+1,a+1))
-    return lomax.pdf(x,a)
+    return lomax.cdf(x,a)
     #return pareto.pdf(x,a)
     # Pareto com 2 parametros
     #return A *(a* (b**a)) / (np.power(x+b,a+1))
@@ -423,6 +423,26 @@ def info_distribution(filename,cop,serie, nbins=30,limit = 24*3600,cor='green'):
     fig.savefig(cop+'/'+'HORA_'+cop+'.png',dpi=96)
     plt.close('all')
 
+def testandoDistribuicao(sample):
+
+    cdfs =[
+            "expon",           #Exponential
+            "genexpon",        #Generalized Exponential
+            "genpareto",       #Generalized Pareto
+            "lomax"           #Lomax
+            
+        ]
+    resultados =[]
+    for cdf in cdfs:
+        #fit our data set against every probability distribution
+        parameters = eval("scipy.stats."+cdf+".fit(sample)");
+     
+        #Applying the Kolmogorov-Smirnof one sided test
+        D, p = scipy.stats.kstest(sample, cdf, args=parameters);
+        resultados.append(p)
+        #pretty-print the results
+        print cdf.ljust(16) + ("p: "+str(p)).ljust(25)+"D: "+str(D)+ "parametros = ",str(parameters).ljust(40)
+
 def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600,cor='green'):
 
     """
@@ -452,101 +472,56 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
                 interArrivalTime.append(((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())/60.0)
             
     
-    qtdeInterArrivalTime = []
+    percentagemInterArrivalTime = []
+    realQtdeInterArrivalTime = []
     axisX = []
-    #for t in np.arange(0,np.max(interArrivalTime),60):
-    #for t in np.arange(0,3600,60):
-    for t in np.arange(0,60,1):
+    for t in np.arange(0,61,1):
         # a qtde eh armazenada como float por causa de divisao ... para resultar em float
-        #qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= (t+1))])))
-        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
-        #axisX.append(1 + t/60.0)
+        percentagemInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
+        realQtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
         axisX.append(t)
+
     plt.close('all')
     fig = plt.figure()
+    fig.suptitle(cop+"\nInter-arrival time")
+    plt.plot(axisX,realQtdeInterArrivalTime,'bo-')
+    plt.ylabel("Quantity [Units]")
+    plt.xlabel("Interval [minutes]")
+    plt.xticks(axisX,rotation=45)
+    plt.grid(True)
+    fig.set_size_inches(18.5,10.5)
+    #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
+    fig.savefig(cop+'/'+'quantity_'+filename+cop+'.png',dpi=96)
+    plt.close('all')
 
 
     if(len(interArrivalTime)>0):
-        """
-        plt.close('all')
-        fig = plt.figure()      
-        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-        #poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-          
-        seriesPlotted = plt.plot(
-             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
-             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
-             axisX,qtdeInterArrivalTime,'ro-',
-        #     axisX,funcMista(np.array(axisX),*poptMista),'y*-',
-        )
-       
-        expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        #print cop , ' EXPO R2 = ', expoR2
-        #print 'Parametos = ',poptExp
-        #print cop , ' Lomax R2 = ', lomaxR2
-        #print 'Parametos = ',poptLomax
-        if(expoR2 > lomaxR2):
-            print cop, ' Quantidade  = Exponencial - R2 = ', expoR2
-        else:
-            print cop, ' Quantidade = Lomax - R2 = ', lomaxR2
-        print 'Parametros =', poptExp , ' Coef R2 = ', expoR2
-        print 'Parametros =', poptLomax , ' Coef R2 = ', lomaxR2
-
-    #    print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
-    #    print 'Parametos = ',poptMista
-
-        fig.suptitle(cop+"\nInter-arrival time")
-        plt.ylabel("Quantity [Units]")
-        plt.xlabel("Interval [minutes]")
-        plt.xticks(axisX,rotation=45)
-        plt.grid(True)
-        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
-        #plt.legend(iter(seriesPlotted),('Real','Mista'),prop={'size':12},bbox_to_anchor=(1, 1))
-        fig.set_size_inches(18.5,10.5)
-        fig.savefig(cop+'/'+filename+cop+'.png',dpi=96)
-        plt.close('all')
-        """
-        # porcentagem
         
-        #total = np.sum(qtdeInterArrivalTime)
-        total = len(sortedArrivalTime)
-        qtdeInterArrivalTime = [q/float(total) for q in qtdeInterArrivalTime]
+        # porcentagem
+        # pego só o último que representa o maior valor do intervalo. Existem valores maiores que 60 minutos que são desconsiderados
+        total = percentagemInterArrivalTime[-1]
+        
+        percentagemInterArrivalTime = [q/float(total) for q in percentagemInterArrivalTime]
+        #D, p = scipy.stats.kstest(percentagemInterArrivalTime, 'expon')
+        #print 'KSTEST = ', D, p
 
         
         plt.close('all')
         fig = plt.figure()                
-        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-        #poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
-        #poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),qtdeInterArrivalTime,maxfev=2000)
+        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)
+        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)
+        #poptMista, pocvMista = curve_fit(funcMista,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)
 
-        """
-        seriesPlotted = plt.plot(
-            axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
-            axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
-            axisX,qtdeInterArrivalTime,'ro-',
-        #    axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
-        )
-        """
-        expoR2 = computeR2(qtdeInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
-        #lomaxR2 = computeR2(qtdeInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        #mistaR2 = computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
+        expoR2 = computeR2(percentagemInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        lomaxR2 = computeR2(percentagemInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
+        #mistaR2 = computeR2(percentagemInterArrivalTime,funcMista(np.array(axisX),*poptMista))
         #print cop , ' Mista R2 = ', mistaR2
         #print 'Parametos = ',poptMista
         print cop , ' EXPO R2 = ', expoR2
         print 'Parametos = ',poptExp
-        #print cop , ' Lomax R2 = ', lomaxR2
-        #print 'Parametos = ',poptLomax
-        """
-        if(expoR2 > lomaxR2):
-            print cop, ' PDF com A = Exponencial - R2 = ', expoR2
-        else:
-            print cop, ' PDF com A = Lomax - R2 = ', lomaxR2
-        print 'Parametros =', poptExp , ' Coef R2 = ', expoR2
-        print 'Parametros =', poptLomax , ' Coef R2 = ', lomaxR2
-        """
-    #    print cop , ' Mista R2 = ', computeR2(qtdeInterArrivalTime,funcMista(np.array(axisX),*poptMista))
+        print cop , ' Lomax R2 = ', lomaxR2
+        print 'Parametos = ',poptLomax
+    #    print cop , ' Mista R2 = ', computeR2(percentagemInterArrivalTime,funcMista(np.array(axisX),*poptMista))
     #    print 'Parametos = ',poptMista
 
         # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
@@ -556,116 +531,26 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         #print cop,' | ',resultados[cop][0],' | ',resultados[cop][1],' | ', resultados[cop][2],' | ', resultados[cop][3]
         #print cop,' | ',resultados[cop][4],' | ',resultados[cop][5],' | ', resultados[cop][6],' | ', resultados[cop][7]
         
-        """
-        #simulando
-        qtdeSimulacoes = 100
-        traceSerie = []
-        trace = []
-        traceInterval = []
-        axisX = []
-        for v in range(0,qtdeSimulacoes):
-            #print 'Simulando ', v, 'de ', qtdeSimulacoes
-            trace.append([])
-            traceInterval.append([])
-            traceSerie.append([])
-            axisX = []
-            to= 0
-            random.seed()
-            
-            while to < 30 * 24 * 60:
-                #to = to -np.log(1-np.random.uniform(0.0,1.0))/a
-                to = to + np.random.pareto(poptLomax[0])
-                #to = to + np.random.exponential(1/a)
-
-                #print to
-                trace[v].append(to)
-            
-            #traceInterval[v] = np.random.pareto(a,1000)
-            #traceInterval[v] = np.random.exponential(1/a,1000)
-            
-            for i in range(0,len(trace[v])-1):
-                traceInterval[v].append(trace[v][i+1] - trace[v][i])
-
-            for t in np.arange(0,60,1):        
-                    traceSerie[v].append(float(len([q for q in traceInterval[v] if (t < q <= (t+1))])))
-                    axisX.append(t)
-            
-            total = np.sum(traceSerie[v])
-            if(total > 0):
-                traceSerie[v] = [q/float(total) for q in traceSerie[v]]
-            else:
-                v = v -1
-
-        traceSerieFinal=[]
-        lower=[]
-        upper=[]
-        media=[]
-        posicao=[]
-        for x in range(0,len(traceSerie[0])):
-            posicao=[]
-            valor=0
-            for q in range(0,qtdeSimulacoes):
-                valor = valor + traceSerie[q][x]
-                posicao.append(traceSerie[q][x])
-            valor = valor/float(qtdeSimulacoes)
-            icmedia = str(bayes_mvs(posicao,0.99)).split(')),')[0]
-            icmedia = icmedia.replace(" ","")
-            icmedia = icmedia.replace("(","")
-            icmedia = icmedia.replace(")","")
-            m,l,u = icmedia.split(',')
-            
-            media.append(float(m))
-            lower.append(float(l))
-            upper.append(float(u))
-            traceSerieFinal.append(valor)
-        
-        plt.plot(
-            #axisX,funcao,'bo-',
-            
-            )
-        """
         seriesPlotted = plt.plot(
             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
-            #axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
-            axisX,qtdeInterArrivalTime,'ro-',
+            axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
+            axisX,percentagemInterArrivalTime,'ro-',
         #    axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
         #    axisX,lower,'g.:',
         #    axisX,upper,'g.:',
         #    axisX,media,'g.--',
         )
 
-        fig.suptitle(cop+"\nInter-arrival time")
-        plt.ylabel("Quantity [%]")
+        fig.suptitle(cop+"\nCDF - Inter-arrival time")
+        plt.ylabel("P(X<=x")
         plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
-        plt.legend(iter(seriesPlotted),('Exponential','Pareto','Real'),prop={'size':12},bbox_to_anchor=(1, 1))
+        plt.legend(iter(seriesPlotted),('Exponential','Lomax','Real'),prop={'size':12},bbox_to_anchor=(1, 0.1))
         fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
         fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
         plt.close('all')
-
-        """
-        # CDF
-        valor = 0;
-        cdf = []
-        for q in qtdeInterArrivalTime:
-            valor = valor + q
-            cdf.append(valor)
-
-        #poptExpo, pocvExpo = curve_fit(cdfPareto,np.array(axisX),cdf,maxfev=2000)
-        #expoR2 = computeR2(cdf,cdfPareto(np.array(axisX),*poptExpo))
-        #print 'ajuste cdf R2 = ', expoR2, ' parametros = ',poptExpo
-        )
-        plt.close('all')
-        fig = plt.figure()
-        plt.plot(
-         #   axisX,cdf,'ro-',
-            axisX,scipy.stats.johnsonsu.cdf(np.array(axisX),*param),'y*-'
-        )
-        fig.savefig('porcentagem/cdf_'+filename+cop+'.png',dpi=96)
-        plt.close('all')        
-        """
      
 def computeR2(y, fy):
 
