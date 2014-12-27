@@ -15,7 +15,7 @@ axisX = []
 #alfa = 0.37608875
 alfa = 0.703
 qtdeSimulacoes = 10
-a= 0.36359594
+a= 0.37608875
 
 
 b=-2.673e-4
@@ -39,20 +39,21 @@ for v in range(0,qtdeSimulacoes):
 		trace[v].append(to)
 	
 	#traceInterval[v] = np.random.pareto(a,500)
-	#traceInterval[v] = np.random.exponential(1/a,100)
+	#traceInterval[v] = np.random.exponential(1/a,500)
 	
 	
 	for i in range(0,len(trace[v])-1):
 		traceInterval[v].append(trace[v][i+1] - trace[v][i])
 	
-	for t in np.arange(0,30,1):        
-	        traceSerie[v].append(float(len([q for q in traceInterval[v] if (q > t)])))
+	for t in np.arange(0,61,1):        
+	        traceSerie[v].append(float(len([q for q in traceInterval[v] if (q <= t)])))
 	        #traceSerie[v].append(float(len([q for q in traceInterval[v] if (t < q <= (t+1))])))
 	        axisX.append(t)
 		
 	#total = np.sum(traceSerie[v])
 	total = float(len(trace[v])-1)
-	print total,np.sum(traceSerie[v]),traceSerie[v]
+	total = (traceSerie[v][-1])
+	#print total,np.sum(traceSerie[v]),traceSerie[v]
 	if(total > 0):
 		traceSerie[v] = [float(q)/float(total) for q in traceSerie[v]]
 
@@ -92,10 +93,10 @@ for x in range(0,len(traceSerie[0])):
 funcao=[]
 funcaoB=[]
 
-for t in np.arange(0,30,1):
+for t in np.arange(0,61,1):
 	#funcao.append(a/float(np.power(t+1,a+1)))
 	#funcaoB.append(lomax.pdf(t,a))
-	funcao.append(np.exp(-a*t))
+	funcao.append(1.0 - np.exp(-a*t))
 	#funcaoB.append(expon.pdf(t))
 	
 plt.plot(
