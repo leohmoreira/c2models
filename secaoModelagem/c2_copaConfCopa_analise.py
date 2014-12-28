@@ -363,7 +363,7 @@ def funcGenPareto(x,A,c):
     return (a) / (np.power(x+1,a+1))
     
  
-def funcExponential(x,a,b):
+def funcExponential(x,a):
 
     return  1.0 - (np.exp(-a*x))
     
@@ -473,38 +473,22 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             
     
     percentagemInterArrivalTime = []
-    realQtdeInterArrivalTime = []
+    cdfQtdeInterArrivalTime = []
+    qtdeInterArrivalTime = []
     axisX = []
     for t in np.arange(0,61,1):
         # a qtde eh armazenada como float por causa de divisao ... para resultar em float
         percentagemInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
-        realQtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
+        cdfQtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
+        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= t+1)])))
         axisX.append(t)
-
-    plt.close('all')
-    fig = plt.figure()
-    fig.suptitle(cop+"\nInter-arrival time")
-    plt.plot(axisX,realQtdeInterArrivalTime,'bo-')
-    plt.ylabel("Quantity [Units]")
-    plt.xlabel("Interval [minutes]")
-    plt.xticks(axisX,rotation=45)
-    plt.grid(True)
-    fig.set_size_inches(18.5,10.5)
-    #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
-    fig.savefig(cop+'/'+'quantity_'+filename+cop+'.png',dpi=96)
-    plt.close('all')
-
 
     if(len(interArrivalTime)>0):
         
         # porcentagem
         # pego só o último que representa o maior valor do intervalo. Existem valores maiores que 60 minutos que são desconsiderados
         total = percentagemInterArrivalTime[-1]
-        
         percentagemInterArrivalTime = [q/float(total) for q in percentagemInterArrivalTime]
-        #D, p = scipy.stats.kstest(percentagemInterArrivalTime, 'expon')
-        #print 'KSTEST = ', D, p
-
         
         plt.close('all')
         fig = plt.figure()                
@@ -523,33 +507,108 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         print 'Parametos = ',poptLomax
     #    print cop , ' Mista R2 = ', computeR2(percentagemInterArrivalTime,funcMista(np.array(axisX),*poptMista))
     #    print 'Parametos = ',poptMista
-
-        # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
-        
-        # CCCDA | Distribuicao | Coef A | Parametro1 | Parametro2 | CoefR2 
+    
+        # simulation time
+        traceSerie = []
+        simulatedQtde = []
+        trace = []
+        traceInterval = []
+        axisX = []
+        qtdeSimulacoes = 10
+        a= poptExp
+        plt.close('all')
+        fig = plt.figure()
+        for v in range(0,qtdeSimulacoes):
+            print 'Simulando ', v, 'de ', qtdeSimulacoes
+            trace.append([])
+            traceInterval.append([])
+            traceSerie.append([])
+            simulatedQtde.append([])
+            axisX = []
+            to= 0
+            random.seed()
+            
+            while to < 30 * 24 * 60:
+                to = to + random.expovariate(a)
+                trace[v].append(to)          
+            
+            for i in range(0,len(trace[v])-1):
+                traceInterval[v].append(trace[v][i+1] - trace[v][i])
+            
+            for t in np.arange(0,61,1):        
+                    traceSerie[v].append(float(len([q for q in traceInterval[v] if (q <= t)])))
+                    simulatedQtde[v].append(float(len([q for q in traceInterval[v] if (t < q <= t + 1)])))
+                    axisX.append(t)
                 
-        #print cop,' | ',resultados[cop][0],' | ',resultados[cop][1],' | ', resultados[cop][2],' | ', resultados[cop][3]
-        #print cop,' | ',resultados[cop][4],' | ',resultados[cop][5],' | ', resultados[cop][6],' | ', resultados[cop][7]
-        
+            total = (traceSerie[v][-1])
+            if(total > 0):
+                traceSerie[v] = [float(q)/float(total) for q in traceSerie[v]]
+                plt.plot(axisX,traceSerie[v],'yo-')
+            
+            else:
+                v = v -1
+
+        # 
+        simulatedSerieFinal=[]
+        posicao=[]
+        for x in range(0,len(simulatedQtde[0])):
+            posicao=[]
+            valor=0
+            for q in range(0,qtdeSimulacoes):
+                valor = valor + simulatedQtde[q][x]
+                posicao.append(simulatedQtde[q][x])
+            valor = valor/float(qtdeSimulacoes)
+            simulatedSerieFinal.append(valor)
+        # geracao dos graficos
+
         seriesPlotted = plt.plot(
             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,percentagemInterArrivalTime,'ro-',
-        #    axisX,funcMista(np.array(axisX),*poptMista),'y*-',   
-        #    axisX,lower,'g.:',
-        #    axisX,upper,'g.:',
-        #    axisX,media,'g.--',
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
-        plt.ylabel("P(X<=x")
+        plt.ylabel("P(X<=x)")
         plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
         plt.legend(iter(seriesPlotted),('Exponential','Lomax','Real'),prop={'size':12},bbox_to_anchor=(1, 0.1))
-        fig.savefig(cop+'/'+'percentagem_'+filename+cop+'.png',dpi=96)
+        fig.savefig(cop+'/'+'cdf_'+filename+cop+'.png',dpi=96)
         fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
+        plt.close('all')
+
+        tmpQtde = np.sum(qtdeInterArrivalTime)
+        print cop, tmpQtde
+        qtdeInterArrivalTime = [float(q)/tmpQtde for q in qtdeInterArrivalTime]
+
+        tmpQtde = np.sum(simulatedSerieFinal)
+        print cop, tmpQtde
+        simulatedSerieFinal = [float(q)/tmpQtde for q in simulatedSerieFinal]
+        plt.close('all')
+        fig = plt.figure()
+        fig.suptitle(cop+"\nInter-arrival time")
+        plt.plot(axisX,qtdeInterArrivalTime,'bo-', axisX,simulatedSerieFinal,'g*-')
+        plt.ylabel("Quantity [Units]")
+        plt.xlabel("Interval [minutes]")
+        plt.xticks(axisX,rotation=45)
+        plt.grid(True)
+        fig.set_size_inches(18.5,10.5)
+        #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
+        fig.savefig(cop+'/'+'quantity_'+filename+cop+'.png',dpi=96)
+        plt.close('all')
+
+        plt.close('all')
+        fig = plt.figure()
+        fig.suptitle(cop+"\nInter-arrival time")
+        plt.plot(axisX,cdfQtdeInterArrivalTime,'bo-')
+        plt.ylabel("Quantity [Units]")
+        plt.xlabel("Interval [minutes]")
+        plt.xticks(axisX,rotation=45)
+        plt.grid(True)
+        fig.set_size_inches(18.5,10.5)
+        #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
+        fig.savefig(cop+'/'+'cdfQuantity_'+filename+cop+'.png',dpi=96)
         plt.close('all')
      
 def computeR2(y, fy):
