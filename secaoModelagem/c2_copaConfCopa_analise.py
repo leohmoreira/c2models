@@ -366,16 +366,25 @@ def funcGenPareto(x,A,c):
 def funcExponential(x,a):
 
     return  1.0 - (np.exp(-a*x))
+
+def pdfExponential(x,a):
+
+    return  a * (np.exp(-a*x))
+
+def pdfLomax(x,a,b):
+
+    return  (a * np.power(b,a)) / np.power(x+b,a+1)
+
+def funcLomax(x,a,b):
     
-def funcLomax(x,a):
-    
-    #return (a) / (np.power(x+1,a+1))
-    return lomax.cdf(x,a)
+    return 1 - (np.power(b,a)/(np.power(x+b,a)))
+    #return lomax.cdf(x,a)
     #return pareto.pdf(x,a)
     # Pareto com 2 parametros
     #return A *(a* (b**a)) / (np.power(x+b,a+1))
     
-def cdfPareto(x,a,b):
+#def cdfPareto(x,a,b):
+def qreto(x,a,b):
     return scipy.stats.johnsonsu.cdf(x,a,b)
 
 def funcMista(x,a,b):
@@ -471,25 +480,29 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             if((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds() > 0):
                 interArrivalTime.append(((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())/60.0)
             
-    
+    #testandoDistribuicao(interArrivalTime)
     percentagemInterArrivalTime = []
     cdfQtdeInterArrivalTime = []
     qtdeInterArrivalTime = []
+    qtdeAbsoluta = []
     axisX = []
     for t in np.arange(0,61,1):
         # a qtde eh armazenada como float por causa de divisao ... para resultar em float
-        percentagemInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
+        #percentagemInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
         cdfQtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
         qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= t+1)])))
+        qtdeAbsoluta.append(float(len([q for q in interArrivalTime if (q <= t)])))
         axisX.append(t)
 
+    #testandoDistribuicao(qtdeAbsoluta)
     if(len(interArrivalTime)>0):
         
         # porcentagem
         # pego só o último que representa o maior valor do intervalo. Existem valores maiores que 60 minutos que são desconsiderados
-        total = percentagemInterArrivalTime[-1]
-        percentagemInterArrivalTime = [q/float(total) for q in percentagemInterArrivalTime]
-        
+        total = qtdeAbsoluta[-1]
+
+        percentagemInterArrivalTime = [q/float(total) for q in qtdeAbsoluta]
+
         plt.close('all')
         fig = plt.figure()                
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)
@@ -507,15 +520,17 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         print 'Parametos = ',poptLomax
     #    print cop , ' Mista R2 = ', computeR2(percentagemInterArrivalTime,funcMista(np.array(axisX),*poptMista))
     #    print 'Parametos = ',poptMista
-    
+        
         # simulation time
         traceSerie = []
         simulatedQtde = []
         trace = []
         traceInterval = []
         axisX = []
-        qtdeSimulacoes = 10
-        a= poptExp
+        qtdeSimulacoes = 100
+        a= poptLomax[0]
+        b= poptLomax[1]
+        print a , b
         plt.close('all')
         fig = plt.figure()
         for v in range(0,qtdeSimulacoes):
@@ -529,7 +544,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             random.seed()
             
             while to < 30 * 24 * 60:
-                to = to + random.expovariate(a)
+                #to = to + random.expovariate(a)
+                to = to + ((b/np.power((1-np.random.uniform(0,1)),(1.0/a))) - b)
                 trace[v].append(to)          
             
             for i in range(0,len(trace[v])-1):
@@ -543,7 +559,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             total = (traceSerie[v][-1])
             if(total > 0):
                 traceSerie[v] = [float(q)/float(total) for q in traceSerie[v]]
-                plt.plot(axisX,traceSerie[v],'yo-')
+                plt.plot(axisX,traceSerie[v],'yx-')
             
             else:
                 v = v -1
@@ -560,11 +576,15 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             valor = valor/float(qtdeSimulacoes)
             simulatedSerieFinal.append(valor)
         # geracao dos graficos
-
+        
+        serieExpo = funcExponential(np.array(axisX),*poptExp)
+        serieLomax = funcLomax(np.array(axisX),*poptLomax)
+      
         seriesPlotted = plt.plot(
             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
-            axisX,percentagemInterArrivalTime,'ro-',
+            axisX,percentagemInterArrivalTime,'ro-'
+
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
@@ -577,7 +597,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig.savefig(cop+'/'+'cdf_'+filename+cop+'.png',dpi=96)
         fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
         plt.close('all')
-
+        
+        # parte do historico de interarrival = pdf mais ou menos
         tmpQtde = np.sum(qtdeInterArrivalTime)
         print cop, tmpQtde
         qtdeInterArrivalTime = [float(q)/tmpQtde for q in qtdeInterArrivalTime]
@@ -585,10 +606,19 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         tmpQtde = np.sum(simulatedSerieFinal)
         print cop, tmpQtde
         simulatedSerieFinal = [float(q)/tmpQtde for q in simulatedSerieFinal]
+        
+        expoPDFSerie = pdfExponential(np.array(axisX),*poptExp)
+        lomaxPDFSerie = pdfLomax(np.array(axisX),*poptLomax)
+
         plt.close('all')
         fig = plt.figure()
         fig.suptitle(cop+"\nInter-arrival time")
-        plt.plot(axisX,qtdeInterArrivalTime,'bo-', axisX,simulatedSerieFinal,'g*-')
+        plt.plot(
+            axisX,qtdeInterArrivalTime,'ro-', 
+            axisX,expoPDFSerie,'b^-',
+            axisX,lomaxPDFSerie,'g*-',
+            axisX,simulatedSerieFinal,'yx-'
+            )
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
@@ -597,7 +627,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
         fig.savefig(cop+'/'+'quantity_'+filename+cop+'.png',dpi=96)
         plt.close('all')
-
+        """
         plt.close('all')
         fig = plt.figure()
         fig.suptitle(cop+"\nInter-arrival time")
@@ -610,7 +640,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
         fig.savefig(cop+'/'+'cdfQuantity_'+filename+cop+'.png',dpi=96)
         plt.close('all')
-     
+        """
 def computeR2(y, fy):
 
     #y = percentagemQtde 
@@ -657,7 +687,7 @@ if __name__ == "__main__":
     # agrupar incidentes e relatos
     incidentsReportsSerie['TODOS'] = [i + r for i,r in zip(incidentsSerie['TODOS'],reportsSerie['TODOS'])]
     allIncidentsReportsDict['TODOS'] = allIncidentsDict['TODOS'] + allReportsDict['TODOS']
-
+    
     for cop in allCops:
         incidentsSerie[cop]=[]
         actionsSerie[cop]=[]
@@ -679,7 +709,7 @@ if __name__ == "__main__":
     interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
     info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
     plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
-        
+    
     #cops para os quais sao criados os graficos  
     graphicsFromCops = [
                         'CCDA - RIO',
@@ -702,6 +732,7 @@ if __name__ == "__main__":
         plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
 
     # Dados finais
+    
     """
     print '-' * 100
     print 'TODOS'
