@@ -19,8 +19,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
@@ -528,8 +528,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         traceInterval = []
         axisX = []
         qtdeSimulacoes = 100
-        a= poptLomax[0]
-        b= poptLomax[1]
+        a = poptLomax[0]
+        b = poptLomax[1]
         print a , b
         plt.close('all')
         fig = plt.figure()
@@ -546,6 +546,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             while to < 30 * 24 * 60:
                 #to = to + random.expovariate(a)
                 to = to + ((b/np.power((1-np.random.uniform(0,1)),(1.0/a))) - b)
+                #to = to + ((b/np.power((np.random.uniform(0,1)),(1.0/a))) - b)
                 trace[v].append(to)          
             
             for i in range(0,len(trace[v])-1):
@@ -567,6 +568,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         # 
         simulatedSerieFinal=[]
         posicao=[]
+        lower=[]
+        upper=[]
+        media=[]
         for x in range(0,len(simulatedQtde[0])):
             posicao=[]
             valor=0
@@ -575,6 +579,17 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
                 posicao.append(simulatedQtde[q][x])
             valor = valor/float(qtdeSimulacoes)
             simulatedSerieFinal.append(valor)
+            
+            icmedia = str(bayes_mvs(posicao,0.99)).split(')),')[0]
+            icmedia = icmedia.replace(" ","")
+            icmedia = icmedia.replace("(","")
+            icmedia = icmedia.replace(")","")
+            m,l,u = icmedia.split(',')
+        
+            media.append(float(m))
+            lower.append(float(l))
+            upper.append(float(u))
+
         # geracao dos graficos
         
         serieExpo = funcExponential(np.array(axisX),*poptExp)
@@ -584,7 +599,6 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,percentagemInterArrivalTime,'ro-'
-
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
@@ -606,6 +620,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         tmpQtde = np.sum(simulatedSerieFinal)
         print cop, tmpQtde
         simulatedSerieFinal = [float(q)/tmpQtde for q in simulatedSerieFinal]
+
+        lower = [float(q)/tmpQtde for q in lower]
+        upper = [float(q)/tmpQtde for q in upper]
         
         expoPDFSerie = pdfExponential(np.array(axisX),*poptExp)
         lomaxPDFSerie = pdfLomax(np.array(axisX),*poptLomax)
@@ -617,7 +634,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             axisX,qtdeInterArrivalTime,'ro-', 
             axisX,expoPDFSerie,'b^-',
             axisX,lomaxPDFSerie,'g*-',
-            axisX,simulatedSerieFinal,'yx-'
+            axisX,simulatedSerieFinal,'yx-',
+            axisX,upper, 'yx--',
+            axisX,lower, 'yx--'
             )
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
