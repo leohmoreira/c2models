@@ -19,8 +19,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
@@ -486,11 +486,13 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     qtdeInterArrivalTime = []
     qtdeAbsoluta = []
     axisX = []
-    for t in np.arange(0,61,1):
+
+    itaIntervalo = []
+    for t in np.arange(0,31,1):
         # a qtde eh armazenada como float por causa de divisao ... para resultar em float
         #percentagemInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
         cdfQtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (q <= t)])))
-        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q <= t+1)])))
+        qtdeInterArrivalTime.append(float(len([q for q in interArrivalTime if (t < q < t+1)])))
         qtdeAbsoluta.append(float(len([q for q in interArrivalTime if (q <= t)])))
         axisX.append(t)
 
@@ -502,7 +504,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         total = qtdeAbsoluta[-1]
 
         percentagemInterArrivalTime = [q/float(total) for q in qtdeAbsoluta]
-
+        for x in range(0,len(percentagemInterArrivalTime)-1):
+            itaIntervalo.append(percentagemInterArrivalTime[x+1]-percentagemInterArrivalTime[x])
+        print itaIntervalo
         plt.close('all')
         fig = plt.figure()                
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)
@@ -527,7 +531,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         trace = []
         traceInterval = []
         axisX = []
-        qtdeSimulacoes = 100
+        qtdeSimulacoes = 10
         a = poptLomax[0]
         b = poptLomax[1]
         print a , b
@@ -552,9 +556,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             for i in range(0,len(trace[v])-1):
                 traceInterval[v].append(trace[v][i+1] - trace[v][i])
             
-            for t in np.arange(0,61,1):        
+            for t in np.arange(0,31,1):        
                     traceSerie[v].append(float(len([q for q in traceInterval[v] if (q <= t)])))
-                    simulatedQtde[v].append(float(len([q for q in traceInterval[v] if (t < q <= t + 1)])))
+                    simulatedQtde[v].append(float(len([q for q in traceInterval[v] if (t < q < t + 1)])))
                     axisX.append(t)
                 
             total = (traceSerie[v][-1])
