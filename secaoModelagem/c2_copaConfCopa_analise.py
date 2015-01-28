@@ -19,8 +19,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
@@ -361,13 +361,13 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
  
 def funcExponential(x,a,b,c):
 
-    #return  1.0 - (np.exp(-a*x))
-    return lomax.cdf(x,a)
+    return  1.0 - (np.exp(-a*x))
+    #return lomax.cdf(x,a)
 
 def pdfExponential(x,a,b,c):
 
-    #return  a * (np.exp(-a*x))
-    return lomax.pdf(x,a)
+    return  a * (np.exp(-a*x))
+    #return lomax.pdf(x,a)
 
 def pdfLomax(x,a,b,c):
 
@@ -509,7 +509,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         trace = []
         traceInterval = []
         axisX = []
-        qtdeSimulacoes = 10
+        qtdeSimulacoes = 100
         a = poptLomax[0]
         b = poptLomax[1]
         plt.close('all')
@@ -530,7 +530,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
                 trace[v].append(to)          
             
             for i in range(0,len(trace[v])-1):
-                traceInterval[v].append(trace[v][i+1] - trace[v][i])
+                traceInterval[v].append((trace[v][i+1] - trace[v][i]))
             
             for t in np.arange(0,61,1):        
                     traceSerie[v].append(float(len([q for q in traceInterval[v] if (q <= t)])))
@@ -581,7 +581,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,percentagemInterArrivalTime,'ro-',
-            axisX,cdfSimulated,'yx-',
+            axisX,cdfSimulated,'kx-',
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
@@ -613,7 +613,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         fig.suptitle(cop+"\nInter-arrival time")
         plt.plot(
             axisX,qtdeInterArrivalTime,'ro-', 
-            axisX,simulatedSerieFinal,'yx-'
+            axisX,simulatedSerieFinal,'kx-'
             )
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
