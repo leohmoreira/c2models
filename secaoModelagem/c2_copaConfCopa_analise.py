@@ -19,8 +19,8 @@ from pylab import text,title
 import os, sys
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.cluster.vq import vq, kmeans, whiten
-lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
-#lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
+#lib_path_Pacificador = os.path.abspath('/home/moreira/Projetos/COP/pacificador_cop')
+lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
@@ -359,23 +359,23 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
     fig.savefig(cop+'/'+filename,dpi=96)
 
  
-def funcExponential(x,a,b,c):
+def funcExponential(x,a):
 
     return  1.0 - (np.exp(-a*x))
     #return lomax.cdf(x,a)
 
-def pdfExponential(x,a,b,c):
+def pdfExponential(x,a):
 
     return  a * (np.exp(-a*x))
     #return lomax.pdf(x,a)
 
-def pdfLomax(x,a,b,c):
+def pdfLomax(x,a,b):
 
     return  (a * np.power(b,a)) / np.power(x+b,a+1)
     #return  (a * np.power(b,a)) / np.power(x,a+1)
     
 
-def funcLomax(x,a,b,c):
+def funcLomax(x,a,b):
     
     return 1 - (np.power(b,a)/(np.power(x+b,a)))
     #return 1 - (np.power(b,a)/(np.power(x,a)))
@@ -502,7 +502,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         print cop , ' EXPO R2 = ', expoR2,' Parametos = ',poptExp
         print cop , ' Lomax R2 = ', lomaxR2,' Parametos = ',poptLomax
 
-        
+        """
         # simulation time
         traceSerie = []
         simulatedQtde = []
@@ -564,7 +564,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             valorCDF = valorCDF/float(qtdeSimulacoes)
             simulatedSerieFinal.append(valor)
             cdfSimulated.append(valorCDF)
-        """    
+            
             icmedia = str(bayes_mvs(posicao,0.99)).split(')),')[0]
             icmedia = icmedia.replace(" ","")
             icmedia = icmedia.replace("(","")
@@ -577,11 +577,27 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         """
         # geracao dos graficos
               
+        lower=[]
+        upper=[]
+        alpha=[]
+        beta=[]
+        for y,r in zip(funcLomax(np.array(axisX),*poptLomax),percentagemInterArrivalTime):
+            if(y>0):
+                alpha.append((r/y) - 1)
+                beta.append(1- (r/y))
+        
+        alphaFinal = np.amax(alpha)
+        betaFinal = np.amax(beta)
+        print alphaFinal, betaFinal
+        upper = [y*(1 + alphaFinal) for y in funcLomax(np.array(axisX),*poptLomax)]
+        lower = [y*(1 - betaFinal) for y in funcLomax(np.array(axisX),*poptLomax)]
         seriesPlotted = plt.plot(
-            axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
+            #axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,percentagemInterArrivalTime,'ro-',
-            axisX,cdfSimulated,'kx-',
+            #axisX,cdfSimulated,'kx-',
+            axisX,upper,'kx-',
+            axisX,lower,'kx-',
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
@@ -590,7 +606,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
-        plt.legend(iter(seriesPlotted),('Exponential','Lomax','Real'),prop={'size':12},bbox_to_anchor=(1, 0.1))
+        plt.legend(iter(seriesPlotted),('Lomax','Real'),prop={'size':12},bbox_to_anchor=(1, 0.1))
         fig.savefig(cop+'/'+'cdf_'+filename+cop+'.png',dpi=96)
         fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
         plt.close('all')
@@ -599,21 +615,21 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         tmpQtde = np.sum(qtdeInterArrivalTime)
         qtdeInterArrivalTime = [float(q)/tmpQtde for q in qtdeInterArrivalTime]
 
-        tmpQtde = np.sum(simulatedSerieFinal)
-        simulatedSerieFinal = [float(q)/tmpQtde for q in simulatedSerieFinal]
+        #tmpQtde = np.sum(simulatedSerieFinal)
+        #simulatedSerieFinal = [float(q)/tmpQtde for q in simulatedSerieFinal]
 
         #lower = [float(q)/tmpQtde for q in lower]
         #upper = [float(q)/tmpQtde for q in upper]
         
-        expoPDFSerie = pdfExponential(np.array(axisX),*poptExp)
-        lomaxPDFSerie = pdfLomax(np.array(axisX),*poptLomax)
+        #expoPDFSerie = pdfExponential(np.array(axisX),*poptExp)
+        #lomaxPDFSerie = pdfLomax(np.array(axisX),*poptLomax)
 
         plt.close('all')
         fig = plt.figure()
         fig.suptitle(cop+"\nInter-arrival time")
         plt.plot(
             axisX,qtdeInterArrivalTime,'ro-', 
-            axisX,simulatedSerieFinal,'kx-'
+            #axisX,simulatedSerieFinal,'kx-'
             )
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
