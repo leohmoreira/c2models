@@ -581,16 +581,24 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         upper=[]
         alpha=[]
         beta=[]
+        Kalpha=[]
+        Kbeta=[]
         for y,r in zip(funcLomax(np.array(axisX),*poptLomax),percentagemInterArrivalTime):
             if(y>0):
                 alpha.append((r/y) - 1)
+                Kalpha.append(r-y)
                 beta.append(1- (r/y))
+                Kbeta.append(y-r)
         
         alphaFinal = np.amax(alpha)
         betaFinal = np.amax(beta)
-        print alphaFinal, betaFinal
+        KalphaFinal = np.amax(Kalpha)
+        KbetaFinal = np.amax(Kbeta)
+        print 'alpha = ', alphaFinal, ' beta = ', betaFinal, ' K-alpha = ', KalphaFinal, ' K-beta = ',KbetaFinal
         upper = [y*(1 + alphaFinal) for y in funcLomax(np.array(axisX),*poptLomax)]
         lower = [y*(1 - betaFinal) for y in funcLomax(np.array(axisX),*poptLomax)]
+        Kupper = [y + KalphaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
+        Klower = [y - KbetaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
         seriesPlotted = plt.plot(
             #axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
@@ -598,6 +606,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             #axisX,cdfSimulated,'kx-',
             axisX,upper,'kx-',
             axisX,lower,'kx-',
+            axisX,Kupper,'mx-',
+            axisX,Klower,'mx-',
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
