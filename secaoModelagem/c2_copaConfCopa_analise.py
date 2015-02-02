@@ -81,6 +81,13 @@ copadays = [datetime(2014,6,12),datetime(2014,6,13),datetime(2014,6,14),datetime
 matchDays = copadays
 # globais
 resultados = {}
+
+#coeficientes da distribuição LOMAX
+coefAlphaLomax = []
+coefBetaLomax = []
+
+# correlacao
+correlacao = []
 # CCCDA | Distribuicao | Parametro1 | Parametro2 | Coef A | CoefR2 
 def changeCop(cop):
 
@@ -357,7 +364,7 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
     if(os.path.exists==False):
         os.mkdir(cop)   
     fig.savefig(cop+'/'+filename,dpi=96)
-
+    correlacao.append(stats.pearsonr(actions,incRel)[0])
  
 def funcExponential(x,a):
 
@@ -502,6 +509,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         print cop , ' EXPO R2 = ', expoR2,' Parametos = ',poptExp
         print cop , ' Lomax R2 = ', lomaxR2,' Parametos = ',poptLomax
 
+        coefAlphaLomax.append(poptLomax[0])
+        coefBetaLomax.append(poptLomax[1])
+
         """
         # simulation time
         traceSerie = []
@@ -576,7 +586,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
             upper.append(float(u))
         """
         # geracao dos graficos
-              
+        """    
         lower=[]
         upper=[]
         alpha=[]
@@ -595,19 +605,21 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         KalphaFinal = np.amax(Kalpha)
         KbetaFinal = np.amax(Kbeta)
         print 'alpha = ', alphaFinal, ' beta = ', betaFinal, ' K-alpha = ', KalphaFinal, ' K-beta = ',KbetaFinal
+
         upper = [y*(1 + alphaFinal) for y in funcLomax(np.array(axisX),*poptLomax)]
         lower = [y*(1 - betaFinal) for y in funcLomax(np.array(axisX),*poptLomax)]
         Kupper = [y + KalphaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
         Klower = [y - KbetaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
+        """
         seriesPlotted = plt.plot(
             #axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,percentagemInterArrivalTime,'ro-',
             #axisX,cdfSimulated,'kx-',
-            axisX,upper,'kx-',
-            axisX,lower,'kx-',
-            axisX,Kupper,'mx-',
-            axisX,Klower,'mx-',
+        #    axisX,upper,'kx-',
+        #    axisX,lower,'kx-',
+        #    axisX,Kupper,'mx-',
+        #    axisX,Klower,'mx-',
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
@@ -755,6 +767,13 @@ if __name__ == "__main__":
 
     # Dados finais
     
+    print 'coeficientes'
+    print 'Alpha = ', compute_statistics(coefAlphaLomax)
+    print 'Beta = ', compute_statistics(coefBetaLomax)
+    print 'Correlacao = ', correlacao
+
+    
+
     """
     print '-' * 100
     print 'TODOS'
