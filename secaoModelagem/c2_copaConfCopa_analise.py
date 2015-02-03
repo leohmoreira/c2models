@@ -88,6 +88,9 @@ coefBetaLomax = []
 
 # correlacao
 correlacao = []
+
+# media de todos os pontos
+mediaPorMinuto = []
 # CCCDA | Distribuicao | Parametro1 | Parametro2 | Coef A | CoefR2 
 def changeCop(cop):
 
@@ -388,6 +391,29 @@ def funcLomax(x,a,b):
     #return 1 - (np.power(b,a)/(np.power(x,a)))
     #return lomax.cdf(x,a)
     #return genpareto.cdf(x,a)
+
+def funcLomaxPonderada(x):
+    
+    #a = 3.86607243476
+    #b = 90.3290141236
+    a = 1.42421085234
+    b = 10.3310560189
+    #a = 1.99249027486
+    #b = 14.7003560784
+    return 1 - (np.power(b,a)/(np.power(x+b,a)))
+    #return 1 - (np.power(b,a)/(np.power(x,a)))
+    #return lomax.cdf(x,a)
+    #return genpareto.cdf(x,a)
+
+def funcLomaxAritmetica(x):
+    
+    #a = 3.86607243476
+    #b = 90.3290141236
+    #a = 1.42421085234
+    #b = 10.3310560189
+    a = 1.99249027486
+    b = 14.7003560784
+    return 1 - (np.power(b,a)/(np.power(x+b,a)))
    
 def compute_statistics(serie):
     """
@@ -611,6 +637,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         Kupper = [y + KalphaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
         Klower = [y - KbetaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
         """
+        
+        mediaPorMinuto.append(percentagemInterArrivalTime)
+
         seriesPlotted = plt.plot(
             #axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
@@ -620,6 +649,8 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         #    axisX,lower,'kx-',
         #    axisX,Kupper,'mx-',
         #    axisX,Klower,'mx-',
+            axisX,funcLomaxPonderada(np.array(axisX)),'mx-',
+            axisX,funcLomaxAritmetica(np.array(axisX)),'kx-'
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
@@ -740,9 +771,9 @@ if __name__ == "__main__":
     
     # inicio da criacao dos graficos
 
-    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
-    info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
-    plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
+    #interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
+    #info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
+    #plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
     
     #cops para os quais sao criados os graficos  
     graphicsFromCops = [
@@ -772,6 +803,49 @@ if __name__ == "__main__":
     print 'Beta = ', compute_statistics(coefBetaLomax)
     print 'Correlacao = ', correlacao
 
+    mediaPontual = 0
+    arrayMedias = []
+    for minuto in range(0,61):
+        mediaPontual = 0
+        for amostra in mediaPorMinuto:
+            mediaPontual = mediaPontual + amostra[minuto]
+        arrayMedias.append(mediaPontual/float(len(mediaPorMinuto)))
+    
+
+    plt.close('all')
+    fig = plt.figure()
+    fig.suptitle(cop+"\nInter-arrival time")
+    for amostra in mediaPorMinuto:
+        plt.plot(
+            range(0,61),amostra,'ro-', 
+            #axisX,simulatedSerieFinal,'kx-'
+            )
+    plt.plot(
+            range(0,61),arrayMedias,'ko-', 
+            #axisX,simulatedSerieFinal,'kx-'
+            )
+    plt.ylabel("Quantity [Units]")
+    plt.xlabel("Interval [minutes]")
+    plt.xticks(range(0,61),rotation=45)
+    plt.grid(True)
+    fig.set_size_inches(18.5,10.5)
+    #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
+    fig.savefig('porcentagem/mediageral.png',dpi=96)
+    plt.close('all')
+
+    
+    mediaAlphaPonderada = 0
+    for k, a in zip(correlacao,coefAlphaLomax):
+        mediaAlphaPonderada = mediaAlphaPonderada + k*a
+    mediaAlphaPonderada = mediaAlphaPonderada/float(len(correlacao))
+
+    mediaBetaPonderada = 0
+    for k, b in zip(correlacao,coefBetaLomax):
+        mediaBetaPonderada = mediaBetaPonderada + k*b
+    mediaBetaPonderada = mediaBetaPonderada/float(len(correlacao))
+
+    print 'Alpha ponderado = ', mediaAlphaPonderada
+    print 'Beta podenrado = ',mediaBetaPonderada
     
 
     """
