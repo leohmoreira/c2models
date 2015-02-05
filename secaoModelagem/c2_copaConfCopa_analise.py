@@ -311,12 +311,12 @@ def dateChangeFormat(item):
     return datetime.strftime(item,"%d/%m")
 
 
-def plot_interArrival(samples,labels,padroes,filename):
+def plot_interArrival(samples,labels,padroes,filename,title):
 
     axisX = range(0,61)
     plt.close('all')
     fig = plt.figure()
-    fig.suptitle(cop+"\nCDF")
+    fig.suptitle(cop+"\n"+title)
     for sample,label,padrao in zip(samples,labels,padroes):
        #plt.plot(axisX,distRealInterArrival[cop],'ro-',label='Real')
         plt.plot(axisX,sample,padrao,label=label)
@@ -549,7 +549,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.close('all')
         fig = plt.figure()                
         #poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)
-        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)       
+        poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),percentagemInterArrivalTime,maxfev=3000)       
 
         #armazena os coeficientes no dict
         coefDistribuicaoLomax[cop]=poptLomax
@@ -560,10 +560,11 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         #coeficientes R2 no dict
         coefR2Lomax[cop]=lomaxR2
         #print cop , ' EXPO R2 = ', expoR2,' Parametos = ',poptExp
-        print cop , ' Lomax R2 = ', lomaxR2,' Parametos = ',poptLomax
+        #print cop , ' Lomax R2 = ', lomaxR2,' Parametos = ',poptLomax
 
         #coefAlphaLomax.append(poptLomax[0])
         #coefBetaLomax.append(poptLomax[1])
+        #coefAlphaLomax.append(poptLomax[0])
 
         """
         # simulation time
@@ -794,9 +795,9 @@ if __name__ == "__main__":
     
     # inicio da criacao dos graficos
 
-    #interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
+    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
     #info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
-    #plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
+    plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
     
     #cops para os quais sao criados os graficos  
     graphicsFromCops = [
@@ -811,7 +812,8 @@ if __name__ == "__main__":
                         'CCDA - SSA',
                         'CCDA - CTB',
                         'CCDA - POA',
-                        'CCDA - CGB'
+                        'CCDA - CGB',
+                        'TODOS'
                         ]
 
     for cop in graphicsFromCops:
@@ -837,31 +839,54 @@ if __name__ == "__main__":
     
     
     # media ponderada das probabilidades. Correlacao x P(X<=x)
-    arrayDistMediaPonderada = []
+    arrayDistRealMediaPonderada = []
+
     for t in range(0,61):
         probT = 0
         for cop in graphicsFromCops:
             probT = probT + correlacao[cop]*distRealInterArrival[cop][t]
-            #probT = probT + distRealInterArrival[cop][t]
-        arrayDistMediaPonderada.append(probT/float(np.sum(correlacao.values())))
-    print len(arrayDistMediaPonderada)
-    plot_interArrival([arrayDistMediaPonderada],['Ponderada'],['ro-'],'CDF_ponderada.png')
+        arrayDistRealMediaPonderada.append(probT/float(np.sum(correlacao.values())))
 
-    distRealInterArrival['Ponderada']= arrayDistMediaPonderada
-    graphicsFromCops.append('Ponderada')
+    # ajustando a distribuicao media ponderada
+    poptRealMediaPonderada, pocvRealMediaPonderada = curve_fit(funcLomax,range(0,61),arrayDistRealMediaPonderada,maxfev=3000)
+    
+    #print ' R2 = ', computeR2(arrayDistRealMediaPonderada,funcLomax(range(0,61),poptRealMediaPonderada[0],poptRealMediaPonderada[1]))
+    arrayDistLomaxMediaPonderada = funcLomax(range(0,61),poptRealMediaPonderada[0],poptRealMediaPonderada[1])
+    
+    #plotando comparacao das funcoes da distribuicao reais
+    plot_interArrival([arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'realPonderada_LomaxPonderada.png','Comparacao entre Distribuicao Real e Ajustada')
+
+    plot_interArrival([distRealInterArrival['TODOS'],arrayDistRealMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Real_RealPonderada.png','Comparacao Distribuicao Real de TODOS e Distribuicao Real Geral Ponderada')
+    plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]),arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de TODOS e Distribuicao Lomax Geral Ponderada')
+
+    #plotando comparacao de cada COP com a distribuicao ponderada
+    for cop in graphicsFromCops:
+        plot_interArrival([distRealInterArrival[cop],arrayDistRealMediaPonderada],['Real','Ponderada'],['ro-','gx-'],cop+'_Real_RealPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Real Geral Ponderada')
+        plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],cop+'_Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de '+ cop + ' e Distribuicao Lomax Geral Ponderada')
+        plot_interArrival([distRealInterArrival[cop],arrayDistLomaxMediaPonderada],['Real','Lomax Ponderada'],['ro-','gx-'],cop+'_Real_LomaxPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Lomax Geral Ponderada')
+        #print cop,' Real - Ajuste com a ponderada = ',computeR2(distRealInterArrival[cop],arrayDistRealMediaPonderada)
+        #print cop,' Lomax - Ajuste com a ponderada = ',computeR2(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada)
+        #------tabela
+        print cop, correlacao[cop],coefR2Lomax[cop],coefDistribuicaoLomax[cop],computeR2(distRealInterArrival[cop],arrayDistRealMediaPonderada),computeR2(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada), computeR2(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
+
+    #plot_interArrival([arrayDistRealMediaPonderada],['Ponderada'],['ro-'],'CDF_ponderada.png')
+
+    #distRealInterArrival['Ponderada']= arrayDistRealMediaPonderada
+    #graphicsFromCops.append('Ponderada')
+
     # gerando um grafico unico com todas as distribuicoes reais
     arrayDist=[]
     for cop in graphicsFromCops:
         arrayDist.append(distRealInterArrival[cop])  
-    plot_interArrival(arrayDist,graphicsFromCops,['bo-','ko-','mo-','yo-','go-','ro-','bx-','kx-','mx-','yx-','gx-','rx-'],'jointReal.png')
+    plot_interArrival(arrayDist,graphicsFromCops,['bo-','ko-','mo-','yo-','go-','ro-','bx-','kx-','mx-','yx-','gx-'],'todasReal.png','Comparacao entre todas Distribuicoes Reais')
  
     # gerando um grafico unico com todas as distribuicoes ajustadas para lomax
     arrayDist=[]
     for cop in graphicsFromCops:
         arrayDist.append(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]))
-    plot_interArrival(arrayDist,graphicsFromCops,['bo-','ko-','mo-','yo-','go-','ro-','bx-','kx-','mx-','yx-','gx-'],'jointLomax.png')
+    plot_interArrival(arrayDist,graphicsFromCops,['bo-','ko-','mo-','yo-','go-','ro-','bx-','kx-','mx-','yx-','gx-'],'todasLomax.png','Comparacao entre todas Distribuicoes Ajustadas')
     
-    print 'media ponderada = ', arrayDistMediaPonderada
+
     """
     for cop in graphicsFromCops:
         
