@@ -79,19 +79,22 @@ copadays = [datetime(2014,6,12),datetime(2014,6,13),datetime(2014,6,14),datetime
             ]
 
 matchDays = copadays
+
+
 # globais
 resultados = {}
 
 #coeficientes da distribuição LOMAX
-coefAlphaLomax = []
-coefBetaLomax = []
+coefDistribuicaoLomax = {}
 
 # correlacao
-correlacao = []
+correlacao = {}
 
-# media de todos os pontos
-mediaPorMinuto = []
-# CCCDA | Distribuicao | Parametro1 | Parametro2 | Coef A | CoefR2 
+#coeficientes R2
+coefR2Lomax = {}
+
+#distribuicao real do intervalo entre chegadas
+distRealInterArrival = {}
 def changeCop(cop):
 
     maceio = u"GCL Maceió"
@@ -308,6 +311,25 @@ def dateChangeFormat(item):
     return datetime.strftime(item,"%d/%m")
 
 
+def plot_interArrival(samples,labels,padroes,filename):
+
+    axisX = range(0,61)
+    plt.close('all')
+    fig = plt.figure()
+    fig.suptitle(cop+"\nCDF")
+    for sample,label,padrao in zip(samples,labels,padroes):
+       #plt.plot(axisX,distRealInterArrival[cop],'ro-',label='Real')
+        plt.plot(axisX,sample,padrao,label=label)
+    plt.ylabel("P(X<=x)")
+    plt.xlabel("Interval [minutes]")
+    plt.xticks(axisX,rotation=45)
+    plt.grid(True)
+    fig.set_size_inches(18.5,10.5)
+    plt.legend(prop={'size':12},bbox_to_anchor=(0.99, 0.4))
+
+    fig.savefig(filename,dpi=96)
+    plt.close('all')
+
 def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
 
     plt.close('all')
@@ -367,7 +389,8 @@ def plot_resume_cop(filename,cop,axisX,actions,incidents,reports):
     if(os.path.exists==False):
         os.mkdir(cop)   
     fig.savefig(cop+'/'+filename,dpi=96)
-    correlacao.append(stats.pearsonr(actions,incRel)[0])
+    correlacao[cop]=stats.pearsonr(actions,incRel)[0]
+    #correlacao.append(stats.pearsonr(actions,incRel)[0])
  
 def funcExponential(x,a):
 
@@ -461,14 +484,12 @@ def testandoDistribuicao(sample):
             "lomax"           #Lomax
             
         ]
-    resultados =[]
     for cdf in cdfs:
         #fit our data set against every probability distribution
         parameters = eval("scipy.stats."+cdf+".fit(sample)");
      
         #Applying the Kolmogorov-Smirnof one sided test
         D, p = scipy.stats.kstest(sample, cdf, args=parameters);
-        resultados.append(p)
         #pretty-print the results
         print cdf.ljust(16) + ("p: "+str(p)).ljust(25)+"D: "+str(D)+ "parametros = ",str(parameters).ljust(40)
 
@@ -497,11 +518,9 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
     interArrivalTime = []
     if(len(sortedArrivalTime)>0):
         for i in range(0,len(sortedArrivalTime)-1):
-            #if((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds() > 0):
             if(sortedArrivalTime[i+1]!=sortedArrivalTime[i]):
                 interArrivalTime.append(((sortedArrivalTime[i+1] - sortedArrivalTime[i]).total_seconds())/60.0)
             
-    #testandoDistribuicao(interArrivalTime)
     percentagemInterArrivalTime = []
     cdfQtdeInterArrivalTime = []
     qtdeInterArrivalTime = []
@@ -517,26 +536,34 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         qtdeAbsoluta.append(float(len([q for q in interArrivalTime if (q <= t)])))
         axisX.append(t)
 
-    #testandoDistribuicao(qtdeAbsoluta)
     if(len(interArrivalTime)>0):
         
-        # porcentagem
         # pego só o último que representa o maior valor do intervalo. Existem valores maiores que 60 minutos que são desconsiderados
         total = qtdeAbsoluta[-1]
 
         percentagemInterArrivalTime = [q/float(total) for q in qtdeAbsoluta]
+
+        #armazena distribuicao real dos intervalos entre chegadas no dict
+        distRealInterArrival[cop]=percentagemInterArrivalTime
+
         plt.close('all')
         fig = plt.figure()                
-        poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)
+        #poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)
         poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),percentagemInterArrivalTime,maxfev=2000)       
 
-        expoR2 = computeR2(percentagemInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
+        #armazena os coeficientes no dict
+        coefDistribuicaoLomax[cop]=poptLomax
+
+        #expoR2 = computeR2(percentagemInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
         lomaxR2 = computeR2(percentagemInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
-        print cop , ' EXPO R2 = ', expoR2,' Parametos = ',poptExp
+
+        #coeficientes R2 no dict
+        coefR2Lomax[cop]=lomaxR2
+        #print cop , ' EXPO R2 = ', expoR2,' Parametos = ',poptExp
         print cop , ' Lomax R2 = ', lomaxR2,' Parametos = ',poptLomax
 
-        coefAlphaLomax.append(poptLomax[0])
-        coefBetaLomax.append(poptLomax[1])
+        #coefAlphaLomax.append(poptLomax[0])
+        #coefBetaLomax.append(poptLomax[1])
 
         """
         # simulation time
@@ -638,8 +665,6 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         Klower = [y - KbetaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
         """
         
-        mediaPorMinuto.append(percentagemInterArrivalTime)
-
         seriesPlotted = plt.plot(
             #axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
@@ -648,9 +673,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         #    axisX,upper,'kx-',
         #    axisX,lower,'kx-',
         #    axisX,Kupper,'mx-',
-        #    axisX,Klower,'mx-',
-            axisX,funcLomaxPonderada(np.array(axisX)),'mx-',
-            axisX,funcLomaxAritmetica(np.array(axisX)),'kx-'
+        #    axisX,Klower,'mx-'        
         )
 
         fig.suptitle(cop+"\nCDF - Inter-arrival time")
@@ -797,43 +820,7 @@ if __name__ == "__main__":
         plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
 
     # Dados finais
-    
-    print 'coeficientes'
-    print 'Alpha = ', compute_statistics(coefAlphaLomax)
-    print 'Beta = ', compute_statistics(coefBetaLomax)
-    print 'Correlacao = ', correlacao
-
-    mediaPontual = 0
-    arrayMedias = []
-    for minuto in range(0,61):
-        mediaPontual = 0
-        for amostra in mediaPorMinuto:
-            mediaPontual = mediaPontual + amostra[minuto]
-        arrayMedias.append(mediaPontual/float(len(mediaPorMinuto)))
-    
-
-    plt.close('all')
-    fig = plt.figure()
-    fig.suptitle(cop+"\nInter-arrival time")
-    for amostra in mediaPorMinuto:
-        plt.plot(
-            range(0,61),amostra,'ro-', 
-            #axisX,simulatedSerieFinal,'kx-'
-            )
-    plt.plot(
-            range(0,61),arrayMedias,'ko-', 
-            #axisX,simulatedSerieFinal,'kx-'
-            )
-    plt.ylabel("Quantity [Units]")
-    plt.xlabel("Interval [minutes]")
-    plt.xticks(range(0,61),rotation=45)
-    plt.grid(True)
-    fig.set_size_inches(18.5,10.5)
-    #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
-    fig.savefig('porcentagem/mediageral.png',dpi=96)
-    plt.close('all')
-
-    
+    """
     mediaAlphaPonderada = 0
     for k, a in zip(correlacao,coefAlphaLomax):
         mediaAlphaPonderada = mediaAlphaPonderada + k*a
@@ -846,28 +833,40 @@ if __name__ == "__main__":
 
     print 'Alpha ponderado = ', mediaAlphaPonderada
     print 'Beta podenrado = ',mediaBetaPonderada
-    
-
     """
-    print '-' * 100
-    print 'TODOS'
-    print "Total de incidentes", len(allIncidentsDict['TODOS'])
-    compute_statistics(incidentsSerie['TODOS'])
-    print "Total de relatos", len(allReportsDict['TODOS'])
-    compute_statistics(reportsSerie['TODOS'])
-    print "Total de ações", len(allActionsDict['TODOS'])
-    compute_statistics(actionsSerie['TODOS'])
-    print '-' * 100
     
+    
+    # media ponderada das probabilidades. Correlacao x P(X<=x)
+    arrayDistMediaPonderada = []
+    for t in range(0,61):
+        probT = 0
+        for cop in graphicsFromCops:
+            probT = probT + correlacao[cop]*distRealInterArrival[cop][t]
+            #probT = probT + distRealInterArrival[cop][t]
+        arrayDistMediaPonderada.append(probT/float(np.sum(correlacao.values())))
+    print len(arrayDistMediaPonderada)
+    plot_interArrival([arrayDistMediaPonderada],['Ponderada'],['ro-'],'CDF_ponderada.png')
 
+    distRealInterArrival['Ponderada']= arrayDistMediaPonderada
+    graphicsFromCops.append('Ponderada')
+    # gerando um grafico unico com todas as distribuicoes reais
+    arrayDist=[]
     for cop in graphicsFromCops:
-        print '-' * 100
-        print cop
-        print "Total de incidentes", len(allIncidentsDict[cop])
-        compute_statistics(incidentsSerie[cop])
-        print "Total de relatos", len(allReportsDict[cop])
-        compute_statistics(reportsSerie['TODOS'])
-        print "Total de ações", len(allActionsDict[cop])
-        compute_statistics(actionsSerie[cop])
+        arrayDist.append(distRealInterArrival[cop])  
+    plot_interArrival(arrayDist,graphicsFromCops,['bo-','ko-','mo-','yo-','go-','ro-','bx-','kx-','mx-','yx-','gx-','rx-'],'jointReal.png')
+ 
+    # gerando um grafico unico com todas as distribuicoes ajustadas para lomax
+    arrayDist=[]
+    for cop in graphicsFromCops:
+        arrayDist.append(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]))
+    plot_interArrival(arrayDist,graphicsFromCops,['bo-','ko-','mo-','yo-','go-','ro-','bx-','kx-','mx-','yx-','gx-'],'jointLomax.png')
     
+    print 'media ponderada = ', arrayDistMediaPonderada
     """
+    for cop in graphicsFromCops:
+        
+        arrayDist=[]
+        arrayDist.append(distRealInterArrival[cop])
+        #plot_interArrival(distRealInterArrival[cop],cop)
+        plot_interArrival(arrayDist,cop)
+    """ 
