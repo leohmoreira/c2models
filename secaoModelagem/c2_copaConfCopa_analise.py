@@ -74,8 +74,15 @@ mdays = [#datetime(2013,6,10),datetime(2013,6,11),datetime(2013,6,12),datetime(2
 copadays = [datetime(2014,6,12),datetime(2014,6,13),datetime(2014,6,14),datetime(2014,6,15),datetime(2014,6,16),
             datetime(2014,6,17),datetime(2014,6,18),datetime(2014,6,19),datetime(2014,6,20),datetime(2014,6,21),
             datetime(2014,6,22),datetime(2014,6,23),datetime(2014,6,24),datetime(2014,6,25),datetime(2014,6,26),
-            datetime(2014,6,28),datetime(2014,6,29),datetime(2014,6,30),datetime(2014,7,1),datetime(2014,7,4),
-            datetime(2014,7,5),datetime(2014,7,8),datetime(2014,7,9),datetime(2014,7,12),datetime(2014,7,13),
+            datetime(2014,6,27),
+            datetime(2014,6,28),datetime(2014,6,29),datetime(2014,6,30),datetime(2014,7,1),
+            datetime(2014,7,2),datetime(2014,7,3),### sem jogo
+            datetime(2014,7,4),
+            datetime(2014,7,5),
+            datetime(2014,7,6),datetime(2014,7,7), ## sem jogo
+            datetime(2014,7,8),datetime(2014,7,9),
+            datetime(2014,7,10),datetime(2014,7,11), ##sem jogo
+            datetime(2014,7,12),datetime(2014,7,13),
             ]
 
 matchDays = copadays
@@ -683,7 +690,7 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
-        plt.legend(iter(seriesPlotted),('Lomax','Real'),prop={'size':12},bbox_to_anchor=(1, 0.1))
+        plt.legend(iter(seriesPlotted),('Ajuste Lomax','Real'),prop={'size':12},bbox_to_anchor=(1, 0.1))
         fig.savefig(cop+'/'+'cdf_'+filename+cop+'.png',dpi=96)
         fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
         plt.close('all')
@@ -813,7 +820,7 @@ if __name__ == "__main__":
                         'CCDA - CTB',
                         'CCDA - POA',
                         'CCDA - CGB',
-                        'TODOS'
+                        #'TODOS'
                         ]
 
     for cop in graphicsFromCops:
@@ -856,18 +863,16 @@ if __name__ == "__main__":
     #plotando comparacao das funcoes da distribuicao reais
     plot_interArrival([arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'realPonderada_LomaxPonderada.png','Comparacao entre Distribuicao Real e Ajustada')
 
-    plot_interArrival([distRealInterArrival['TODOS'],arrayDistRealMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Real_RealPonderada.png','Comparacao Distribuicao Real de TODOS e Distribuicao Real Geral Ponderada')
-    plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]),arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de TODOS e Distribuicao Lomax Geral Ponderada')
+    #plot_interArrival([distRealInterArrival['TODOS'],arrayDistRealMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Real_RealPonderada.png','Comparacao Distribuicao Real de TODOS e Distribuicao Real Geral Ponderada')
+    #plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]),arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de TODOS e Distribuicao Lomax Geral Ponderada')
 
     #plotando comparacao de cada COP com a distribuicao ponderada
     for cop in graphicsFromCops:
-        plot_interArrival([distRealInterArrival[cop],arrayDistRealMediaPonderada],['Real','Ponderada'],['ro-','gx-'],cop+'_Real_RealPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Real Geral Ponderada')
-        plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],cop+'_Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de '+ cop + ' e Distribuicao Lomax Geral Ponderada')
-        plot_interArrival([distRealInterArrival[cop],arrayDistLomaxMediaPonderada],['Real','Lomax Ponderada'],['ro-','gx-'],cop+'_Real_LomaxPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Lomax Geral Ponderada')
-        #print cop,' Real - Ajuste com a ponderada = ',computeR2(distRealInterArrival[cop],arrayDistRealMediaPonderada)
-        #print cop,' Lomax - Ajuste com a ponderada = ',computeR2(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada)
+        plot_interArrival([distRealInterArrival[cop],arrayDistRealMediaPonderada],['Real','Real Geral Ponderada'],['ro-','gx-'],cop+'/Real_RealPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Real Geral Ponderada')
+        plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de '+ cop + ' e Distribuicao Lomax Geral Ponderada')
+        plot_interArrival([distRealInterArrival[cop],arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Real_LomaxPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Lomax Geral Ponderada')
         #------tabela
-        print cop, correlacao[cop],coefR2Lomax[cop],coefDistribuicaoLomax[cop],computeR2(distRealInterArrival[cop],arrayDistRealMediaPonderada),computeR2(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada), computeR2(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
+        print cop,'|', correlacao[cop],'|',coefR2Lomax[cop],'|',coefDistribuicaoLomax[cop],'|',computeR2(distRealInterArrival[cop],arrayDistRealMediaPonderada),'|',computeR2(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada),'|', computeR2(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
 
     #plot_interArrival([arrayDistRealMediaPonderada],['Ponderada'],['ro-'],'CDF_ponderada.png')
 
