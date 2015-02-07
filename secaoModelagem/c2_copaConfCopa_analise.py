@@ -325,7 +325,6 @@ def plot_interArrival(samples,labels,padroes,filename,title):
     fig = plt.figure()
     fig.suptitle(cop+"\n"+title)
     for sample,label,padrao in zip(samples,labels,padroes):
-       #plt.plot(axisX,distRealInterArrival[cop],'ro-',label='Real')
         plt.plot(axisX,sample,padrao,label=label)
     plt.ylabel("P(X<=x)")
     plt.xlabel("Interval [minutes]")
@@ -500,7 +499,7 @@ def testandoDistribuicao(sample):
         #pretty-print the results
         print cdf.ljust(16) + ("p: "+str(p)).ljust(25)+"D: "+str(D)+ "parametros = ",str(parameters).ljust(40)
 
-def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600,cor='green'):
+def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='green'):
 
     """
         Calcula a distribuição dos tempos entre ocorrencias dos incidentes.
@@ -566,177 +565,45 @@ def interArrrival_time_distribution(filename,cop,serie, nbins=30,limit = 24*3600
 
         #coeficientes R2 no dict
         coefR2Lomax[cop]=lomaxR2
-        #print cop , ' EXPO R2 = ', expoR2,' Parametos = ',poptExp
-        #print cop , ' Lomax R2 = ', lomaxR2,' Parametos = ',poptLomax
-
-        #coefAlphaLomax.append(poptLomax[0])
-        #coefBetaLomax.append(poptLomax[1])
-        #coefAlphaLomax.append(poptLomax[0])
-
-        """
-        # simulation time
-        traceSerie = []
-        simulatedQtde = []
-        trace = []
-        traceInterval = []
-        axisX = []
-        qtdeSimulacoes = 100
-        a = poptLomax[0]
-        b = poptLomax[1]
-        plt.close('all')
-        fig = plt.figure()
-        for v in range(0,qtdeSimulacoes):
-            print 'Simulando ', v, 'de ', qtdeSimulacoes
-            trace.append([])
-            traceInterval.append([])
-            traceSerie.append([])
-            simulatedQtde.append([])
-            axisX = []
-            to= 0
-            random.seed()
-            
-            while to < 30 * 24 * 60:
-                #to = to + random.expovariate(a)
-                to = to + ((b/np.power((1-np.random.uniform(0,1)),(1.0/a))) - b)
-                trace[v].append(to)          
-            
-            for i in range(0,len(trace[v])-1):
-                traceInterval[v].append((trace[v][i+1] - trace[v][i]))
-            
-            for t in np.arange(0,61,1):        
-                    traceSerie[v].append(float(len([q for q in traceInterval[v] if (q <= t)])))
-                    simulatedQtde[v].append(float(len([q for q in traceInterval[v] if (t < q < t + 1)])))
-                    axisX.append(t)
-                
-            total = (traceSerie[v][-1])
-            if(total > 0):
-                traceSerie[v] = [float(q)/float(total) for q in traceSerie[v]]
-                #plt.plot(axisX,traceSerie[v],'yx-')
-            
-            else:
-                v = v -1
-
-        # 
-        simulatedSerieFinal=[]
-        posicao=[]
-        lower=[]
-        upper=[]
-        media=[]
-        cdfSimulated=[]
-        for x in range(0,len(simulatedQtde[0])):
-            posicao=[]
-            valor=0
-            valorCDF=0
-            for q in range(0,qtdeSimulacoes):
-                valor = valor + simulatedQtde[q][x]
-                valorCDF = valorCDF + traceSerie[q][x]
-                posicao.append(simulatedQtde[q][x])
-            valor = valor/float(qtdeSimulacoes)
-            valorCDF = valorCDF/float(qtdeSimulacoes)
-            simulatedSerieFinal.append(valor)
-            cdfSimulated.append(valorCDF)
-            
-            icmedia = str(bayes_mvs(posicao,0.99)).split(')),')[0]
-            icmedia = icmedia.replace(" ","")
-            icmedia = icmedia.replace("(","")
-            icmedia = icmedia.replace(")","")
-            m,l,u = icmedia.split(',')
         
-            media.append(float(m))
-            lower.append(float(l))
-            upper.append(float(u))
-        """
-        # geracao dos graficos
-        """    
-        lower=[]
-        upper=[]
-        alpha=[]
-        beta=[]
-        Kalpha=[]
-        Kbeta=[]
-        for y,r in zip(funcLomax(np.array(axisX),*poptLomax),percentagemInterArrivalTime):
-            if(y>0):
-                alpha.append((r/y) - 1)
-                Kalpha.append(r-y)
-                beta.append(1- (r/y))
-                Kbeta.append(y-r)
-        
-        alphaFinal = np.amax(alpha)
-        betaFinal = np.amax(beta)
-        KalphaFinal = np.amax(Kalpha)
-        KbetaFinal = np.amax(Kbeta)
-        print 'alpha = ', alphaFinal, ' beta = ', betaFinal, ' K-alpha = ', KalphaFinal, ' K-beta = ',KbetaFinal
 
-        upper = [y*(1 + alphaFinal) for y in funcLomax(np.array(axisX),*poptLomax)]
-        lower = [y*(1 - betaFinal) for y in funcLomax(np.array(axisX),*poptLomax)]
-        Kupper = [y + KalphaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
-        Klower = [y - KbetaFinal for y in funcLomax(np.array(axisX),*poptLomax)]
-        """
-        
         seriesPlotted = plt.plot(
-            #axisX,funcExponential(np.array(axisX),*poptExp),'b^-',
             axisX,funcLomax(np.array(axisX),*poptLomax),'g*-',
             axisX,percentagemInterArrivalTime,'ro-',
-            #axisX,cdfSimulated,'kx-',
-        #    axisX,upper,'kx-',
-        #    axisX,lower,'kx-',
-        #    axisX,Kupper,'mx-',
-        #    axisX,Klower,'mx-'        
         )
 
-        fig.suptitle(cop+"\nCDF - Inter-arrival time")
+        fig.suptitle(cop+"\nInter-arrival - Ajuste Lomax X Real")
         plt.ylabel("P(X<=x)")
         plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
         plt.legend(iter(seriesPlotted),('Ajuste Lomax','Real'),prop={'size':12},bbox_to_anchor=(1, 0.1))
-        fig.savefig(cop+'/'+'cdf_'+filename+cop+'.png',dpi=96)
-        fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
+        #fig.savefig(cop+'/'+'cdf_'+filename+cop+'.png',dpi=96)
+        fig.savefig('CDF_ajusteLomax_X_Real/'+cop+'.png',dpi=96)
+        #fig.savefig('porcentagem/'+filename+cop+'.png',dpi=96)
         plt.close('all')
         
         # parte do historico de interarrival = pdf mais ou menos
         tmpQtde = np.sum(qtdeInterArrivalTime)
         qtdeInterArrivalTime = [float(q)/tmpQtde for q in qtdeInterArrivalTime]
 
-        #tmpQtde = np.sum(simulatedSerieFinal)
-        #simulatedSerieFinal = [float(q)/tmpQtde for q in simulatedSerieFinal]
-
-        #lower = [float(q)/tmpQtde for q in lower]
-        #upper = [float(q)/tmpQtde for q in upper]
-        
-        #expoPDFSerie = pdfExponential(np.array(axisX),*poptExp)
-        #lomaxPDFSerie = pdfLomax(np.array(axisX),*poptLomax)
-
         plt.close('all')
         fig = plt.figure()
         fig.suptitle(cop+"\nInter-arrival time")
         plt.plot(
             axisX,qtdeInterArrivalTime,'ro-', 
-            #axisX,simulatedSerieFinal,'kx-'
-            )
+        )
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
         #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
-        fig.savefig(cop+'/'+'quantity_'+filename+cop+'.png',dpi=96)
+        #fig.savefig(cop+'/'+'quantity_'+filename+cop+'.png',dpi=96)
+        fig.savefig('PDF_Real/'+cop+'.png',dpi=96)
         plt.close('all')
-        """
-        plt.close('all')
-        fig = plt.figure()
-        fig.suptitle(cop+"\nInter-arrival time")
-        plt.plot(axisX,cdfQtdeInterArrivalTime,'bo-')
-        plt.ylabel("Quantity [Units]")
-        plt.xlabel("Interval [minutes]")
-        plt.xticks(axisX,rotation=45)
-        plt.grid(True)
-        fig.set_size_inches(18.5,10.5)
-        #plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
-        fig.savefig(cop+'/'+'cdfQuantity_'+filename+cop+'.png',dpi=96)
-        plt.close('all')
-        """
+        
 def computeR2(y, fy):
 
     #y = percentagemQtde 
@@ -802,7 +669,7 @@ if __name__ == "__main__":
     
     # inicio da criacao dos graficos
 
-    interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_','TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
+    interArrrival_time_distribution('TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
     #info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
     plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
     
@@ -824,26 +691,11 @@ if __name__ == "__main__":
                         ]
 
     for cop in graphicsFromCops:
-        interArrrival_time_distribution('Intervalo_Tempo_IncidentesRelatos_',cop,allIncidentsReportsDict[cop], nbins=60,limit = 1 * 3600) # unidade em segundos
-        info_distribution('Distribuicao de Info por horas',cop,allIncidentsReportsDict[cop], nbins=24,limit = 24*3600,cor='green')
+        interArrrival_time_distribution(cop,allIncidentsReportsDict[cop], nbins=60,limit = 1 * 3600) # unidade em segundos
+        #info_distribution('Distribuicao de Info por horas',cop,allIncidentsReportsDict[cop], nbins=24,limit = 24*3600,cor='green')
         plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
 
-    # Dados finais
-    """
-    mediaAlphaPonderada = 0
-    for k, a in zip(correlacao,coefAlphaLomax):
-        mediaAlphaPonderada = mediaAlphaPonderada + k*a
-    mediaAlphaPonderada = mediaAlphaPonderada/float(len(correlacao))
-
-    mediaBetaPonderada = 0
-    for k, b in zip(correlacao,coefBetaLomax):
-        mediaBetaPonderada = mediaBetaPonderada + k*b
-    mediaBetaPonderada = mediaBetaPonderada/float(len(correlacao))
-
-    print 'Alpha ponderado = ', mediaAlphaPonderada
-    print 'Beta podenrado = ',mediaBetaPonderada
-    """
-    
+    # Dados finais  
     
     # media ponderada das probabilidades. Correlacao x P(X<=x)
     arrayDistRealMediaPonderada = []
@@ -856,13 +708,13 @@ if __name__ == "__main__":
 
     # ajustando a distribuicao media ponderada
     poptRealMediaPonderada, pocvRealMediaPonderada = curve_fit(funcLomax,range(0,61),arrayDistRealMediaPonderada,maxfev=3000)
-    
-    #print ' R2 = ', computeR2(arrayDistRealMediaPonderada,funcLomax(range(0,61),poptRealMediaPonderada[0],poptRealMediaPonderada[1]))
+
     arrayDistLomaxMediaPonderada = funcLomax(range(0,61),poptRealMediaPonderada[0],poptRealMediaPonderada[1])
+    print 'Parametros da Lomax para dist real podenrada = ', poptRealMediaPonderada
+    print 'ajuste = ', computeR2(arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada)
     
     #plotando comparacao das funcoes da distribuicao reais
     plot_interArrival([arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'realPonderada_LomaxPonderada.png','Comparacao entre Distribuicao Real e Ajustada')
-
     #plot_interArrival([distRealInterArrival['TODOS'],arrayDistRealMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Real_RealPonderada.png','Comparacao Distribuicao Real de TODOS e Distribuicao Real Geral Ponderada')
     #plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]),arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de TODOS e Distribuicao Lomax Geral Ponderada')
 
@@ -874,12 +726,7 @@ if __name__ == "__main__":
         #------tabela
         print cop,'|', correlacao[cop],'|',coefR2Lomax[cop],'|',coefDistribuicaoLomax[cop],'|',computeR2(distRealInterArrival[cop],arrayDistRealMediaPonderada),'|',computeR2(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada),'|', computeR2(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
 
-    #plot_interArrival([arrayDistRealMediaPonderada],['Ponderada'],['ro-'],'CDF_ponderada.png')
-
-    #distRealInterArrival['Ponderada']= arrayDistRealMediaPonderada
-    #graphicsFromCops.append('Ponderada')
-
-    # gerando um grafico unico com todas as distribuicoes reais
+    """
     arrayDist=[]
     for cop in graphicsFromCops:
         arrayDist.append(distRealInterArrival[cop])  
@@ -890,13 +737,19 @@ if __name__ == "__main__":
     for cop in graphicsFromCops:
         arrayDist.append(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]))
     plot_interArrival(arrayDist,graphicsFromCops,['bo-','ko-','mo-','yo-','go-','ro-','bx-','kx-','mx-','yx-','gx-'],'todasLomax.png','Comparacao entre todas Distribuicoes Ajustadas')
-    
-
     """
+
+    # calculo das constantes alpha e beta de ajuste
+
+    alfa = {}
+    beta = {}
+
     for cop in graphicsFromCops:
-        
-        arrayDist=[]
-        arrayDist.append(distRealInterArrival[cop])
-        #plot_interArrival(distRealInterArrival[cop],cop)
-        plot_interArrival(arrayDist,cop)
-    """ 
+        alfa[cop]=[]
+        for f,r in zip(arrayDistLomaxMediaPonderada,distRealInterArrival[cop]):
+            if(f==0):
+                alfa[cop].append(0.0)
+            else:
+                alfa[cop].append((2*r/f)-1)
+        print cop, ' ajuste alfa = ',alfa[cop]
+        print 'alfa maior = ', np.amax(alfa[cop])
