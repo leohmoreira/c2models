@@ -320,7 +320,7 @@ def dateChangeFormat(item):
 
 def plot_interArrival(samples,labels,padroes,filename,title):
 
-    axisX = range(0,61)
+    axisX = range(0,len(samples[0]))
     plt.close('all')
     fig = plt.figure()
     fig.suptitle(cop+"\n"+title)
@@ -619,6 +619,23 @@ def computeR2(y, fy):
     numerador = float(np.sum([np.power(yi - fyi,2) for yi,fyi in zip(y,fy)]))
     denominador = float(np.sum([np.power(yi - ybarra,2) for yi in y]))
     return 1 - numerador/denominador
+
+def erroMedio(real,ajuste):
+
+    # calcula a media da diferenca, em modulo, entre y e ajuste
+    erro = 0
+    arrayErro=[]
+    for reali, ajustei in zip(real,ajuste):
+
+        if(reali == 0):
+            arrayErro.append(abs(reali-ajustei))
+            #erro = erro + (abs(reali-ajustei))
+        else:
+            arrayErro.append(abs(reali-ajustei)/reali)
+            #erro = erro + (abs(reali-ajustei)/reali)
+    #return erro/float(len(real))
+    return compute_statistics(arrayErro)
+
     
 if __name__ == "__main__":
     """
@@ -719,12 +736,12 @@ if __name__ == "__main__":
     #plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]),arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de TODOS e Distribuicao Lomax Geral Ponderada')
 
     #plotando comparacao de cada COP com a distribuicao ponderada
-    for cop in graphicsFromCops:
-        plot_interArrival([distRealInterArrival[cop],arrayDistRealMediaPonderada],['Real','Real Geral Ponderada'],['ro-','gx-'],cop+'/Real_RealPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Real Geral Ponderada')
-        plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de '+ cop + ' e Distribuicao Lomax Geral Ponderada')
-        plot_interArrival([distRealInterArrival[cop],arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Real_LomaxPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Lomax Geral Ponderada')
+    #for cop in graphicsFromCops:
+    #    plot_interArrival([distRealInterArrival[cop],arrayDistRealMediaPonderada],['Real','Real Geral Ponderada'],['ro-','gx-'],cop+'/Real_RealPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Real Geral Ponderada')
+    #    plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de '+ cop + ' e Distribuicao Lomax Geral Ponderada')
+    #    plot_interArrival([distRealInterArrival[cop],arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Real_LomaxPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Lomax Geral Ponderada')
         #------tabela
-        print cop,'|', correlacao[cop],'|',coefR2Lomax[cop],'|',coefDistribuicaoLomax[cop],'|',computeR2(distRealInterArrival[cop],arrayDistRealMediaPonderada),'|',computeR2(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada),'|', computeR2(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
+    #    print cop,'|', correlacao[cop],'|',coefR2Lomax[cop],'|',coefDistribuicaoLomax[cop],'|',computeR2(distRealInterArrival[cop],arrayDistRealMediaPonderada),'|',computeR2(funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada),'|', computeR2(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
 
     """
     arrayDist=[]
@@ -743,13 +760,45 @@ if __name__ == "__main__":
 
     alfa = {}
     beta = {}
-
+    combinacaoAlfaBeta = {}
+    combinacaoR2_Superior = {}
+    distCombinacao = {}
+    print 'TODOS Erro medio - Ajuste Proprio = ', erroMedio(distRealInterArrival['TODOS'],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]))
     for cop in graphicsFromCops:
+        print 'Gerando estudo de ', cop
         alfa[cop]=[]
+        beta[cop]=[]
+        combinacaoAlfaBeta[cop] = []
+        combinacaoR2_Superior[cop] = []
+        distCombinacao[cop] = []
+        """"
+        ---> tentativa #1
         for f,r in zip(arrayDistLomaxMediaPonderada,distRealInterArrival[cop]):
+            
             if(f==0):
                 alfa[cop].append(0.0)
+                beta[cop].append(0.0)
             else:
                 alfa[cop].append((2*r/f)-1)
-        print cop, ' ajuste alfa = ',alfa[cop]
-        print 'alfa maior = ', np.amax(alfa[cop])
+                beta[cop].append(-r + f)
+            
+
+        #testando melhor combinacao de alfa e beta. A melhor é aquela que produz o maior R2
+        #distCombinacao=[]
+        for a in alfa[cop][1:]:
+            for b in beta[cop][1:]:
+                distCombinacao[cop].append([(a*f + b) for f in arrayDistLomaxMediaPonderada])
+                combinacaoAlfaBeta[cop].append([a,b])
+                combinacaoR2_Superior[cop].append(computeR2(distCombinacao[cop],arrayDistLomaxMediaPonderada))
+        posMelhorCombinacao = combinacaoR2_Superior[cop].index(np.amax(combinacaoR2_Superior[cop]))
+        #print 'melhor r2 de alfa beta = ',np.amax(combinacaoR2_Superior[cop])
+        print 'melhor r2 de alfa beta = ',combinacaoR2_Superior[cop][posMelhorCombinacao]
+        print 'alfa e beta = ', combinacaoAlfaBeta[cop][posMelhorCombinacao]
+        plot_interArrival([distRealInterArrival[cop],arrayDistLomaxMediaPonderada,distCombinacao[cop][posMelhorCombinacao]],['Real','Lomax Media','AlfaBeta'],['ro-','mo-','gx-'],cop+'_alfaBeta.png','Alfa Beta e a Real')
+
+        """
+        # tentativa #2
+        print 'Erro medio - Ajuste proprio= ', erroMedio(distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]))
+        #print 'Erro medio - Ajuste Media Geral Ponderada= ', erroMedio(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
+        #plot_interArrival([alfa[cop],beta[cop]],['alfa','beta'],['bo-','go-'],cop+'_coefAlphaBeta.png','Coef alfa e beta')
+    print 'Real Ponderada - Erro Medio - Ajuste proprio', erroMedio(arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada)
