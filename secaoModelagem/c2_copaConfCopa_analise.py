@@ -634,7 +634,8 @@ def erroMedio(real,ajuste):
             arrayErro.append(abs(reali-ajustei)/reali)
             #erro = erro + (abs(reali-ajustei)/reali)
     #return erro/float(len(real))
-    return compute_statistics(arrayErro)
+    sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(arrayErro)
+    return (maximum,arithmeticMean,variance)
 
     
 if __name__ == "__main__":
@@ -763,7 +764,15 @@ if __name__ == "__main__":
     combinacaoAlfaBeta = {}
     combinacaoR2_Superior = {}
     distCombinacao = {}
-    print 'TODOS Erro medio - Ajuste Proprio = ', erroMedio(distRealInterArrival['TODOS'],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]))
+
+    print 'Gerando estudo de TODOS'
+    maximo,media,variance = erroMedio(distRealInterArrival['TODOS'],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]))
+    print 'Real x Lomax Propria- Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    maximo,media,variance = erroMedio(distRealInterArrival['TODOS'],arrayDistLomaxMediaPonderada)
+    print 'Real x Lomax - Ponderada = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    maximo,media,variance = erroMedio(distRealInterArrival['TODOS'],arrayDistRealMediaPonderada)
+    print 'Real x Real Ponderada = ',maximo, ' Media = ', media, ' Variancia = ',variance
+
     for cop in graphicsFromCops:
         print 'Gerando estudo de ', cop
         alfa[cop]=[]
@@ -798,7 +807,36 @@ if __name__ == "__main__":
 
         """
         # tentativa #2
-        print 'Erro medio - Ajuste proprio= ', erroMedio(distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]))
-        #print 'Erro medio - Ajuste Media Geral Ponderada= ', erroMedio(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
-        #plot_interArrival([alfa[cop],beta[cop]],['alfa','beta'],['bo-','go-'],cop+'_coefAlphaBeta.png','Coef alfa e beta')
-    print 'Real Ponderada - Erro Medio - Ajuste proprio', erroMedio(arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada)
+    print 'Baseado na Media Ponderada', '-'*50
+    graphicsFromCops.append('TODOS')
+    print ' Real x Ajuste Propria', '-'*100
+    for cop in graphicsFromCops:
+        maximo,media,variance = erroMedio(distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]))
+        print cop + ' Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    print ' Real x Real Media Ponderada', '-'*100
+    for cop in graphicsFromCops:
+        maximo,media,variance = erroMedio(distRealInterArrival[cop],arrayDistRealMediaPonderada)
+        print cop + ' Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    print ' Real x Ajuste da Media Ponderada', '-'*100
+    for cop in graphicsFromCops:
+        maximo,media,variance = erroMedio(distRealInterArrival[cop],arrayDistLomaxMediaPonderada)
+        print cop + ' Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    maximo,media,variance = erroMedio(arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada)
+    print 'Real Ponderada x Lomax Ponderada- Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+
+    print 'Baseado na Media Ponderada', '-'*50
+    print ' Real x Ajuste Propria', '-'*100
+    for cop in graphicsFromCops:
+        maximo,media,variance = erroMedio(distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]))
+        print cop + ' Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    print ' Real x Real TODOS', '-'*100
+    for cop in graphicsFromCops:
+        maximo,media,variance = erroMedio(distRealInterArrival[cop],distRealInterArrival['TODOS'])
+        print cop + ' Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    print ' Real x Ajuste TODOS', '-'*100
+    for cop in graphicsFromCops:
+        maximo,media,variance = erroMedio(distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]))
+        print cop + ' Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    maximo,media,variance = erroMedio(arrayDistRealMediaPonderada,funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]))
+    print 'Real Ponderada x AjusteTodos- Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
+    
