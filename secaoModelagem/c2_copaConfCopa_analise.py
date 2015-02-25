@@ -54,11 +54,12 @@ allCopsCopaMundo = [
             'CCDA - FOR',
             'CCDA - REC','GCL Maceio',
             'CCDA - BHZ',
-            'CCDA - BSB','CCom_BPEB_CCDA_Bsb',
+            'CCDA - BSB','CCom_BPEB_CCDA_Bsb','CMP','CCom_32 GAC_FTC_CCDA_Bsb','CCom_3 Esqd C Mec_FTC_CCDA_Bsb','CCom_41BIMtz_FTC_CCDA_Bsb',
+            'CCom_41BIMtz_FTC_CCDA_Bsb','CCom_16 B Log_FTC_CCDA_Bsb','32GAC','CCom_22BI_FTC_CCDA_Bsb','CCom_BGP_FTC_CCDA_Bsb', 'CCom_36BIMtz_FTC_CCDA_Bsb',
             'CCDA - SAO',
             'CCDA - RIO','FTC Centro Norte (1 BI Mtz)',
             'CCDA - SSA','CC2 - FTC - SSA','CCTI - SSA',
-            'CCDA - CTB','5 BDA C BLD','15 Bda Inf Mec',
+            'CCDA - CTB','5 BDA C BLD','15 Bda Inf Mec','FTC CTB'
             'CCDA - POA','FT Centro Sul (29 BIB)',
             'CCDA - CGB'
             ]
@@ -113,20 +114,40 @@ distRealPDF = {}
 
 #data limite para cada COP (maior data de incidente, relato ou ação). Utilizado para calculo da correlacao
 greatestDate = {}
+
+#eixoX de cada COP
+axisXCop = {}
 def changeCop(cop):
 
     maceio = u"GCL Maceió"
     ftCentroNorte = u"FT Centro Norte (1º BI Mtz)"
     bdaInfMec = u"15º BDA INF MEC"
     ftCentroSul = u"FT Centro Sul (29º BIB)"
+    ccom32GAC = u"CCom_32º GAC_FTC_CCDA_Bsb"
+    ccom3Esqd= u"CCom_3º Esqd C Mec_FTC_CCDA_Bsb"
+    ccom41BIMTZ= u"CCom_41BIMtz_FTC_CCDA_Bsb"
+    ccom16Blog= u"CCom_16º B Log_FTC_CCDA_Bsb"
+    gac32=u"32°GAC"
+    ccom22BI=u"CCom_22BI_FTC_CCDA_Bsb"
+    ccomBGP=u"CCom_BGP_FTC_CCDA_Bsb"
+    ccom36BI=u"CCom_36BIMtz_FTC_CCDA_Bsb"
+    ccomRCG=u"CCom_1º RCGd_CCDA_Bsb"
 
-    if(cop == 'FNC - MAO' or cop == 'FTP' or cop == 'FTC' or cop =='CCTI'):
+    if(cop in ['FNC - MAO','FTP','FTC','CCTI','FOCON']):
         return 'CCDA - MAO'
+
+    if cop =='FNC':
+        return 'CCDA - NAT'
 
     if cop.encode("utf-8") == maceio.encode("utf-8"):
         return 'CCDA - REC'
 
-    if cop == 'CCom_BPEB_CCDA_Bsb':
+    if ((cop in ['FNC_MB','CCom_BPEB_CCDA_Bsb','CMP','CCom_41BIMtz_FTC_CCDA_Bsb','CCom_22BI_FTC_CCDA_Bsb','CCom_BGP_FTC_CCDA_Bsb','CCom_36BIMtz_FTC_CCDA_Bsb']) or (cop.encode("utf-8") == ccom32GAC.encode("utf-8") or 
+        cop.encode("utf-8") == ccom3Esqd.encode("utf-8") or
+        cop.encode("utf-8") == ccom16Blog.encode("utf-8") or
+        cop.encode("utf-8") == gac32.encode("utf-8") or
+        cop.encode("utf-8") == ccomRCG.encode("utf-8")
+        )):
         return 'CCDA - BSB'
     
     if cop.encode("utf-8") == ftCentroNorte.encode("utf-8"):
@@ -135,7 +156,7 @@ def changeCop(cop):
     if cop == 'CC2 - FTC - SSA' or cop == 'CCTI - SSA':
         return 'CCDA - SSA'
 
-    if cop == '5 BDA C BLD' or cop.encode("utf-8") == bdaInfMec.encode("utf-8"):
+    if cop in ['5 BDA C BLD','FTC CTB'] or cop.encode("utf-8") == bdaInfMec.encode("utf-8"):
         return 'CCDA - CTB'
 
     if cop.encode("utf-8") == ftCentroSul.encode("utf-8"):
@@ -167,7 +188,15 @@ def get_available_cops():
             ):
                 cops.append(r.relator['cop']['id'])
                 #cops.append(r.relator['cop'])
-    
+
+    allSincronizations = Sincronizacao.get_all()
+    for sinc in allSincronizations:
+        for action in sinc.acoes:
+            if (              
+                    ((action.tipo == 'PONTUAL') and (action.inicio >= inicioAmostragem) and (action.inicio <= terminoAmostragem)) or
+                    ((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
+            ):
+                cops.append(sinc.cop_responsavel['id'])
     return set(cops)
 
 
@@ -195,7 +224,6 @@ def get_dict_all_actions():
                 dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
                                 
     return dictionaryAllActions
-
 
 def get_all_actions():
     """
@@ -229,9 +257,9 @@ def get_actions_near_date(listActions,date, mask = '%Y/%m/%d'):
         if datetime.strptime(datetime.strftime(action.inicio,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
     ]
 
-def get_actions_greatest_date(listActions):
+def get_actions_greatest_date(listActions,mask = '%Y/%m/%d'):
     datas = [act.inicio for act in listActions]
-    return np.amax(datas)
+    return datetime.strptime(datetime.strftime(np.amax(datas),mask),mask)
 
 def get_all_incidents():
     """
@@ -664,60 +692,22 @@ if __name__ == "__main__":
     """
     
     allCops = get_available_cops()
+    tmpCops = [changeCop(c) for c in allCops]
+    print set(tmpCops)
+    
 
     allActionsDict = get_dict_all_actions()
     allIncidentsDict = get_dict_all_incidents()
     allReportsDict = get_dict_all_reports()
     allIncidentsReportsDict = {}
 
-    incidentsSerie = {}
-    actionsSerie = {}
-    reportsSerie = {}
-    incidentsReportsSerie = {}
-
-    incidentsSerie['TODOS'] = []
-    actionsSerie['TODOS'] = []
-  
-    reportsSerie['TODOS'] = []
-    incidentsReportsSerie['TODOS'] = []
-    for day in matchDays:
-            incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
-            actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
-            reportsSerie['TODOS'].append(len(get_reports_near_date(allReportsDict['TODOS'],day)))
-    
-    # agrupar incidentes e relatos
-    incidentsReportsSerie['TODOS'] = [i + r for i,r in zip(incidentsSerie['TODOS'],reportsSerie['TODOS'])]
-    allIncidentsReportsDict['TODOS'] = allIncidentsDict['TODOS'] + allReportsDict['TODOS']
-    
-    for cop in allCops:
-        incidentsSerie[cop]=[]
-        actionsSerie[cop]=[]
-        reportsSerie[cop] = []
-        incidentsReportsSerie[cop] = []
-
-        for day in matchDays:
-            incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
-            actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
-            reportsSerie[cop].append(len(get_reports_near_date(allReportsDict[cop],day)))
-            # agrupar incidentes e relatos
-            incidentsReportsSerie[cop] = [i + r for i,r in zip(incidentsSerie[cop],reportsSerie[cop])]
-            allIncidentsReportsDict[cop] = allIncidentsDict[cop] + allReportsDict[cop]
-    
-    # termino da geracao dos dados para estatisticas
-    
-    # inicio da criacao dos graficos
-
-    interArrrival_time_distribution('TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
-    #info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
-    plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
-    
     #cops para os quais sao criados os graficos  
     graphicsFromCops = [
                         'CCDA - RIO',
                         'CCDA - FOR',
                         'CCDA - REC',
                         'CCDA - BHZ',
-                        #'CCDA - BSB',
+                        'CCDA - BSB',
                         'CCDA - SSA',
                         'CCDA - MAO', 
                         'CCDA - SAO',
@@ -730,6 +720,54 @@ if __name__ == "__main__":
     for cop in graphicsFromCops:
         print 'Maior data de ',cop,' = ', get_actions_greatest_date(allActionsDict[cop])
         greatestDate[cop] = get_actions_greatest_date(allActionsDict[cop])
+        axisXCop[cop] = []
+
+    incidentsSerie = {}
+    actionsSerie = {}
+    reportsSerie = {}
+    incidentsReportsSerie = {}
+
+    incidentsSerie['TODOS'] = []
+    actionsSerie['TODOS'] = []
+  
+    reportsSerie['TODOS'] = []
+    incidentsReportsSerie['TODOS'] = []
+    for day in matchDays:
+#        if(day <= greatestDate[cop]): #apenas os dias dentro do limite
+        incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
+        actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
+        reportsSerie['TODOS'].append(len(get_reports_near_date(allReportsDict['TODOS'],day)))
+#        axisXCop[cop].append(day)
+
+    
+    # agrupar incidentes e relatos
+    incidentsReportsSerie['TODOS'] = [i + r for i,r in zip(incidentsSerie['TODOS'],reportsSerie['TODOS'])]
+    allIncidentsReportsDict['TODOS'] = allIncidentsDict['TODOS'] + allReportsDict['TODOS']
+    
+    for cop in allCops: 
+        incidentsSerie[cop]=[]
+        actionsSerie[cop]=[]
+        reportsSerie[cop] = []
+        incidentsReportsSerie[cop] = []
+
+        for day in matchDays:
+        #if(day <= greatestDate[cop]): #apenas os dias dentro do limite
+            incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
+            actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
+            reportsSerie[cop].append(len(get_reports_near_date(allReportsDict[cop],day)))
+            # agrupar incidentes e relatos
+            incidentsReportsSerie[cop] = [i + r for i,r in zip(incidentsSerie[cop],reportsSerie[cop])]
+            allIncidentsReportsDict[cop] = allIncidentsDict[cop] + allReportsDict[cop]
+
+    # termino da geracao dos dados para estatisticas
+    
+    # inicio da criacao dos graficos
+
+    interArrrival_time_distribution('TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
+    #info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
+    plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
+    
+    for cop in graphicsFromCops:        
         interArrrival_time_distribution(cop,allIncidentsReportsDict[cop], nbins=60,limit = 1 * 3600) # unidade em segundos
         #info_distribution('Distribuicao de Info por horas',cop,allIncidentsReportsDict[cop], nbins=24,limit = 24*3600,cor='green')
         plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
