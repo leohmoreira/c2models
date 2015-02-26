@@ -258,8 +258,11 @@ def get_actions_near_date(listActions,date, mask = '%Y/%m/%d'):
     ]
 
 def get_actions_greatest_date(listActions,mask = '%Y/%m/%d'):
-    datas = [act.inicio for act in listActions]
-    return datetime.strptime(datetime.strftime(np.amax(datas),mask),mask)
+    if(len(listActions)>0):
+        datas = [act.inicio for act in listActions]
+        return datetime.strptime(datetime.strftime(np.amax(datas),mask),mask)
+    else:
+        return inicioAmostragem
 
 def get_all_incidents():
     """
@@ -309,6 +312,14 @@ def get_incidents_near_date(listIncidents,date,mask = '%Y/%m/%d'):
             if datetime.strptime(datetime.strftime(incident.reporting_date,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
     ]
 
+def get_incidents_greatest_date(listIncidents, mask = '%Y/%m/%d'):
+   
+    if(len(listIncidents)>0):
+        datas = [inc.reporting_date for inc in listIncidents]
+        return datetime.strptime(datetime.strftime(np.amax(datas),mask),mask)
+    else:
+        return inicioAmostragem
+
 def get_all_reports():
     """
         Retorna todos os relatos de situação agrupados em um array
@@ -356,6 +367,13 @@ def get_reports_near_date(listReports,date,mask = '%Y/%m/%d'):
     return [report for report in listReports
             if datetime.strptime(datetime.strftime(report.data_hora,mask),mask) == datetime.strptime(datetime.strftime(date,mask),mask)
     ]
+
+def get_reports_greatest_date(listReports, mask = '%Y/%m/%d'):
+    if(len(listReports)>0):
+        datas = [rep.data_hora for rep in listReports]
+        return datetime.strptime(datetime.strftime(np.amax(datas),mask),mask)
+    else:
+        return inicioAmostragem
 
 def dateChangeFormat(item):
 
@@ -615,14 +633,14 @@ def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='gre
         fig = plt.figure()
         fig.suptitle(cop+"\nInter-arrival time")
         plt.plot(
-            axisX,qtdeInterArrivalTime,'ro-', 
+            axisX,qtdeInterArrivalTime,'ro-',label='Real' 
         )
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
         plt.xticks(axisX,rotation=45)
         plt.grid(True)
         fig.set_size_inches(18.5,10.5)
-        plt.legend(iter(seriesPlotted),('Exponential'),prop={'size':12},bbox_to_anchor=(1, 0.1))
+        plt.legend(prop={'size':16},bbox_to_anchor=(0.99, 0.5))
         #fig.savefig(cop+'/'+'quantity_'+filename+cop+'.png',dpi=96)
         fig.savefig('PDF_Real/'+cop+'.png',dpi=96)
         plt.close('all')
@@ -692,9 +710,7 @@ if __name__ == "__main__":
     """
     
     allCops = get_available_cops()
-    tmpCops = [changeCop(c) for c in allCops]
-    print set(tmpCops)
-    
+    #allCops = set([changeCop(c) for c in get_available_cops()])  
 
     allActionsDict = get_dict_all_actions()
     allIncidentsDict = get_dict_all_incidents()
@@ -718,10 +734,12 @@ if __name__ == "__main__":
                     ]
 
     for cop in graphicsFromCops:
-        print 'Maior data de ',cop,' = ', get_actions_greatest_date(allActionsDict[cop])
-        greatestDate[cop] = get_actions_greatest_date(allActionsDict[cop])
+        greatestDate[cop] = np.amax([get_actions_greatest_date(allActionsDict[cop]),
+                             get_incidents_greatest_date(allIncidentsDict[cop]),
+                             get_reports_greatest_date(allReportsDict[cop])])
         axisXCop[cop] = []
-
+    greatestDate['TODOS'] = terminoAmostragem
+    axisXCop['TODOS'] = []
     incidentsSerie = {}
     actionsSerie = {}
     reportsSerie = {}
@@ -733,47 +751,48 @@ if __name__ == "__main__":
     reportsSerie['TODOS'] = []
     incidentsReportsSerie['TODOS'] = []
     for day in matchDays:
-#        if(day <= greatestDate[cop]): #apenas os dias dentro do limite
-        incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
-        actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
-        reportsSerie['TODOS'].append(len(get_reports_near_date(allReportsDict['TODOS'],day)))
-#        axisXCop[cop].append(day)
+        if(day <= greatestDate['TODOS']): #apenas os dias dentro do limite
+            incidentsSerie['TODOS'].append(len(get_incidents_near_date(allIncidentsDict['TODOS'],day)))
+            actionsSerie['TODOS'].append(len(get_actions_near_date(allActionsDict['TODOS'],day)))
+            reportsSerie['TODOS'].append(len(get_reports_near_date(allReportsDict['TODOS'],day)))
+            axisXCop['TODOS'].append(day)
 
     
     # agrupar incidentes e relatos
     incidentsReportsSerie['TODOS'] = [i + r for i,r in zip(incidentsSerie['TODOS'],reportsSerie['TODOS'])]
     allIncidentsReportsDict['TODOS'] = allIncidentsDict['TODOS'] + allReportsDict['TODOS']
     
-    for cop in allCops: 
+    #for cop in allCops: 
+    for cop in graphicsFromCops: 
         incidentsSerie[cop]=[]
         actionsSerie[cop]=[]
         reportsSerie[cop] = []
         incidentsReportsSerie[cop] = []
-
+        print cop, ' = ',greatestDate[cop]
         for day in matchDays:
-        #if(day <= greatestDate[cop]): #apenas os dias dentro do limite
-            incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
-            actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
-            reportsSerie[cop].append(len(get_reports_near_date(allReportsDict[cop],day)))
-            # agrupar incidentes e relatos
-            incidentsReportsSerie[cop] = [i + r for i,r in zip(incidentsSerie[cop],reportsSerie[cop])]
-            allIncidentsReportsDict[cop] = allIncidentsDict[cop] + allReportsDict[cop]
-
+            if(day <= greatestDate[cop]): #apenas os dias dentro do limite
+                incidentsSerie[cop].append(len(get_incidents_near_date(allIncidentsDict[cop],day)))
+                actionsSerie[cop].append(len(get_actions_near_date(allActionsDict[cop],day)))
+                reportsSerie[cop].append(len(get_reports_near_date(allReportsDict[cop],day)))
+                # agrupar incidentes e relatos
+                incidentsReportsSerie[cop] = [i + r for i,r in zip(incidentsSerie[cop],reportsSerie[cop])]
+                allIncidentsReportsDict[cop] = allIncidentsDict[cop] + allReportsDict[cop]
+                axisXCop[cop].append(day)
     # termino da geracao dos dados para estatisticas
     
     # inicio da criacao dos graficos
 
     interArrrival_time_distribution('TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
     #info_distribution('Distribuicao de Info por horas','TODOS',allIncidentsReportsDict['TODOS'], nbins=24,limit = 24*3600,cor='green')
-    plot_resume_cop("Resumo_TODOS.png",'TODOS',matchDays,actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
+    plot_resume_cop("Resumo_TODOS.png",'TODOS',axisXCop['TODOS'],actionsSerie['TODOS'],incidentsSerie['TODOS'],reportsSerie['TODOS'])
     
     for cop in graphicsFromCops:        
         interArrrival_time_distribution(cop,allIncidentsReportsDict[cop], nbins=60,limit = 1 * 3600) # unidade em segundos
         #info_distribution('Distribuicao de Info por horas',cop,allIncidentsReportsDict[cop], nbins=24,limit = 24*3600,cor='green')
-        plot_resume_cop("Resumo_"+cop+".png",cop,matchDays,actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
+        plot_resume_cop("Resumo_"+cop+".png",cop,axisXCop[cop],actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
 
     # Dados finais  
-    
+    """    
     # media ponderada das probabilidades. Correlacao x P(X<=x)
     arrayDistRealMediaPonderada = []
 
@@ -801,7 +820,7 @@ if __name__ == "__main__":
         plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de '+ cop + ' e Distribuicao Lomax Geral Ponderada')
         plot_interArrival([distRealInterArrival[cop],arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Real_LomaxPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Lomax Geral Ponderada')
 
-
+    """
     # calculo das constantes alpha e beta de ajuste
     """
     alfa = {}
