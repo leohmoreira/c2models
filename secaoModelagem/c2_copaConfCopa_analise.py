@@ -98,6 +98,9 @@ resultados = {}
 #coeficientes da distribuição LOMAX
 coefDistribuicaoLomax = {}
 
+#coeficientes da distribuição Expo
+coefDistribuicaoExpo = {}
+
 # correlacao
 correlacao = {}
 
@@ -526,7 +529,7 @@ def testandoDistribuicao(sample):
     for cdf in cdfs:
         #fit our data set against every probability distribution
         parameters = eval("scipy.stats."+cdf+".fit(sample)");
-     
+        print 'PARAMETROS = ', parameters
         #Applying the Kolmogorov-Smirnof one sided test
         D, p = scipy.stats.kstest(sample, cdf, args=parameters);
         #pretty-print the results
@@ -594,6 +597,8 @@ def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='gre
         #armazena os coeficientes no dict
         coefDistribuicaoLomax[cop]=poptLomax
 
+        coefDistribuicaoExpo[cop]=poptExp
+
         expoR2 = computeR2(percentagemInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
         lomaxR2 = computeR2(percentagemInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
         lomaxIR2 = computeR2(percentagemInterArrivalTime,funcLomaxI(np.array(axisX),*poptLomaxI))
@@ -644,6 +649,13 @@ def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='gre
         #fig.savefig(cop+'/'+'quantity_'+filename+cop+'.png',dpi=96)
         fig.savefig('PDF_Real/'+cop+'.png',dpi=96)
         plt.close('all')
+
+        print cop
+        print 'Coeficientes Lomax = ',coefDistribuicaoLomax[cop]
+        print 'Estatisticas ',compute_statistics(interArrivalTime)
+        print 'Media analitica = ',coefDistribuicaoLomax[cop][1]/(coefDistribuicaoLomax[cop][0]-1.0)
+        print '---'*50
+
         
 def computeR2(y, fy):
 
@@ -653,6 +665,12 @@ def computeR2(y, fy):
     """
     ss_res = np.dot((y - fy),(y - fy))
     ymean = np.mean(y)
+
+    print cop
+        print 'Coeficientes Lomax = ',coefDistribuicaoLomax[cop]
+        print 'Estatisticas ',compute_statistics(distRealInterArrival[cop])
+        print 'Media analitica = ',coefDistribuicaoLomax[cop][1]/(coefDistribuicaoLomax[cop][0]-1.0)
+        print '---'*50
     ss_tot = np.dot((y-ymean),(y-ymean))
     return 1-ss_res/ss_tot #coeficiente R2
     """
@@ -703,7 +721,12 @@ def erroMedioRelativo(real,ajuste):
     sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(arrayErro)
     return (maximum,arithmeticMean,arrayErro.index(np.amax(arrayErro)))
 
-    
+class Foo:
+    def __call__(self,cop):
+        print cop
+        return distRealInterArrival[cop]
+
+
 if __name__ == "__main__":
     """
         Loop principal
@@ -882,9 +905,21 @@ if __name__ == "__main__":
     # Gerando tabela de estatistica
     print 'Quantidade de dados'
     for cop in graphicsFromCops:
-        print cop,'|',len(allIncidentsDict[cop]),'|',len(allReportsDict[cop]),'|',len(allIncidentsDict[cop])+len(allReportsDict[cop])
+        print cop,'|',len(allActionsDict[cop]),'|',len(allIncidentsDict[cop]),'|',len(allReportsDict[cop]),'|',len(allIncidentsDict[cop])+len(allReportsDict[cop])
 
-
+    
+    foo_instance = Foo()
+    foo_instance('TODOS') #this is calling the __call__ method   
+    
+    """
+    for cop in graphicsFromCops:
+        
+        print cop
+        print 'Coeficientes Lomax = ',coefDistribuicaoLomax[cop]
+        print 'Estatisticas ',compute_statistics(distRealInterArrival[cop])
+        print 'Media analitica = ',coefDistribuicaoLomax[cop][1]/(coefDistribuicaoLomax[cop][0]-1.0)
+        print '---'*50
+    """
     # fazendo o estudo A.f(X) + b = r(x)
     # calculo das constantes alpha e beta de ajuste
     print '*-'*50
