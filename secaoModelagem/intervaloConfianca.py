@@ -11,7 +11,11 @@ import random
 
 def funcWeibull(x,a,b):
 
-	return x * a * b
+	return 1- np.exp(-np.power(x/b,a))
+
+def invFuncWeibull(y,a,b):
+
+	return b*np.power((-np.log(1-y)),1.0/a)
 
 def funcExpo(x,a):
 
@@ -23,7 +27,7 @@ def intervaloConfianca(limiteTempo,coeficientes,confidence):
 	A simulação para no tempoLimite = distancia entre o primeiro e último evento
 	"""
 	
-	qtdeSimulacoes = 100
+	qtdeSimulacoes = 1000
 	serieSimulacao = []
 	serieIntervaloEntreChegadas = []
 	serieQtdeIntervalo = []
@@ -36,7 +40,8 @@ def intervaloConfianca(limiteTempo,coeficientes,confidence):
 		tempoSimulacao = 0
 
 		while tempoSimulacao < limiteTempo:
-			tempoSimulacao = tempoSimulacao + random.expovariate(coeficientes)
+			#tempoSimulacao = tempoSimulacao + random.expovariate(coeficientes)
+			tempoSimulacao = tempoSimulacao + invFuncWeibull(np.random.uniform(0,1),0.5,0.5)
 			serieSimulacao[simulacao].append(tempoSimulacao)
 
 		# calculo do intervalo entre chegadas
@@ -73,7 +78,7 @@ def intervaloConfianca(limiteTempo,coeficientes,confidence):
 		lower.append(l)
 		upper.append(u)
 		
-	return media,lower,upper
+	return serieProbIntervalo, media,lower,upper
 
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0*np.array(data)
@@ -84,15 +89,27 @@ def mean_confidence_interval(data, confidence=0.95):
 
 if __name__ == "__main__":
 
+	"""
+	para gerar a simulação ao inves de simplesmente geram um rando uniform e usar a inversa da CDF, 
+	gerer um random uniform e verificar em qual intervalo ele se enquadra (F(x+1) - F(x)) e ai soma este valor em t
+	MonteCarlo - Maj David PFC / Maj Camilo
+	"""
+
 	plt.close('all')
 	fig = plt.figure()
-	media, lower, upper = intervaloConfianca(1000,0.7,0.95)
+	series, media, lower, upper = intervaloConfianca(1000,0.7,0.99)
 	
+	for serie in series:
+		plt.plot(np.arange(0,61,1),serie,'ro-')		
+
+	print 'Media =', media[1], ' Lower = ', lower[1], ' Upper = ', upper[1]
 	plt.plot(np.arange(0,61,1),lower,'bo--')
 	plt.plot(np.arange(0,61,1),upper,'bo--')
 	plt.plot(np.arange(0,61,1),media,'yo-')
 
 	#serie modelada
-	plt.plot(np.arange(0,61,1),funcExpo(np.arange(0,61,1),0.7),'g*-')
+	#plt.plot(np.arange(0,61,1),funcExpo(np.arange(0,61,1),0.7),'g*-')
+	plt.plot(np.arange(0,61,1),funcWeibull(np.arange(0,61,1),0.5,0.5),'g*-')
+
 	plt.show()
 	
