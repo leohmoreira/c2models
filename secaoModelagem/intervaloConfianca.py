@@ -11,11 +11,12 @@ import random
 
 def funcWeibull(x,a,b):
 
-	return 1- np.exp(-np.power(x/b,a))
+	#return 1- np.exp(-np.power(x/b,a))
+	return 1 - (np.exp(-(np.power((x/a),b))))
 
 def invFuncWeibull(y,a,b):
 
-	return b*np.power((-np.log(1-y)),1.0/a)
+	return a*np.power((-np.log(1-y)),1.0/b)
 
 def funcExpo(x,a):
 
@@ -27,7 +28,7 @@ def intervaloConfianca(limiteTempo,coeficientes,confidence):
 	A simulação para no tempoLimite = distancia entre o primeiro e último evento
 	"""
 	
-	qtdeSimulacoes = 1000
+	qtdeSimulacoes = 100
 	serieSimulacao = []
 	serieIntervaloEntreChegadas = []
 	serieQtdeIntervalo = []
@@ -40,13 +41,23 @@ def intervaloConfianca(limiteTempo,coeficientes,confidence):
 		tempoSimulacao = 0
 
 		while tempoSimulacao < limiteTempo:
-			#tempoSimulacao = tempoSimulacao + random.expovariate(coeficientes)
-			tempoSimulacao = tempoSimulacao + invFuncWeibull(np.random.uniform(0,1),0.5,0.5)
+			tempoSimulacao = tempoSimulacao + invFuncWeibull(np.random.uniform(0,1),2.27216869,0.60880361)
 			serieSimulacao[simulacao].append(tempoSimulacao)
-
+			"""
+			#tempoSimulacao = tempoSimulacao + random.expovariate(coeficientes)
+			#descobrindo qual intervalo ----> Monte Carlo
+			randomNumber = np.random.uniform(0,1)
+			for t in np.arange(0,61,1):
+				if(funcWeibull(t,2.27216869,0.60880361) > randomNumber):
+					#tempoSimulacao = tempoSimulacao + invFuncWeibull(np.random.uniform(0,1),2.27216869,0.60880361)
+					#serieSimulacao[simulacao].append(tempoSimulacao)
+					#tempoSimulacao += tempoSimulacao + t
+					#serieSimulacao[simulacao].append(t)
+					break 
+			"""
 		# calculo do intervalo entre chegadas
 		for i in range(0,len(serieSimulacao[simulacao])-1):
-			serieIntervaloEntreChegadas[simulacao].append(serieSimulacao[simulacao][i+1] - serieSimulacao[simulacao][i])
+			serieIntervaloEntreChegadas[simulacao].append((serieSimulacao[simulacao][i+1] - serieSimulacao[simulacao][i]))
 
 		#calculo da qtde de chegadas em cada intervalo
 		for t in np.arange(0,61,1):        
@@ -99,8 +110,8 @@ if __name__ == "__main__":
 	fig = plt.figure()
 	series, media, lower, upper = intervaloConfianca(1000,0.7,0.99)
 	
-	for serie in series:
-		plt.plot(np.arange(0,61,1),serie,'ro-')		
+	#for serie in series:
+	#	plt.plot(np.arange(0,61,1),serie,'ro-')		
 
 	print 'Media =', media[1], ' Lower = ', lower[1], ' Upper = ', upper[1]
 	plt.plot(np.arange(0,61,1),lower,'bo--')
@@ -109,7 +120,7 @@ if __name__ == "__main__":
 
 	#serie modelada
 	#plt.plot(np.arange(0,61,1),funcExpo(np.arange(0,61,1),0.7),'g*-')
-	plt.plot(np.arange(0,61,1),funcWeibull(np.arange(0,61,1),0.5,0.5),'g*-')
+	plt.plot(np.arange(0,61,1),funcWeibull(np.arange(0,61,1),2.27216869,0.60880361),'g*-')
 
 	plt.show()
 	

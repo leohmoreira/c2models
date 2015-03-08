@@ -101,6 +101,9 @@ coefDistribuicaoLomax = {}
 #coeficientes da distribuição Expo
 coefDistribuicaoExpo = {}
 
+#coeficientes da distribuição Weibull
+coefDistribuicaoWeibull = {}
+
 # correlacao
 correlacao = {}
 
@@ -108,6 +111,8 @@ correlacao = {}
 coefR2Lomax = {}
 coefR2LomaxI = {}
 coefR2Expo = {}
+coefR2Weibull = {}
+
 
 #distribuicao real do intervalo entre chegadas = CDF
 distRealInterArrival = {}
@@ -117,6 +122,9 @@ distRealPDF = {}
 
 #data limite para cada COP (maior data de incidente, relato ou ação). Utilizado para calculo da correlacao
 greatestDate = {}
+
+# qtde de eventos por COp
+qtdeEventos = {}
 
 #eixoX de cada COP
 axisXCop = {}
@@ -457,6 +465,10 @@ def funcLomaxI(x,a):
     
     return 1 - (1/(np.power(x+1,a)))
 
+def funcWeibull(x,a,b):
+
+    return 1 - (np.exp(-(np.power((x/a),b))))
+
 def funcLomaxPonderada(x):
     
     #a = 3.86607243476
@@ -592,21 +604,24 @@ def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='gre
         fig = plt.figure()                
         poptExp, pocvExp = curve_fit(funcExponential,np.array(axisX),percentagemInterArrivalTime,maxfev=3000)
         poptLomax, pocvLomax = curve_fit(funcLomax,np.array(axisX),percentagemInterArrivalTime,maxfev=3000)
-        poptLomaxI, pocvLomaxI = curve_fit(funcLomaxI,np.array(axisX),percentagemInterArrivalTime,maxfev=3000)       
+        poptLomaxI, pocvLomaxI = curve_fit(funcLomaxI,np.array(axisX),percentagemInterArrivalTime,maxfev=3000)
+        poptWeibull, pocvWeibull = curve_fit(funcWeibull,np.array(axisX),percentagemInterArrivalTime,maxfev=5000)
 
         #armazena os coeficientes no dict
         coefDistribuicaoLomax[cop]=poptLomax
-
         coefDistribuicaoExpo[cop]=poptExp
+        coefDistribuicaoWeibull[cop]=poptWeibull
 
         expoR2 = computeR2(percentagemInterArrivalTime,funcExponential(np.array(axisX),*poptExp))
         lomaxR2 = computeR2(percentagemInterArrivalTime,funcLomax(np.array(axisX),*poptLomax))
         lomaxIR2 = computeR2(percentagemInterArrivalTime,funcLomaxI(np.array(axisX),*poptLomaxI))
+        weibullR2 = computeR2(percentagemInterArrivalTime,funcWeibull(np.array(axisX),*poptWeibull))
 
         #coeficientes R2 no dict
         coefR2Lomax[cop]=lomaxR2
         coefR2LomaxI[cop]=lomaxIR2
         coefR2Expo[cop]=expoR2
+        coefR2Weibull[cop]=weibullR2
         
 
         seriesPlotted = plt.plot(
@@ -630,15 +645,28 @@ def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='gre
         distRealPDF[cop]=qtdeInterArrivalTime
 
         tmpQtde = np.sum(qtdeInterArrivalTime)
+        qtdeInterArrivalTimePDF = qtdeInterArrivalTime
         qtdeInterArrivalTime = [float(q)/tmpQtde for q in qtdeInterArrivalTime]
         distRealPDF[cop]=qtdeInterArrivalTime
         
+        # comparando o ajuste da PDF e da CDF(funcExponential(t+1),*poptExp)
+        
+        arrayPDFExponential = []
+        arrayPDFLomax = []
+        arrayPDFWeibull = []
+        for t in np.arange(0,61,1):
+            arrayPDFExponential.append((funcExponential((t+1),*poptExp)) - (funcExponential(t,*poptExp)))
+            arrayPDFLomax.append((funcLomax((t+1),*poptLomax)) - (funcLomax(t,*poptLomax)))
+            arrayPDFWeibull.append((funcWeibull((t+1),*poptWeibull)) - (funcWeibull(t,*poptWeibull)))
 
         plt.close('all')
         fig = plt.figure()
         fig.suptitle(cop+"\nInter-arrival time")
         plt.plot(
-            axisX,qtdeInterArrivalTime,'ro-',label='Real' 
+            axisX,qtdeInterArrivalTime,'ro-',#label='Real' ,
+            axisX,arrayPDFExponential,'bx-',
+            axisX,arrayPDFLomax,'cx-',        
+            axisX,arrayPDFWeibull,'gx-',
         )
         plt.ylabel("Quantity [Units]")
         plt.xlabel("Interval [minutes]")
@@ -650,11 +678,12 @@ def interArrrival_time_distribution(cop,serie, nbins=30,limit = 24*3600,cor='gre
         fig.savefig('PDF_Real/'+cop+'.png',dpi=96)
         plt.close('all')
 
-        print cop
-        print 'Coeficientes Lomax = ',coefDistribuicaoLomax[cop]
-        print 'Estatisticas ',compute_statistics(interArrivalTime)
-        print 'Media analitica = ',coefDistribuicaoLomax[cop][1]/(coefDistribuicaoLomax[cop][0]-1.0)
-        print '---'*50
+        #print cop
+        #print 'Coeficientes Lomax = ',coefDistribuicaoLomax[cop]
+        #print poptLomaxPDF
+        #print 'Estatisticas ',compute_statistics(interArrivalTime)
+        #print 'Media analitica = ',coefDistribuicaoLomax[cop][1]/(coefDistribuicaoLomax[cop][0]-1.0)
+        #print '---'*50
 
         
 def computeR2(y, fy):
@@ -721,11 +750,84 @@ def erroMedioRelativo(real,ajuste):
     sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(arrayErro)
     return (maximum,arithmeticMean,arrayErro.index(np.amax(arrayErro)))
 
-class Foo:
-    def __call__(self,cop):
-        print cop
-        return distRealInterArrival[cop]
+def invFuncWeibull(y,a,b):
 
+    return a*np.power((-np.log(1-y)),1.0/b)
+
+
+def intervaloConfianca(limiteTempo,coeficientes,confidence = 0.99):
+    """
+    Calcula o intervalo de confianca a partir da simulação usando a funcao e seus parametros
+    A simulação para no tempoLimite = distancia entre o primeiro e último evento
+    """
+    
+    qtdeSimulacoes = 10
+    serieSimulacao = []
+    serieIntervaloEntreChegadas = []
+    serieQtdeIntervalo = []
+    serieProbIntervalo = []
+    for simulacao in range(0,qtdeSimulacoes):
+        serieSimulacao.append([])
+        serieIntervaloEntreChegadas.append([])
+        serieQtdeIntervalo.append([])
+        serieProbIntervalo.append([])
+        tempoSimulacao = 0
+
+        # controlando por tempo
+        """
+        while tempoSimulacao < limiteTempo:
+            #tempoSimulacao = tempoSimulacao + invFuncWeibull(np.random.uniform(0,1),*coeficientes)
+            #serieSimulacao[simulacao].append(tempoSimulacao)
+            
+            randomNumber = random.uniform(0,1)
+            ts = 0
+            while ts < 60:
+                if(funcWeibull(ts,*coeficientes)>randomNumber):
+                    tempoSimulacao = tempoSimulacao + ts
+                    serieSimulacao[simulacao].append(tempoSimulacao)
+                    ts = 61
+                ts = ts + 1
+        """
+        # por qtde
+        for item in range(0,limiteTempo+1):
+            serieSimulacao[simulacao].append(invFuncWeibull(np.random.uniform(0,1),*coeficientes))
+        # calculo do intervalo entre chegadas
+        for i in range(0,len(serieSimulacao[simulacao])-1):
+            serieIntervaloEntreChegadas[simulacao].append(serieSimulacao[simulacao][i+1] - serieSimulacao[simulacao][i])
+
+        print 'QTDE======= ',len(serieIntervaloEntreChegadas[simulacao])
+        
+        #calculo da qtde de chegadas em cada intervalo
+        for t in np.arange(0,61,1):        
+            serieQtdeIntervalo[simulacao].append(float(len([q for q in serieIntervaloEntreChegadas[simulacao] if (q <= t)])))
+
+        #transformando qtde em porcentagem
+        for t in np.arange(0,61,1):        
+            serieProbIntervalo[simulacao] = [q/float(serieQtdeIntervalo[simulacao][-1]) for q in serieQtdeIntervalo[simulacao]]
+        
+    # calculo do IC para cada ponto da distribuicao
+    media = []
+    upper = []
+    lower = []
+    valoresPorInstante = []
+    for tempo in np.arange(0,61,1):
+        valoresPorInstante.append([])
+        for simulacao in range(0,qtdeSimulacoes):
+            #valoresPorInstante[tempo].append(serieQtdeIntervalo[simulacao][tempo])
+            valoresPorInstante[tempo].append(serieProbIntervalo[simulacao][tempo])
+        
+        # gerando media e limites do IC
+        icmedia = str(bayes_mvs(valoresPorInstante[tempo],confidence)).split(')),')[0]
+        icmedia = icmedia.replace(" ","")
+        icmedia = icmedia.replace("(","")
+        icmedia = icmedia.replace(")","")
+        m,l,u = icmedia.split(',')
+
+        media.append(m)
+        lower.append(l)
+        upper.append(u)
+        
+    return serieProbIntervalo, media,lower,upper
 
 if __name__ == "__main__":
     """
@@ -746,7 +848,7 @@ if __name__ == "__main__":
                         'CCDA - FOR',
                         'CCDA - REC',
                         'CCDA - BHZ',
-                        'CCDA - BSB',
+                        #'CCDA - BSB',
                         'CCDA - SSA',
                         'CCDA - MAO', 
                         'CCDA - SAO',
@@ -815,58 +917,11 @@ if __name__ == "__main__":
         plot_resume_cop("Resumo_"+cop+".png",cop,axisXCop[cop],actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
 
     # Dados finais  
-    """    
-    # media ponderada das probabilidades. Correlacao x P(X<=x)
-    arrayDistRealMediaPonderada = []
-
-    for t in range(0,61):
-        probT = 0
-        for cop in graphicsFromCops:
-            probT = probT + correlacao[cop]*distRealInterArrival[cop][t]
-        arrayDistRealMediaPonderada.append(probT/float(np.sum(correlacao.values())))
-
-    # ajustando a distribuicao media ponderada
-    poptRealMediaPonderada, pocvRealMediaPonderada = curve_fit(funcLomax,range(0,61),arrayDistRealMediaPonderada,maxfev=3000)
-
-    arrayDistLomaxMediaPonderada = funcLomax(range(0,61),poptRealMediaPonderada[0],poptRealMediaPonderada[1])
-    print 'Parametros da Lomax para dist real podenrada = ', poptRealMediaPonderada
-    print 'ajuste = ', computeR2(arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada)
-    
-    #plotando comparacao das funcoes da distribuicao reais
-    plot_interArrival([arrayDistRealMediaPonderada,arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'realPonderada_LomaxPonderada.png','Comparacao entre Distribuicao Real e Ajustada')
-    plot_interArrival([distRealInterArrival['TODOS'],arrayDistRealMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Real_RealPonderada.png','Comparacao Distribuicao Real de TODOS e Distribuicao Real Geral Ponderada')
-    plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]),arrayDistLomaxMediaPonderada],['Real','Ponderada'],['ro-','gx-'],'TODOS'+'_Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de TODOS e Distribuicao Lomax Geral Ponderada')
-
-    #plotando comparacao de cada COP com a distribuicao ponderada
-    for cop in graphicsFromCops:
-        plot_interArrival([distRealInterArrival[cop],arrayDistRealMediaPonderada],['Real','Real Geral Ponderada'],['ro-','gx-'],cop+'/Real_RealPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Real Geral Ponderada')
-        plot_interArrival([funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]),arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Lomax_LomaxPonderada.png','Comparacao Distribuicao Ajustada de '+ cop + ' e Distribuicao Lomax Geral Ponderada')
-        plot_interArrival([distRealInterArrival[cop],arrayDistLomaxMediaPonderada],['Real','Lomax Geral Ponderada'],['ro-','gx-'],cop+'/Real_LomaxPonderada.png','Comparacao Distribuicao Real de '+ cop +' e Distribuicao Lomax Geral Ponderada')
-
-    """
-    # calculo das constantes alpha e beta de ajuste
-    """
-    alfa = {}
-    beta = {}
-    combinacaoAlfaBeta = {}
-    combinacaoR2_Superior = {}
-    distCombinacao = {}
-    """
-    #print 'Gerando estudo de TODOS'
-    #maximo,media,variance = erroMedio(distRealInterArrival['TODOS'],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1]))
-    #print 'Real x Lomax Propria- Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
-    """
-    maximo,media,variance = erroMedio(distRealInterArrival['TODOS'],arrayDistLomaxMediaPonderada)
-    print 'Real x Lomax - Ponderada = ',maximo, ' Media = ', media, ' Variancia = ',variance
-    maximo,media,variance = erroMedio(distRealInterArrival['TODOS'],arrayDistRealMediaPonderada)
-    print 'Real x Real Ponderada = ',maximo, ' Media = ', media, ' Variancia = ',variance
-    """
-
     #apresentado R2
     print '*'*120
-    print 'TODOS', ' Expo = ', coefR2Expo['TODOS'], ' Lomax I = ',coefR2LomaxI['TODOS'], ' Lomax II = ', coefR2Lomax['TODOS']
+    print 'TODOS', ' Expo = ', coefR2Expo['TODOS'], ' Lomax I = ',coefR2LomaxI['TODOS'], ' Lomax II = ', coefR2Lomax['TODOS'], ' Weibull = ', coefR2Weibull['TODOS']
     for cop in graphicsFromCops:
-        print cop, ' Expo = ', coefR2Expo[cop], ' Lomax I = ',coefR2LomaxI[cop], ' Lomax II = ', coefR2Lomax[cop]
+        print cop, ' Expo = ', coefR2Expo[cop], ' Lomax I = ',coefR2LomaxI[cop], ' Lomax II = ', coefR2Lomax[cop], ' Weibull = ', coefR2Weibull[cop]
 
     print '*'*120
     for cop in graphicsFromCops:
@@ -887,6 +942,7 @@ if __name__ == "__main__":
 
     for cop in graphicsFromCops:
         plot_interArrival([distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1])],['Real','Lomax II'],['ro-','gs-'],cop+'/Real_Lomax.png','Real x Lomax')
+        plot_interArrival([distRealInterArrival[cop],funcWeibull(range(0,61),coefDistribuicaoWeibull[cop][0],coefDistribuicaoWeibull[cop][1])],['Real','Weibull'],['ro-','gs-'],cop+'/Real_Weibull.png','Real x Weibull')
     plot_interArrival([distRealInterArrival['TODOS'],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1])],['Real','Lomax II'],['ro-','gs-'],'TODOS/Real_Lomax.png','Real x Lomax')
     
     #CDF de todas juntas 
@@ -896,30 +952,12 @@ if __name__ == "__main__":
         tmp.append(distRealInterArrival[cop])
     plot_interArrival(tmp,graphicsFromCops,['bo-','y^-','gs-','cp-','m*-','kh-','b+-','yD-','g|-','c1-','m3-'],'allCDF.png','CDF')
 
-    print ' Real x Ajuste Propria', '-'*100
-    for cop in graphicsFromCops:
-        minimo,maximo,media,variance = erroMedio(distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1]))
-        #print cop + ' Maximo = ',maximo, ' Media = ', media, ' Variancia = ',variance
-        print cop , '|',minimo, '|',maximo, '|', '|',media
-
-    # Gerando tabela de estatistica
+        # Gerando tabela de estatistica
     print 'Quantidade de dados'
     for cop in graphicsFromCops:
         print cop,'|',len(allActionsDict[cop]),'|',len(allIncidentsDict[cop]),'|',len(allReportsDict[cop]),'|',len(allIncidentsDict[cop])+len(allReportsDict[cop])
-
+        qtdeEventos[cop] = len(allIncidentsDict[cop])+len(allReportsDict[cop])
     
-    foo_instance = Foo()
-    foo_instance('TODOS') #this is calling the __call__ method   
-    
-    """
-    for cop in graphicsFromCops:
-        
-        print cop
-        print 'Coeficientes Lomax = ',coefDistribuicaoLomax[cop]
-        print 'Estatisticas ',compute_statistics(distRealInterArrival[cop])
-        print 'Media analitica = ',coefDistribuicaoLomax[cop][1]/(coefDistribuicaoLomax[cop][0]-1.0)
-        print '---'*50
-    """
     # fazendo o estudo A.f(X) + b = r(x)
     # calculo das constantes alpha e beta de ajuste
     print '*-'*50
@@ -929,42 +967,30 @@ if __name__ == "__main__":
     alfaBeta = {}
     distanciaAbsoluta = {}
     distanciaRelativa = {}
+    print '-'*120
+    print 'Correlacao entre modelo e real'
     for cop in graphicsFromCops:
-        f = funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1])
+        print cop
+        fLomax = funcLomax(np.arange(0,61,1),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1])
+        fExpo = funcExponential(np.arange(0,61,1),coefDistribuicaoExpo[cop][0])
+        fWeibull = funcWeibull(np.arange(0,61,1),coefDistribuicaoWeibull[cop][0],coefDistribuicaoWeibull[cop][1])
+        #print stats.pearsonr(distRealInterArrival[cop],fExpo)[0]
+        print 'Expo = ',stats.pearsonr(distRealInterArrival[cop],fExpo)[0], ' R2 = ', coefR2Expo[cop]
+        print 'Lomax = ',stats.pearsonr(distRealInterArrival[cop],fLomax)[0],' R2 = ', coefR2Lomax[cop]
+        print 'Weibull = ',stats.pearsonr(distRealInterArrival[cop],fWeibull)[0],' R2 = ', coefR2Weibull[cop]
+        print 'Coeficiente Weibull = ', coefDistribuicaoWeibull[cop]
+        # intervalo de amostragem em minutos (último evento - 1o evento)
+        limiteTempo = ((greatestDate[cop] - inicioAmostragem).total_seconds())/60.0
+        print cop , ' TEMPO = ', limiteTempo
+        # por tempo
         """
-        print 'Gerando estudo de AB de ', cop
-        alfa[cop]=[]
-        beta[cop]=[]
-        alfaBeta[cop]=[]
-        Tentativa # 1
-        -> Sistema formado por af(x) + b = r(x) e af(x+1) + b = r(x+1)
-        for t in range(1,60):
-            a = (distRealInterArrival[cop][t] - distRealInterArrival[cop][t+1])/(f[t] - f[t+1])
-            b = distRealInterArrival[cop][t] - a*f[t]
-            alfa[cop].append(a)
-            beta[cop].append(b)
-            alfaBeta[cop].append((a+b)/2.0)
-            plot_interArrival([alfa[cop],beta[cop]],['Alfa','Beta'],['bo-','gD-'],'NewAlfaBeta_'+cop+'.png','Alfa x Beta')        
-        print 'COP ALAFbETA= ',compute_statistics(alfaBeta[cop])
+        series, media, lower, upper = intervaloConfianca(limiteTempo,coefDistribuicaoWeibull[cop])
+        plot_interArrival([distRealInterArrival[cop],lower,upper],['Real','Lower','Upper'],['ro-','c*--','c*--'],cop+'weibull.png','IC da Weibull')
         """
+        # por qtde
         
-        """
-        Tentativa #2
-        Estudo da distancia absoluta e relativa entre a Real e Lomax II
-        """
-        distanciaAbsoluta[cop] = []
-        distanciaRelativa[cop] = []
+        series, media, lower, upper = intervaloConfianca(qtdeEventos[cop],coefDistribuicaoWeibull[cop])
+        plot_interArrival([distRealInterArrival[cop],lower,upper],['Real','Lower','Upper'],['ro-','c*--','c*--'],cop+'QTDEweibull.png','QTDE - IC da Weibull')
         
-        Amax,Amedia,Apos = erroMedioAbsoluto(distRealInterArrival[cop],f)
-        Rmax,Rmedia,Rpos = erroMedioRelativo(distRealInterArrival[cop],f)
-        fmaisAbsoluta = [y+Amax for y in f]
-        fmenosAbsoluta = [y-Amax for y in f]
-        plot_interArrival([fmaisAbsoluta,distRealInterArrival[cop],f,fmenosAbsoluta],['Up','Real','Ajuste','Down'],['b*-','ro-','gs-','c*-'],'ajusteAbsoluto_'+cop,'Absoluto')
-        fmaisRelativa = [y*(1+Amax) for y in f]
-        fmenosRelativa = [y*(1-Amax) for y in f]
-        plot_interArrival([fmaisRelativa,distRealInterArrival[cop],f,fmenosRelativa],['Up','Real','Ajuste','Down'],['b*-','ro-','gs-','c*-'],'ajusteRelativo_'+cop,'Relativo')
-        
-        print cop,'|',correlacao[cop],'|',coefR2Lomax[cop],'|',Amax,'|',Amedia,'|',Rmax,'|',Rmedia, '|',Apos,Rpos
-
-
+        #
         
