@@ -24,7 +24,7 @@ lib_path_Pacificador = os.path.abspath('/opt/pacificador_cop/')
 sys.path.append(lib_path_Pacificador)
 
 from incidentes.models import *
-from scipy.stats import lomax,expon,powerlaw,bayes_mvs,pareto,truncexpon
+from scipy.stats import lomax,expon,powerlaw,bayes_mvs,pareto,truncexpon,norm
 import scipy.stats
 import numpy as np
 import random
@@ -469,28 +469,6 @@ def funcWeibull(x,a,b):
 
     return 1 - (np.exp(-(np.power((x/a),b))))
 
-def funcLomaxPonderada(x):
-    
-    #a = 3.86607243476
-    #b = 90.3290141236
-    a = 1.42421085234
-    b = 10.3310560189
-    #a = 1.99249027486
-    #b = 14.7003560784
-    return 1 - (np.power(b,a)/(np.power(x+b,a)))
-    #return 1 - (np.power(b,a)/(np.power(x,a)))
-    #return lomax.cdf(x,a)
-    #return genpareto.cdf(x,a)
-
-def funcLomaxAritmetica(x):
-    
-    #a = 3.86607243476
-    #b = 90.3290141236
-    #a = 1.42421085234
-    #b = 10.3310560189
-    a = 1.99249027486
-    b = 14.7003560784
-    return 1 - (np.power(b,a)/(np.power(x+b,a)))
    
 def compute_statistics(serie):
     """
@@ -755,13 +733,13 @@ def invFuncWeibull(y,a,b):
     return a*np.power((-np.log(1-y)),1.0/b)
 
 
-def intervaloConfianca(limiteTempo,coeficientes,confidence = 0.99):
+def intervaloConfianca(cop,limiteTempo,coeficientes,confidence = 0.99):
     """
     Calcula o intervalo de confianca a partir da simulação usando a funcao e seus parametros
     A simulação para no tempoLimite = distancia entre o primeiro e último evento
     """
-    
-    qtdeSimulacoes = 10
+
+    qtdeSimulacoes = 100
     serieSimulacao = []
     serieIntervaloEntreChegadas = []
     serieQtdeIntervalo = []
@@ -774,7 +752,7 @@ def intervaloConfianca(limiteTempo,coeficientes,confidence = 0.99):
         tempoSimulacao = 0
 
         # controlando por tempo
-        """
+        
         while tempoSimulacao < limiteTempo:
             #tempoSimulacao = tempoSimulacao + invFuncWeibull(np.random.uniform(0,1),*coeficientes)
             #serieSimulacao[simulacao].append(tempoSimulacao)
@@ -791,6 +769,7 @@ def intervaloConfianca(limiteTempo,coeficientes,confidence = 0.99):
         # por qtde
         for item in range(0,limiteTempo+1):
             serieSimulacao[simulacao].append(invFuncWeibull(np.random.uniform(0,1),*coeficientes))
+        """
         # calculo do intervalo entre chegadas
         for i in range(0,len(serieSimulacao[simulacao])-1):
             serieIntervaloEntreChegadas[simulacao].append(serieSimulacao[simulacao][i+1] - serieSimulacao[simulacao][i])
@@ -817,17 +796,33 @@ def intervaloConfianca(limiteTempo,coeficientes,confidence = 0.99):
             valoresPorInstante[tempo].append(serieProbIntervalo[simulacao][tempo])
         
         # gerando media e limites do IC
+        
         icmedia = str(bayes_mvs(valoresPorInstante[tempo],confidence)).split(')),')[0]
         icmedia = icmedia.replace(" ","")
         icmedia = icmedia.replace("(","")
         icmedia = icmedia.replace(")","")
         m,l,u = icmedia.split(',')
-
-        media.append(m)
-        lower.append(l)
-        upper.append(u)
         
+        #dados da populacao
+        sizeData, (minimum,maximum),arithmeticMean,variance,skeness,kurtosis = stats.describe(valoresPorInstante[tempo])
+        #l,u = norm.interval(confidence, loc=arithmeticMean, scale=sqrt(variance))
+
+        #media.append(m)
+        tmp = 2.58 * sqrt(variance)/sqrt(len(valoresPorInstante[tempo]))
+        l = arithmeticMean - tmp
+        u = arithmeticMean + tmp
+        media.append(arithmeticMean)
+        lower.append(l)
+        upper.append(u)   
+    
     return serieProbIntervalo, media,lower,upper
+
+def mean_confidence_interval(data, confidence=0.95):
+    a = 1.0*np.array(data)
+    n = len(a)
+    m, se = np.mean(a), scipy.stats.sem(a)
+    h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
+    return m, m-h, m+h
 
 if __name__ == "__main__":
     """
@@ -941,9 +936,10 @@ if __name__ == "__main__":
     #plotando as dist reais x Lomax de cada Cops
 
     for cop in graphicsFromCops:
-        plot_interArrival([distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1])],['Real','Lomax II'],['ro-','gs-'],cop+'/Real_Lomax.png','Real x Lomax')
-        plot_interArrival([distRealInterArrival[cop],funcWeibull(range(0,61),coefDistribuicaoWeibull[cop][0],coefDistribuicaoWeibull[cop][1])],['Real','Weibull'],['ro-','gs-'],cop+'/Real_Weibull.png','Real x Weibull')
-    plot_interArrival([distRealInterArrival['TODOS'],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1])],['Real','Lomax II'],['ro-','gs-'],'TODOS/Real_Lomax.png','Real x Lomax')
+        plot_interArrival([distRealInterArrival[cop],funcExponential(range(0,61),coefDistribuicaoExpo[cop])],['Real','Exponential'],['ro-','b*-'],cop+'/Real_Expo.png','Real x Exponential')
+        plot_interArrival([distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1])],['Real','Lomax'],['ro-','g*-'],cop+'/Real_Lomax.png','Real x Lomax')
+        plot_interArrival([distRealInterArrival[cop],funcWeibull(range(0,61),coefDistribuicaoWeibull[cop][0],coefDistribuicaoWeibull[cop][1])],['Real','Weibull'],['ro-','c*-'],cop+'/Real_Weibull.png','Real x Weibull')
+    #plot_interArrival([distRealInterArrival['TODOS'],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1])],['Real','Lomax II'],['ro-','gs-'],'TODOS/Real_Lomax.png','Real x Lomax')
     
     #CDF de todas juntas 
     print '-'*100
@@ -960,13 +956,6 @@ if __name__ == "__main__":
     
     # fazendo o estudo A.f(X) + b = r(x)
     # calculo das constantes alpha e beta de ajuste
-    print '*-'*50
-    print 'Estudo de distancia'
-    alfa = {}
-    beta = {}
-    alfaBeta = {}
-    distanciaAbsoluta = {}
-    distanciaRelativa = {}
     print '-'*120
     print 'Correlacao entre modelo e real'
     for cop in graphicsFromCops:
@@ -974,23 +963,34 @@ if __name__ == "__main__":
         fLomax = funcLomax(np.arange(0,61,1),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1])
         fExpo = funcExponential(np.arange(0,61,1),coefDistribuicaoExpo[cop][0])
         fWeibull = funcWeibull(np.arange(0,61,1),coefDistribuicaoWeibull[cop][0],coefDistribuicaoWeibull[cop][1])
+        
+        plot_interArrival([distRealInterArrival[cop],fExpo,fLomax,fWeibull],['Real','Exponential','Lomax','Weibull'],['ro-','bs-','g^-','c*-'],cop+'/Comparacao.png','Best Fit')
+
         #print stats.pearsonr(distRealInterArrival[cop],fExpo)[0]
         print 'Expo = ',stats.pearsonr(distRealInterArrival[cop],fExpo)[0], ' R2 = ', coefR2Expo[cop]
         print 'Lomax = ',stats.pearsonr(distRealInterArrival[cop],fLomax)[0],' R2 = ', coefR2Lomax[cop]
         print 'Weibull = ',stats.pearsonr(distRealInterArrival[cop],fWeibull)[0],' R2 = ', coefR2Weibull[cop]
-        print 'Coeficiente Weibull = ', coefDistribuicaoWeibull[cop]
-        # intervalo de amostragem em minutos (último evento - 1o evento)
-        limiteTempo = ((greatestDate[cop] - inicioAmostragem).total_seconds())/60.0
-        print cop , ' TEMPO = ', limiteTempo
-        # por tempo
-        """
-        series, media, lower, upper = intervaloConfianca(limiteTempo,coefDistribuicaoWeibull[cop])
-        plot_interArrival([distRealInterArrival[cop],lower,upper],['Real','Lower','Upper'],['ro-','c*--','c*--'],cop+'weibull.png','IC da Weibull')
-        """
-        # por qtde
+        #print 'Coeficiente Weibull = ', coefDistribuicaoWeibull[cop]
         
+        #limiteTempo = ((greatestDate[cop] - inicioAmostragem).total_seconds())/60.0
+        #series, media, lower, upper = intervaloConfianca(cop,limiteTempo,coefDistribuicaoWeibull[cop])
+
+        print 'Comparacao Real Modelo -----'
+        for k in [1,2,3,4,5,10,20,30,40,50,60]:
+            print 'Real = ', distRealInterArrival[cop][k], ' Modelo = ', fWeibull[k]
+        print 'Coeficientes Weibull = ', coefDistribuicaoWeibull[cop]
+
+
+        # intervalo de amostragem em minutos (último evento - 1o evento)
+        #intervalo de confianca
+        #limiteTempo = ((greatestDate[cop] - inicioAmostragem).total_seconds())/60.0
+        #series, media, lower, upper = intervaloConfianca(cop,limiteTempo,coefDistribuicaoWeibull[cop])
+        #plot_interArrival([distRealInterArrival[cop],media,lower,upper],['Real','Mean','Lower','Upper'],['ro-','c*-','c--','c--'],cop+'/IC100_Weibull.png','IC Weibull')
+        
+        # por qtde
+        """
         series, media, lower, upper = intervaloConfianca(qtdeEventos[cop],coefDistribuicaoWeibull[cop])
         plot_interArrival([distRealInterArrival[cop],lower,upper],['Real','Lower','Upper'],['ro-','c*--','c*--'],cop+'QTDEweibull.png','QTDE - IC da Weibull')
-        
+        """
         #
         
