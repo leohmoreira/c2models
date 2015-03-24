@@ -89,7 +89,7 @@ copadays = [datetime(2014,6,12),datetime(2014,6,13),datetime(2014,6,14),datetime
             ]
 
 matchDays = copadays
-#matchDays = mdays
+#conf matchDays = mdays
 
 
 # globais
@@ -153,7 +153,7 @@ def changeCop(cop):
     if cop.encode("utf-8") == maceio.encode("utf-8"):
         return 'CCDA - REC'
 
-    if ((cop in ['FNC_MB','CCom_BPEB_CCDA_Bsb','CMP','CCom_41BIMtz_FTC_CCDA_Bsb','CCom_22BI_FTC_CCDA_Bsb','CCom_BGP_FTC_CCDA_Bsb','CCom_36BIMtz_FTC_CCDA_Bsb']) or (cop.encode("utf-8") == ccom32GAC.encode("utf-8") or 
+    if ((cop in ['COC','FNC_MB','CCom_BPEB_CCDA_Bsb','CMP','CCom_41BIMtz_FTC_CCDA_Bsb','CCom_22BI_FTC_CCDA_Bsb','CCom_BGP_FTC_CCDA_Bsb','CCom_36BIMtz_FTC_CCDA_Bsb']) or (cop.encode("utf-8") == ccom32GAC.encode("utf-8") or 
         cop.encode("utf-8") == ccom3Esqd.encode("utf-8") or
         cop.encode("utf-8") == ccom16Blog.encode("utf-8") or
         cop.encode("utf-8") == gac32.encode("utf-8") or
@@ -185,7 +185,7 @@ def get_available_cops():
     for i in allIncidents:
         if(inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem):
             cops.append(i['operations_center']['id'])
-#            cops.append(i['operations_center'])
+#conf            cops.append(i['operations_center'])
                 
     allReports = RelatoDeSituacao.get_all()
     
@@ -198,7 +198,7 @@ def get_available_cops():
                  'id' in r.relator['cop']  # todos tem que ter o id               
             ):
                 cops.append(r.relator['cop']['id'])
-                #cops.append(r.relator['cop'])
+#conf                cops.append(r.relator['cop'])
 
     allSincronizations = Sincronizacao.get_all()
     for sinc in allSincronizations:
@@ -208,6 +208,7 @@ def get_available_cops():
                     ((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
             ):
                 cops.append(sinc.cop_responsavel['id'])
+    print set(cops)
     return set(cops)
 
 
@@ -231,9 +232,10 @@ def get_dict_all_actions():
                     ((action.tipo == 'INTERVALO') and (action.inicio >= inicioAmostragem and action.fim <= terminoAmostragem))
                 )
             ):
+                sinc.cop_responsavel['id'] = changeCop(sinc.cop_responsavel['id'])
                 dictionaryAllActions['TODOS'].append(action)
                 dictionaryAllActions[sinc.cop_responsavel['id']].append(action)
-                                
+    
     return dictionaryAllActions
 
 def get_all_actions():
@@ -285,12 +287,12 @@ def get_all_incidents():
     for i in allIncidents:
         if(
             (i['operations_center']['id'] in allCops) and
-#            (i['operations_center'] in allCops) and
+#conf            (i['operations_center'] in allCops) and
             (inicioAmostragem <= i.reporting_date and i.reporting_date <=terminoAmostragem)
         ):
         
             i['operations_center']['id'] = changeCop(i['operations_center']['id'])
-#            i['operations_center'] = changeCop(i['operations_center'])
+#conf            i['operations_center'] = changeCop(i['operations_center'])
             incidents.append(i)
             
     return incidents    
@@ -310,7 +312,7 @@ def get_dict_all_incidents():
     for incident in allIncidents:
         dictionaryAllIncidents['TODOS'].append(incident)
         dictionaryAllIncidents[incident['operations_center']['id']].append(incident)
-#        dictionaryAllIncidents[incident['operations_center']].append(incident)
+#conf        dictionaryAllIncidents[incident['operations_center']].append(incident)
     return dictionaryAllIncidents
 
 
@@ -336,7 +338,7 @@ def get_all_reports():
         Retorna todos os relatos de situação agrupados em um array
     """
     allReports = RelatoDeSituacao.get_all()
-    
+    print 'TAMANHo = ', len(allReports)
     reports = []
     for r in allReports:
         if (
@@ -346,10 +348,12 @@ def get_all_reports():
                 and # todos tem que ter o COP
                 'id' in r.relator['cop'] and # todos tem que ter o COP
                 r.relator['cop']['id'] in allCops
+#conf                r.relator['cop'] in allCops
             ):
                 r.relator['cop']['id'] = changeCop(r.relator['cop']['id'])
-                #r.relator['cop'] = changeCop(r.relator['cop'])
+#conf                r.relator['cop'] = changeCop(r.relator['cop'])
                 reports.append(r)
+    print len(reports)
     return reports
         
 def get_dict_all_reports():
@@ -366,7 +370,7 @@ def get_dict_all_reports():
     for report in allReports:
         dictionaryAllReports['TODOS'].append(report)
         dictionaryAllReports[report.relator['cop']['id']].append(report)
-        #dictionaryAllReports[report.relator['cop']].append(report)
+#conf        dictionaryAllReports[report.relator['cop']].append(report)
                 
     return dictionaryAllReports
 
@@ -391,7 +395,7 @@ def dateChangeFormat(item):
     return datetime.strftime(item,"%d/%m")
 
 
-def plot_interArrival(samples,labels,padroes,filename,title):
+def plot_interArrival(samples,labels,padroes,filename,title,limite=-1):
 
     axisX = range(0,len(samples[0]))
     plt.close('all')
@@ -399,12 +403,12 @@ def plot_interArrival(samples,labels,padroes,filename,title):
     #fig.suptitle(cop+"\n"+title)
     fig.suptitle(title)
     for sample,label,padrao in zip(samples,labels,padroes):
-        plt.plot(axisX,sample,padrao,label=label,lw=3.0,ms=10.0)
+        plt.plot(axisX[0:limite],sample[0:limite],padrao,label=label,lw=3.0,ms=10.0)
     plt.ylabel("P(X <= t)")
     #plt.ylabel("Quantity [units]")
     #plt.ylabel("P(t < X < t + 1)")
     plt.xlabel("Interval [minutes]")
-    plt.xticks(axisX,rotation=45)
+    plt.xticks(axisX[0:limite],rotation=45)
     plt.grid(True)
     fig.set_size_inches(18.5,10.5)
     plt.legend(prop={'size':16},bbox_to_anchor=(0.99, 0.5))
@@ -830,6 +834,7 @@ if __name__ == "__main__":
     """
     
     allCops = get_available_cops()
+
     #allCops = set([changeCop(c) for c in get_available_cops()])  
 
     allActionsDict = get_dict_all_actions()
@@ -839,20 +844,20 @@ if __name__ == "__main__":
 
     #cops para os quais sao criados os graficos  
     graphicsFromCops = [
-                        'CCDA - RIO',
+                        #'CCDA - BSB',
+                        'CCDA - BHZ',
                         'CCDA - FOR',
                         'CCDA - REC',
-                        'CCDA - BHZ',
-                        #'CCDA - BSB',
+                        'CCDA - RIO',
                         'CCDA - SSA',
-                        'CCDA - MAO', 
                         'CCDA - SAO',
-                        'CCDA - CTB',
-                        'CCDA - POA',
+                        'CCDA - POA', 
                         'CCDA - CGB',
-                        'CCDA - NAT',
+                        'CCDA - CTB',
+                        'CCDA - MAO',
+                        'CCDA - NAT'
                     ]
-
+        
     for cop in graphicsFromCops:
         greatestDate[cop] = np.amax([get_actions_greatest_date(allActionsDict[cop]),
                              get_incidents_greatest_date(allIncidentsDict[cop]),
@@ -900,6 +905,9 @@ if __name__ == "__main__":
                 axisXCop[cop].append(day)
     # termino da geracao dos dados para estatisticas
     
+    #cop = 'CCDA - BSB'
+    #plot_resume_cop("Resumo_"+cop+".png",cop,axisXCop[cop],actionsSerie[cop],incidentsSerie[cop],reportsSerie[cop])
+
     # inicio da criacao dos graficos
 
     interArrrival_time_distribution('TODOS',allIncidentsReportsDict['TODOS'], nbins=60,limit =  1 * 3600) # unidade em segundos
@@ -924,14 +932,14 @@ if __name__ == "__main__":
     print 'Correlacao Todos = ',correlacao['TODOS']
     print '*'*120
 
-    graphicsFromCops.append('TODOS')
+    #graphicsFromCops.append('TODOS')
     
     #PDF de todas juntas 
     print '-'*100
     tmp = []
     for cop in graphicsFromCops:
         tmp.append(distRealPDF[cop])
-    plot_interArrival(tmp,graphicsFromCops,['bo-','y^-','gs-','cp-','m*-','kh-','b+-','yD-','g|-','c1-','m3-'],'allPDF_prob.png','Intervalo entre chegadas')
+    plot_interArrival(tmp,graphicsFromCops,['bo-','y^-','gs-','cp-','m*-','kh-','b+-','yD-','g|-','c1-','m3-'],'allPDF_qtde_prob.png','Intervalo entre chegadas',21)
 
     #plotando as dist reais x Lomax de cada Cops
 
@@ -946,7 +954,7 @@ if __name__ == "__main__":
     tmp = []
     for cop in graphicsFromCops:
         tmp.append(distRealInterArrival[cop])
-    plot_interArrival(tmp,graphicsFromCops,['bo-','y^-','gs-','cp-','m*-','kh-','b+-','yD-','g|-','c1-','m3-'],'allCDF.png','CDF')
+    plot_interArrival(tmp,graphicsFromCops,['bo-','y^-','gs-','cp-','m*-','kh-','b+-','yD-','g|-','c1-','m3-'],'allCDF.png','CDF',21)
 
         # Gerando tabela de estatistica
     print 'Quantidade de dados'
@@ -993,4 +1001,8 @@ if __name__ == "__main__":
         plot_interArrival([distRealInterArrival[cop],lower,upper],['Real','Lower','Upper'],['ro-','c*--','c*--'],cop+'QTDEweibull.png','QTDE - IC da Weibull')
         """
         #
-        
+        # figuras para o artigo milcom
+        #CDF
+        plot_interArrival([distRealInterArrival['CCDA - BHZ'],distRealInterArrival['CCDA - SAO']],['COp 2','COp 7'],['cp-','m*-'],'CDF_ComparacaoSAOBHZ.png','Demonstracao',21)
+        #PDF
+        plot_interArrival([distRealPDF['CCDA - BHZ'],distRealPDF['CCDA - SAO']],['COp 2','COp 7'],['cp-','m*-'],'PDF_ComparacaoSAOBHZ.png','Demonstracao',21)
