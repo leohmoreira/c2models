@@ -857,6 +857,20 @@ if __name__ == "__main__":
                         'CCDA - MAO',
                         'CCDA - NAT'
                     ]
+    labelsCops = [
+                        #'CCDA - BSB',
+                        'COp 2',
+                        'COp 3',
+                        'COp 4',
+                        'COp 5',
+                        'COp 6',
+                        'COp 7',
+                        'COp 8', 
+                        'COp 9',
+                        'COp 10',
+                        'COp 11',
+                        'COp 12'
+                    ]
         
     for cop in graphicsFromCops:
         greatestDate[cop] = np.amax([get_actions_greatest_date(allActionsDict[cop]),
@@ -939,7 +953,7 @@ if __name__ == "__main__":
     tmp = []
     for cop in graphicsFromCops:
         tmp.append(distRealPDF[cop])
-    plot_interArrival(tmp,graphicsFromCops,['bo-','y^-','gs-','cp-','m*-','kh-','b+-','yD-','g|-','c1-','m3-'],'allPDF_qtde_prob.png','Intervalo entre chegadas',21)
+    plot_interArrival(tmp,labelsCops,['bo-','y^-','gs-','cp-','m*-','kh-','b+-','yD-','g|-','c1-','m3-'],'allPDF_qtde_prob.png','Intervalo entre chegadas',21)
 
     #plotando as dist reais x Lomax de cada Cops
 
@@ -947,6 +961,7 @@ if __name__ == "__main__":
         plot_interArrival([distRealInterArrival[cop],funcExponential(range(0,61),coefDistribuicaoExpo[cop])],['Real','Exponential'],['ro-','b*-'],cop+'/Real_Expo.png','Real x Exponential')
         plot_interArrival([distRealInterArrival[cop],funcLomax(range(0,61),coefDistribuicaoLomax[cop][0],coefDistribuicaoLomax[cop][1])],['Real','Lomax'],['ro-','g*-'],cop+'/Real_Lomax.png','Real x Lomax')
         plot_interArrival([distRealInterArrival[cop],funcWeibull(range(0,61),coefDistribuicaoWeibull[cop][0],coefDistribuicaoWeibull[cop][1])],['Real','Weibull'],['ro-','c*-'],cop+'/Real_Weibull.png','Real x Weibull')
+        plot_interArrival([distRealInterArrival[cop],funcWeibull(range(0,61),coefDistribuicaoWeibull[cop][0],coefDistribuicaoWeibull[cop][1])],['Real','Weibull'],['ro-','c*-'],cop+'/Real_Weibull_20.png','Real x Weibull',21)
     #plot_interArrival([distRealInterArrival['TODOS'],funcLomax(range(0,61),coefDistribuicaoLomax['TODOS'][0],coefDistribuicaoLomax['TODOS'][1])],['Real','Lomax II'],['ro-','gs-'],'TODOS/Real_Lomax.png','Real x Lomax')
     
     #CDF de todas juntas 
@@ -984,8 +999,19 @@ if __name__ == "__main__":
         #series, media, lower, upper = intervaloConfianca(cop,limiteTempo,coefDistribuicaoWeibull[cop])
 
         print 'Comparacao Real Modelo -----'
+        print cop , ' Ultima tabela ---------------------------------------------------'
+        tempoReal = []
+        tempoModelo = []
         for k in [1,2,3,4,5,10,20,30,40,50,60]:
-            print 'Real = ', distRealInterArrival[cop][k], ' Modelo = ', fWeibull[k]
+            #print 'Real = ', distRealInterArrival[cop][k], ' Modelo = ', fWeibull[k]
+            print k ,' & ', distRealInterArrival[cop][k], ' & ', fWeibull[k]
+            tempoReal.append(distRealInterArrival[cop][k])
+            tempoReal.append(' & ')
+            tempoModelo.append(fWeibull[k])
+            tempoModelo.append(' & ')
+        
+        #print tempoReal
+        #print tempoModelo
         print 'Coeficientes Weibull = ', coefDistribuicaoWeibull[cop]
 
 
